@@ -111,3 +111,16 @@ Weekly Premium = Base + (AI Risk Score × Coverage Level × Income Variability)
 - Low risk → ₹30/week
 - Medium risk → ₹60/week
 - High risk → ₹100/week
+
+# TECH STACK SUMMARY
+
+| Layer              | Current Prototype (Web)          | Future System (Mobile)      | Purpose                               |
+| ------------------ | -------------------------------- | --------------------------- | ------------------------------------- |
+| **Frontend**       | HTML, CSS, JavaScript            | Flutter                     | UI for dashboard, earnings, insurance |
+| **Backend**        | FastAPI (Python)                 | FastAPI (Microservices)     | APIs, pricing logic, triggers         |
+| **Database/API**   | Supabase                         | Supabase                    | Auth, DB, real-time data              |
+| **AI/ML**          | Scikit-learn, XGBoost            | Real-time ML pipelines      | Risk & income prediction              |
+| **External APIs**  | Open-Meteo, AQI, Geoapify (mock) | Open-Meteo, AQI, Geoapify   | Weather, AQI, location risk           |
+| **Location**       | Mock (manual selection)          | Real-time GPS               | Event trigger & payouts               |
+| **Notifications**  | —                                | Firebase Cloud Messaging    | Alerts & updates                      |
+| **Infrastructure** | Local / basic cloud              | Docker, Kubernetes, AWS/GCP | Scaling & deployment                  |

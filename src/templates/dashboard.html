@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldGig — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0c10;--surface:#111318;--surface2:#181c24;
+    --border:#232733;--accent:#f97316;--accent2:#3b82f6;
+    --accent3:#10b981;--warn:#ef4444;
+    --text:#e8eaf0;--muted:#6b7280;--gold:#fbbf24;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(249,115,22,0.06) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(59,130,246,0.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+
+  /* TOP BAR */
+  .top-bar{position:sticky;top:0;z-index:50;background:rgba(17,19,24,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-0.5px;}
+  .logo span{color:var(--accent);}
+  .logo-tag{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-left:8px;}
+  .top-center{display:flex;gap:4px;}
+  .top-nav-btn{padding:6px 14px;border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;border:none;background:none;transition:all 0.18s;font-family:'DM Sans',sans-serif;}
+  .top-nav-btn:hover{color:var(--text);background:var(--surface2);}
+  .top-nav-btn.active{color:var(--accent);background:rgba(249,115,22,0.1);}
+  .top-right{display:flex;align-items:center;gap:12px;}
+  .rider-chip{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--text);}
+  .rider-chip:hover{border-color:rgba(249,115,22,0.4);}
+  .chip-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#f59e0b);display:flex;align-items:center;justify-content:center;font-size:12px;}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3);box-shadow:0 0 5px var(--accent3);animation:pdot 2s infinite;}
+  @keyframes pdot{0%,100%{opacity:1}50%{opacity:0.4}}
+  .logout-btn{padding:6px 12px;border-radius:8px;font-size:12px;color:#fca5a5;cursor:pointer;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);transition:all 0.18s;}
+  .logout-btn:hover{background:rgba(239,68,68,0.15);}
+
+  /* LAYOUT */
+  .main{max-width:1300px;margin:0 auto;padding:32px 36px;position:relative;z-index:1;}
+
+  /* TABS */
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* PAGE HEADER */
+  .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;letter-spacing:-0.5px;}
+  .page-subtitle{color:var(--muted);font-size:14px;margin-top:4px;}
+  .week-badge{background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:8px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+  .week-dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);}
+
+  /* ALERT */
+  .alert-banner{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:14px;margin-bottom:24px;animation:slidein 0.4s ease;}
+  @keyframes slidein{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .alert-action{background:var(--warn);color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;}
+  .alert-action:hover{opacity:0.85;}
+
+  /* KPI */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;}
+  .kpi-card:hover{transform:translateY(-2px);border-color:rgba(249,115,22,0.3);}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
+  .kpi-label{font-size:11px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;font-family:'Space Mono',monospace;}
+  .kpi-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin:8px 0 4px;}
+  .kpi-change{font-size:12px;color:var(--accent3);}
+  .kpi-icon{position:absolute;top:16px;right:16px;font-size:24px;opacity:0.3;}
+
+  /* LIVE ROW */
+  .live-row{display:flex;gap:10px;margin-bottom:24px;}
+  .live-tile{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;}
+  .live-tile-icon{font-size:26px;}
+  .live-tile-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+  .live-tile-label{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;}
+  .live-tile-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;}
+
+  /* GRID */
+  .grid3{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+
+  /* CARD */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;}
+  .card-tag{font-size:10px;font-family:'Space Mono',monospace;background:var(--surface2);color:var(--muted);padding:3px 8px;border-radius:99px;border:1px solid var(--border);}
+  .ai-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#93c5fd;padding:4px 10px;border-radius:6px;font-size:11px;font-family:'Space Mono',monospace;}
+
+  /* BAR CHART */
+  .bar-chart{display:flex;align-items:flex-end;gap:8px;height:140px;padding-bottom:24px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;}
+  .bar-stack{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:110px;gap:2px;position:relative;}
+  .bar-seg{width:100%;border-radius:4px 4px 0 0;cursor:pointer;position:relative;}
+  .bar-seg:hover{opacity:0.8;}
+  .bar-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:11px;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:10;}
+  .bar-seg:hover .bar-tip{opacity:1;}
+  .bar-label{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;}
+  .bar-payout-lbl{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--accent3);font-family:'Space Mono',monospace;white-space:nowrap;}
+  .chart-legend{display:flex;gap:16px;margin-top:12px;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+  .legend-dot{width:8px;height:8px;border-radius:2px;}
+
+  /* RISK */
+  .risk-arc{position:relative;width:160px;height:90px;margin:0 auto;overflow:hidden;}
+  .risk-arc svg{width:160px;height:160px;position:absolute;top:0;left:0;}
+  .risk-score-label{position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;}
+  .risk-score-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--gold);}
+  .risk-factors{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+  .risk-factor{display:flex;align-items:center;gap:10px;font-size:13px;}
+  .rf-label{flex:1;color:var(--muted);}
+  .rf-bar-wrap{flex:2;height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+  .rf-bar{height:100%;border-radius:99px;transition:width 1s ease;}
+  .rf-val{font-family:'Space Mono',monospace;font-size:11px;width:36px;text-align:right;}
+
+  /* DISRUPTION TABLE */
+  .disrupt-table{width:100%;border-collapse:collapse;}
+  .disrupt-table th{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;padding:0 12px 10px 0;text-align:left;border-bottom:1px solid var(--border);}
+  .disrupt-table td{padding:12px 12px 12px 0;border-bottom:1px solid rgba(35,39,51,0.6);font-size:13px;vertical-align:middle;}
+  .disrupt-table tr:last-child td{border-bottom:none;}
+  .status-pill{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;font-family:'Space Mono',monospace;}
+  .sp-triggered{background:rgba(59,130,246,0.15);color:#93c5fd;}
+  .sp-watch{background:rgba(251,191,36,0.15);color:var(--gold);}
+  .sp-clear{background:rgba(16,185,129,0.12);color:#6ee7b7;}
+  .sp-paid{background:rgba(16,185,129,0.12);color:#6ee7b7;}
+  .sp-queued{background:rgba(59,130,246,0.15);color:#93c5fd;}
+
+  /* PRICING */
+  .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .pricing-option{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative;}
+  .pricing-option:hover,.pricing-option.selected{border-color:var(--accent);background:rgba(249,115,22,0.06);}
+  .pricing-option.selected::after{content:'✓';position:absolute;top:10px;right:10px;color:var(--accent);font-size:14px;font-weight:700;}
+  .pricing-name{font-weight:600;font-size:13px;margin-bottom:4px;}
+  .pricing-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);margin-bottom:4px;}
+  .pricing-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+  .premium-total{margin-top:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+  .activate-btn{width:100%;margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:opacity 0.2s,transform 0.1s;}
+  .activate-btn:hover{opacity:0.9;transform:translateY(-1px);}
+
+  /* TRIGGER ROW */
+  .trigger-list{display:flex;flex-direction:column;gap:10px;}
+  .trigger-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:13px;}
+  .t-bar-wrap{width:80px;height:5px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;}
+  .t-bar{height:100%;border-radius:99px;}
+
+  /* CLAIMS */
+  .claim-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:8px;}
+  .claim-amount{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--accent3);margin-left:auto;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px;width:380px;transform:translateY(20px);transition:transform 0.25s;}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;}
+  .modal-amount{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--accent3);text-align:center;margin:16px 0;}
+  .modal-close{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--accent3);color:var(--accent3);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;transform:translateY(60px);opacity:0;transition:all 0.3s;}
+  .toast.show{transform:translateY(0);opacity:1;}
+
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo">Shield<span>Gig</span><span class="logo-tag">// Parametric Insurance</span></div>
+  </div>
+  <div class="top-center">
+    <button class="top-nav-btn active" onclick="switchTab('dashboard',this)">📊 Dashboard</button>
+    <button class="top-nav-btn" onclick="switchTab('insurance',this)">🛡️ Insurance</button>
+    <button class="top-nav-btn" onclick="switchTab('triggers',this)">⚡ Triggers <span id="triggerBadge" style="background:var(--warn);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:2px">2</span></button>
+    <button class="top-nav-btn" onclick="switchTab('claims',this)">💰 Claims</button>
+    <button class="top-nav-btn" onclick="switchTab('risk',this)">🤖 Risk AI</button>
+  </div>
+  <div class="top-right">
+    <a href="/session-info" class="rider-chip">
+      <div class="chip-avatar">🛵</div>
+      <span id="headerName">{{ user.name }}</span>
+      <div class="status-dot"></div>
+    </a>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="tab-dashboard" class="tab-content active">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle" id="dbSubtitle">Loading…</div>
+    </div>
+    <div class="week-badge"><span class="week-dot"></span>Live · Updated just now</div>
+  </div>
+
+  <div class="alert-banner">
+    <div style="font-size:20px">🌧️</div>
+    <div style="flex:1">
+      <div style="font-weight:600;font-size:14px;color:#fca5a5">Parametric Trigger Active — Heavy Rain</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Rainfall 48mm/hr detected. Payout of ₹340 queued for today's income loss.</div>
+    </div>
+    <button class="alert-action" onclick="openModal()">View Payout</button>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-icon">💵</div><div class="kpi-label">Week Earnings</div><div class="kpi-value" id="kpiEarnings">—</div><div class="kpi-change">↑ vs last week</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent2)"><div class="kpi-icon">🛡️</div><div class="kpi-label">Insurance Payout</div><div class="kpi-value" id="kpiPayout">—</div><div class="kpi-change" id="kpiTriggers">—</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-icon">⚡</div><div class="kpi-label">AI Risk Score</div><div class="kpi-value" id="kpiRisk" style="color:var(--gold)">—</div><div class="kpi-change" style="color:var(--gold)" id="kpiRiskLevel">—</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-icon">📦</div><div class="kpi-label">Weekly Premium</div><div class="kpi-value" id="kpiPremium">—</div><div class="kpi-change" style="color:var(--muted)">AI-adjusted</div></div>
+  </div>
+
+  <div class="live-row" id="liveRow">
+    <!-- Populated by JS -->
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Weekly Earnings Breakdown</div><div class="card-tag">Mon–Sun</div></div>
+      <div class="bar-chart" id="earningsChart"></div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div>Actual Earnings</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Insurance Payout</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(249,115,22,0.3)"></div>Expected</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">AI Risk Score</div><div class="ai-badge">🤖 ML Model</div></div>
+      <div style="text-align:center">
+        <div class="risk-arc">
+          <svg viewBox="0 0 160 160"><path d="M 20 130 A 60 60 0 0 1 140 130" fill="none" stroke="#232733" stroke-width="12" stroke-linecap="round"/><path d="M 20 130 A 60 60 0 0 1 140 130" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="60"/><defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10b981"/><stop offset="60%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs></svg>
+          <div class="risk-score-label"><div class="risk-score-val" id="riskVal">68</div><div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">/ 100</div></div>
+        </div>
+      </div>
+      <div class="risk-factors" id="riskFactors"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Active Disruption Monitor</div><div class="card-tag">Real-time</div></div>
+    <table class="disrupt-table">
+      <thead><tr><th>Disruption</th><th>Type</th><th>Measured</th><th>Threshold</th><th>Est. Loss</th><th>Status</th></tr></thead>
+      <tbody id="disruptionBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ INSURANCE ═══ -->
+<div id="tab-insurance" class="tab-content">
+  <div class="page-header">
+    <div><div class="page-title">My Insurance Plan</div><div class="page-subtitle">Choose your coverage model for the current week</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Weekly Coverage Models</div><div class="card-tag">Pick One</div></div>
+      <div class="pricing-grid" id="pricingGrid"></div>
+      <div class="premium-total">
+        <div><div style="font-size:12px;color:var(--muted)">AI-Adjusted Weekly Premium</div><div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:'Space Mono',monospace">Risk Score 68 · Medium-High</div></div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)" id="premiumDisplay">₹60</div>
+      </div>
+      <button class="activate-btn" onclick="activatePlan()">Activate This Week's Coverage →</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">AI Pricing Formula</div><div class="ai-badge">🤖 XGBoost</div></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.9;color:var(--accent3)">
+        Weekly Premium =<br>&nbsp;&nbsp;Base (₹30)<br>&nbsp;&nbsp;+ (AI Risk Score × Coverage Level)<br>&nbsp;&nbsp;× Income Variability
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px" id="aiInputs"></div>
+      <div style="margin-top:16px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'Space Mono',monospace">PREMIUM TIERS</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;text-align:center;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:10px"><div style="font-size:11px;color:#6ee7b7;font-family:'Space Mono',monospace">LOW RISK</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent3)">₹30</div></div>
+          <div style="flex:1;text-align:center;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;padding:10px"><div style="font-size:11px;color:var(--gold);font-family:'Space Mono',monospace">MED RISK</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--gold)">₹60</div></div>
+          <div style="flex:1;text-align:center;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px"><div style="font-size:11px;color:#fca5a5;font-family:'Space Mono',monospace">HIGH RISK</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--warn)">₹100</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TRIGGERS ═══ -->
+<div id="tab-triggers" class="tab-content">
+  <div class="page-header">
+    <div><div class="page-title">Live Parametric Triggers</div><div class="page-subtitle">Auto-payout when thresholds are crossed · No claims process needed</div></div>
+    <div class="week-badge"><span class="week-dot"></span>2 Active</div>
+  </div>
+  <div class="trigger-list" id="triggerList"></div>
+  <div style="margin-top:16px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:14px">
+    <div style="font-size:22px">ℹ️</div>
+    <div><div style="font-weight:600;font-size:13px">Parametric Insurance — No Claims Required</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Payouts are automatic when thresholds are crossed. No paperwork, no waiting. Amounts calculated by AI regression model.</div></div>
+  </div>
+</div>
+
+<!-- ═══ CLAIMS ═══ -->
+<div id="tab-claims" class="tab-content">
+  <div class="page-header"><div><div class="page-title">Claims History</div><div class="page-subtitle">Auto-triggered payouts this month</div></div></div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+    <div class="kpi-card" style="--kpi-color:var(--accent3)"><div class="kpi-label">Total Paid Out</div><div class="kpi-value" id="clTotalPaid" style="color:var(--accent3)">—</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent2)"><div class="kpi-label">Total Triggers</div><div class="kpi-value" id="clTriggers">—</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-label">Net Benefit</div><div class="kpi-value" id="clNet" style="color:var(--accent3)">—</div></div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">Payout Log</div><div class="card-tag">Auto-processed</div></div><div id="claimsList"></div></div>
+</div>
+
+<!-- ═══ RISK AI ═══ -->
+<div id="tab-risk" class="tab-content">
+  <div class="page-header">
+    <div><div class="page-title">AI Risk Engine</div><div class="page-subtitle">ML models powering real-time assessment</div></div>
+    <div class="ai-badge" style="font-size:13px;padding:8px 14px">🤖 Random Forest · XGBoost</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Income Prediction (XGBoost)</div><div class="card-tag">Next 7 days</div></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">Predicted Weekly Income</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent3)">₹19,200</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">Expected Loss (disruptions)</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--warn)">₹3,400</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(249,115,22,0.06);border-radius:8px;border:1px solid rgba(249,115,22,0.2)"><span style="font-size:13px;color:var(--muted)">Net Insured Income Floor</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)">₹17,800</span></div>
+      </div>
+      <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">MODEL INPUTS</div>
+        <div style="font-size:12px;color:var(--muted);line-height:2">● Historical earnings (8 weeks) &nbsp; ● Weather forecast (7 days)<br>● Location zone risk &nbsp; ● Platform order patterns<br>● Day-of-week multipliers &nbsp; ● Active hours logged</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Disruption Probability (Random Forest)</div><div class="card-tag">Next 7 days</div></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="risk-factor"><div class="rf-label">🌧️ Rain Event</div><div class="rf-bar-wrap"><div class="rf-bar" style="width:82%;background:var(--warn)"></div></div><div class="rf-val" style="color:var(--warn)">82%</div></div>
+        <div class="risk-factor"><div class="rf-label">🌡️ Heat Wave</div><div class="rf-bar-wrap"><div class="rf-bar" style="width:55%;background:var(--gold)"></div></div><div class="rf-val" style="color:var(--gold)">55%</div></div>
+        <div class="risk-factor"><div class="rf-label">💨 AQI Spike</div><div class="rf-bar-wrap"><div class="rf-bar" style="width:20%;background:var(--accent3)"></div></div><div class="rf-val" style="color:var(--accent3)">20%</div></div>
+        <div class="risk-factor"><div class="rf-label">🚫 Curfew</div><div class="rf-bar-wrap"><div class="rf-bar" style="width:8%;background:var(--accent3)"></div></div><div class="rf-val" style="color:var(--accent3)">8%</div></div>
+        <div class="risk-factor"><div class="rf-label">📉 Demand Drop</div><div class="rf-bar-wrap"><div class="rf-bar" style="width:30%;background:var(--accent2)"></div></div><div class="rf-val" style="color:var(--accent2)">30%</div></div>
+      </div>
+      <div style="margin-top:18px;padding:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px">
+        <div style="font-size:12px;color:#fca5a5;font-weight:600">⚠️ Fraud Detection Active</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Isolation Forest model monitoring for anomalous claim patterns. All payouts cross-checked.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="payoutModal">
+  <div class="modal">
+    <div class="modal-title">🎉 Payout Triggered!</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:12px;line-height:1.6">A parametric trigger activated due to heavy rainfall. No claim needed — payout is automatic.</div>
+    <div class="modal-amount">₹340</div>
+    <div style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:24px">🌧️ Heavy Rain · 48mm/hr · June 22, 2025<br><span style="font-size:11px">Estimated income loss: ₹680 → 50% coverage payout</span></div>
+    <button class="modal-close" onclick="closeModal()">Got it — thanks!</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';  // Same origin
+let selectedPlanId = 'micro';
+let selectedPlanPrice = 60;
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.top-nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function openModal() { document.getElementById('payoutModal').classList.add('open'); }
+function closeModal() { document.getElementById('payoutModal').classList.remove('open'); }
+document.getElementById('payoutModal').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── LOGOUT ──────────────────────────────────────────────────────────────────
+async function doLogout() {
+  await fetch('/auth/logout', { method:'POST' });
+  window.location.href = '/login';
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function statusClass(s) {
+  return {triggered:'sp-triggered',watch:'sp-watch',clear:'sp-clear',paid:'sp-paid',queued:'sp-queued'}[s]||'sp-clear';
+}
+function statusLabel(s) {
+  return {triggered:'TRIGGERED',watch:'WATCH',clear:'CLEAR',paid:'PAID',queued:'QUEUED'}[s]||s.toUpperCase();
+}
+function barColor(c) {
+  return {warn:'var(--warn)',gold:'var(--gold)',green:'var(--accent3)',blue:'var(--accent2)'}[c]||'var(--accent3)';
+}
+
+// ─── LOAD DASHBOARD ───────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [summary, chart, risk, disruptions] = await Promise.all([
+    fetch('/api/dashboard/summary').then(r=>r.json()),
+    fetch('/api/dashboard/earnings-chart').then(r=>r.json()),
+    fetch('/api/dashboard/risk-factors').then(r=>r.json()),
+    fetch('/api/dashboard/disruptions').then(r=>r.json()),
+  ]);
+
+  const w = summary.week;
+  document.getElementById('dbSubtitle').textContent = `Week of ${w.label} · ${summary.rider.zone}`;
+  document.getElementById('kpiEarnings').textContent = `₹${w.earnings.toLocaleString()}`;
+  document.getElementById('kpiPayout').textContent = `₹${w.payout.toLocaleString()}`;
+  document.getElementById('kpiTriggers').textContent = `${w.triggers_fired} triggers this week`;
+  document.getElementById('kpiRisk').textContent = `${w.risk_score}/100`;
+  document.getElementById('kpiRiskLevel').textContent = '▲ High Risk Week';
+  document.getElementById('kpiPremium').textContent = `₹${w.premium}`;
+
+  // Live tiles
+  const env = summary.environment;
+  const liveRow = document.getElementById('liveRow');
+  const tiles = [
+    {icon:'🌡️', val:env.temperature.value+env.temperature.unit, label:'TEMP / HEAT IDX', status:env.temperature.status},
+    {icon:'🌧️', val:env.rainfall.value+env.rainfall.unit, label:'RAINFALL', status:env.rainfall.status},
+    {icon:'💨', val:env.aqi.value+' '+env.aqi.unit, label:'AIR QUALITY', status:env.aqi.status},
+    {icon:'🚦', val:env.mobility.value, label:'MOBILITY IDX', status:env.mobility.status},
+    {icon:'📱', val:env.platform.value, label:'PLATFORM STATUS', status:env.platform.status},
+  ];
+  const sColors = {triggered:'rgba(239,68,68,0.15)',watch:'rgba(251,191,36,0.15)',clear:'rgba(16,185,129,0.12)'};
+  const sFonts = {triggered:'#fca5a5',watch:'var(--gold)',clear:'#6ee7b7'};
+  const vColors = {triggered:'var(--warn)',watch:'var(--gold)',clear:'var(--accent3)'};
+  liveRow.innerHTML = tiles.map(t=>`
+    <div class="live-tile">
+      <div class="live-tile-icon">${t.icon}</div>
+      <div class="live-tile-val" style="color:${vColors[t.status]||'var(--text)'}">${t.val}</div>
+      <div class="live-tile-label">${t.label}</div>
+      <div class="live-tile-status" style="background:${sColors[t.status]};color:${sFonts[t.status]}">${t.status.toUpperCase()}</div>
+    </div>`).join('');
+
+  // Bar chart
+  buildBarChart(chart);
+
+  // Risk factors
+  document.getElementById('riskVal').textContent = risk.overall_score;
+  const rfColors = {warn:'var(--warn)',gold:'var(--gold)',green:'var(--accent3)',blue:'var(--accent2)'};
+  document.getElementById('riskFactors').innerHTML = risk.factors.map(f=>`
+    <div class="risk-factor">
+      <div class="rf-label">${f.name}</div>
+      <div class="rf-bar-wrap"><div class="rf-bar" style="width:${f.score}%;background:${rfColors[f.color]||'var(--accent3)'}"></div></div>
+      <div class="rf-val" style="color:${rfColors[f.color]}">${f.score}%</div>
+    </div>`).join('');
+
+  // Disruption table
+  document.getElementById('disruptionBody').innerHTML = disruptions.disruptions.map(d=>`
+    <tr>
+      <td>${d.icon} ${d.name}</td>
+      <td style="color:var(--muted)">${d.type}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:12px">${d.measured}</td>
+      <td style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">${d.threshold}</td>
+      <td style="color:${d.loss!=='—'?'var(--warn)':'var(--muted)'};font-family:'Space Mono',monospace">${d.loss}</td>
+      <td><span class="status-pill ${statusClass(d.status)}">${statusLabel(d.status)}</span></td>
+    </tr>`).join('');
+}
+
+function buildBarChart(data) {
+  const chart = document.getElementById('earningsChart');
+  chart.innerHTML = '';
+  const maxVal = 1200;
+  data.days.forEach((day,i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const stack = document.createElement('div');
+    stack.className = 'bar-stack';
+    const earnH = Math.round((data.earnings[i]/maxVal)*100);
+    const payH = Math.round((data.payouts[i]/maxVal)*100);
+    if(data.payouts[i]>0) {
+      const lbl = document.createElement('div');
+      lbl.className = 'bar-payout-lbl';
+      lbl.textContent = '+₹'+data.payouts[i];
+      col.appendChild(lbl);
+      const pb = document.createElement('div');
+      pb.className='bar-seg';
+      pb.style.cssText=`height:${payH}px;background:var(--accent2);position:absolute;bottom:${earnH}px;width:100%;border-radius:4px 4px 0 0;`;
+      pb.innerHTML=`<div class="bar-tip">Payout: ₹${data.payouts[i]}</div>`;
+      stack.appendChild(pb);
+    }
+    const eb=document.createElement('div');
+    eb.className='bar-seg';
+    eb.style.cssText=`height:${earnH}px;background:var(--accent3);`;
+    eb.innerHTML=`<div class="bar-tip">Earned: ₹${data.earnings[i]}</div>`;
+    stack.appendChild(eb);
+    const lbl=document.createElement('div');
+    lbl.className='bar-label';lbl.textContent=day;
+    col.appendChild(stack);col.appendChild(lbl);
+    chart.appendChild(col);
+  });
+}
+
+// ─── LOAD INSURANCE ───────────────────────────────────────────────────────────
+async function loadInsurance() {
+  const [plans, aiData] = await Promise.all([
+    fetch('/api/insurance/plans').then(r=>r.json()),
+    fetch('/api/insurance/ai-premium?plan_id=micro').then(r=>r.json()),
+  ]);
+  const grid = document.getElementById('pricingGrid');
+  grid.innerHTML = plans.plans.map((p,i)=>`
+    <div class="pricing-option ${i===0?'selected':''}" onclick="selectPlan(this,'${p.id}',${p.base_price})">
+      <div class="pricing-name">${p.name}</div>
+      <div class="pricing-price">₹${p.base_price}<span style="font-size:14px;color:var(--muted)">/wk</span></div>
+      <div class="pricing-desc">${p.description}</div>
+    </div>`).join('');
+
+  const f = aiData.formula;
+  document.getElementById('aiInputs').innerHTML = `
+    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">🌦️</div><div><div style="font-weight:600">Weather Forecast Input</div><div style="color:var(--muted);font-size:11px">${aiData.weather_input}</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gold)">High</div></div>
+    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">📍</div><div><div style="font-weight:600">Location Risk</div><div style="color:var(--muted);font-size:11px">${aiData.location_input}</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent3)">Medium</div></div>
+    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">📈</div><div><div style="font-weight:600">Historical Earnings</div><div style="color:var(--muted);font-size:11px">${aiData.earnings_input}</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent3)">${aiData.earnings_input.split(' ')[0]}</div></div>`;
+}
+
+async function selectPlan(el, planId, price) {
+  document.querySelectorAll('.pricing-option').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPlanId = planId;
+  selectedPlanPrice = price;
+  const data = await fetch(`/api/insurance/ai-premium?plan_id=${planId}`).then(r=>r.json());
+  document.getElementById('premiumDisplay').textContent = '₹'+data.final_premium;
+}
+
+async function activatePlan() {
+  const res = await fetch('/api/insurance/activate', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({plan_id: selectedPlanId})
+  });
+  const data = await res.json();
+  if(data.success) showToast('✓ '+data.message);
+}
+
+// ─── LOAD TRIGGERS ────────────────────────────────────────────────────────────
+async function loadTriggers() {
+  const data = await fetch('/api/triggers/live').then(r=>r.json());
+  const statusStyle = {
+    triggered:'border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)',
+    watch:'border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.03)',
+    clear:''
+  };
+  document.getElementById('triggerList').innerHTML = data.triggers.map(t=>`
+    <div class="trigger-row" style="${statusStyle[t.status]||''}">
+      <div style="font-size:18px">${t.icon}</div>
+      <div style="flex:1"><div style="font-weight:600">${t.name}</div><div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">${t.source}</div></div>
+      <div style="text-align:right"><div style="font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:${barColor(t.bar_color)}">${t.current_value}</div><div style="font-size:11px;color:var(--muted)">${t.threshold}</div></div>
+      <div class="t-bar-wrap"><div class="t-bar" style="width:${t.percent}%;background:${barColor(t.bar_color)}"></div></div>
+      <span class="status-pill ${statusClass(t.status)}">${statusLabel(t.status)}</span>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${t.payout_amount>0?'var(--accent3)':'var(--muted)'};margin-left:8px">${t.payout}</div>
+    </div>`).join('');
+}
+
+// ─── LOAD CLAIMS ─────────────────────────────────────────────────────────────
+async function loadClaims() {
+  const [summary, history] = await Promise.all([
+    fetch('/api/claims/summary').then(r=>r.json()),
+    fetch('/api/claims/history').then(r=>r.json()),
+  ]);
+  document.getElementById('clTotalPaid').textContent = '₹'+summary.total_paid.toLocaleString();
+  document.getElementById('clTriggers').textContent = summary.total_triggers;
+  document.getElementById('clNet').textContent = '+₹'+summary.net_benefit.toLocaleString();
+  document.getElementById('claimsList').innerHTML = history.claims.map(c=>`
+    <div class="claim-row">
+      <div style="font-size:18px">${c.icon}</div>
+      <div><div style="font-weight:600;font-size:13px">${c.title}</div><div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">${c.detail}</div></div>
+      <span class="status-pill ${statusClass(c.status)}" style="margin-left:auto;margin-right:8px">${statusLabel(c.status)}</span>
+      <div class="claim-amount">₹${c.amount}</div>
+    </div>`).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+Promise.all([loadDashboard(), loadInsurance(), loadTriggers(), loadClaims()]);
+</script>
+</body>
+</html>

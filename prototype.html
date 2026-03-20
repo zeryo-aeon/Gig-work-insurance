@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GigShield — Parametric Insurance Prototype</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07071A;--card:#12122A;--card2:#1A1A35;--orange:#FF6B00;--deeporange:#E84A00;--teal:#0d9488;--green:#2DB84B;--text:#E8E8F0;--muted:#8888AA;--accent:#FFB347;--border:rgba(255,107,0,0.15);--danger:#e11d48}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.6;overflow-x:hidden}
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+section{padding:60px 0}
+h2.sec-title{font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,36px);font-weight:800;margin-bottom:8px}
+.sec-tag{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--orange);margin-bottom:8px}
+.sec-desc{color:var(--muted);font-size:14px;max-width:640px;margin-bottom:32px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
+.card2{background:var(--card2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px}
+
+/* NAV */
+nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(7,7,26,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px}
+nav .inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+nav .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff}
+nav .logo span{color:var(--orange)}
+nav .links{display:flex;gap:24px}
+nav .links a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;transition:color .2s}
+nav .links a:hover{color:var(--orange)}
+
+/* HERO */
+.hero{padding:100px 0 60px;text-align:center;background:linear-gradient(135deg,#07071A 0%,#0D0D2B 50%,#1a0a00 100%);position:relative;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(255,107,0,0.1) 0%,transparent 70%)}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,64px);font-weight:800;line-height:1.08;margin-bottom:16px;position:relative}
+.hero h1 span{color:var(--orange)}
+.hero p{color:var(--muted);font-size:16px;max-width:600px;margin:0 auto 32px}
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.kpi{background:var(--card);padding:24px;text-align:center}
+.kpi-val{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--orange)}
+.kpi-lbl{color:var(--muted);font-size:11px;margin-top:4px;letter-spacing:.5px}
+
+/* GRID HELPERS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.kpi-strip{grid-template-columns:repeat(2,1fr)}}
+
+/* TABS */
+.tab-btns{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.tab-btn.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* TABLE */
+.dtable{width:100%;border-collapse:separate;border-spacing:0 6px}
+.dtable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:8px 12px}
+.dtable td{padding:12px;background:var(--card2);font-size:13px}
+.dtable tr td:first-child{border-radius:8px 0 0 8px;font-weight:600}
+.dtable tr td:last-child{border-radius:0 8px 8px 0}
+
+/* BADGES */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px}
+.badge-low{background:rgba(19,136,8,0.2);color:#5DD66B}
+.badge-med{background:rgba(255,179,71,0.25);color:#FFD080}
+.badge-high{background:rgba(255,107,0,0.35);color:#FFB880}
+.badge-crit{background:rgba(232,74,0,0.5);color:#fff}
+
+/* PRICING CARDS */
+.price-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.price-card:hover{border-color:var(--orange);transform:translateY(-3px)}
+.price-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange),var(--accent))}
+.price-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:8px}
+.price-card .model-tag{font-size:11px;color:var(--orange);font-weight:600;margin-bottom:8px}
+.price-card p{color:var(--muted);font-size:12px;line-height:1.6}
+.price-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--accent)}
+.price-card.open .price-detail{display:block}
+
+/* SLIDERS */
+.slider-group{margin-bottom:20px}
+.slider-group label{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px}
+.slider-group label span{color:var(--orange);font-family:'Syne',sans-serif}
+input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;background:var(--card2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--orange);cursor:pointer}
+
+/* TRIGGER BARS */
+.trigger-row{display:flex;align-items:center;gap:16px;padding:14px;background:var(--card2);border-radius:10px;margin-bottom:10px}
+.trigger-icon{font-size:24px;flex-shrink:0}
+.trigger-info{flex:1}
+.trigger-name{font-weight:600;font-size:13px}
+.trigger-vals{font-size:11px;color:var(--muted);margin-top:2px}
+.trigger-bar-wrap{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-top:6px}
+.trigger-bar{height:100%;border-radius:4px;transition:width 1s ease}
+.trigger-status{font-size:11px;font-weight:700;flex-shrink:0;min-width:80px;text-align:right}
+.triggered{color:#FF4444;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* RESULT BOX */
+.result-box{background:linear-gradient(135deg,rgba(255,107,0,0.12),rgba(13,148,136,0.08));border:1px solid var(--orange);border-radius:16px;padding:28px;text-align:center}
+.result-box .premium{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--orange)}
+.result-box .risk-label{font-size:14px;font-weight:700;margin-top:4px}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:32px;text-align:center;color:var(--muted);font-size:12px}
+hr.divider{border:none;border-top:1px solid var(--border);margin:0}
+
+/* WEATHER CARDS */
+.weather-card{background:var(--card2);border-radius:12px;padding:20px;text-align:center}
+.weather-card .w-val{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--orange)}
+.weather-card .w-lbl{color:var(--muted);font-size:11px;margin-top:4px}
+.city-select{background:var(--card2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.city-select:focus{outline:none;border-color:var(--orange)}
+</style>
+</head>
+<body>
+
+<nav><div class="inner">
+  <div class="logo">Gig<span>Shield</span> ●</div>
+  <div class="links">
+    <a href="#persona">Profile</a><a href="#weather">Live Risk</a><a href="#disruptions">Disruptions</a>
+    <a href="#pricing">Pricing</a><a href="#ai">AI Scoring</a><a href="#triggers">Triggers</a>
+  </div>
+</div></nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Parametric Insurance<br>for <span>Gig Workers</span></h1>
+  <p>AI-driven weekly micro-insurance that automatically protects India's delivery workforce against income loss from weather, social disruptions & platform volatility.</p>
+</div>
+<div class="kpi-strip">
+  <div class="kpi"><div class="kpi-val">₹20-30K</div><div class="kpi-lbl">Monthly Income Range</div></div>
+  <div class="kpi"><div class="kpi-val">7.7M</div><div class="kpi-lbl">Gig Workers in India</div></div>
+  <div class="kpi"><div class="kpi-val">₹30-100</div><div class="kpi-lbl">Weekly Premium Range</div></div>
+  <div class="kpi"><div class="kpi-val">18.4</div><div class="kpi-lbl">Avg Lost Days/Year</div></div>
+</div>
+
+<hr class="divider">
+
+<!-- WORKER PERSONA -->
+<section id="persona"><div class="container">
+  <div class="sec-tag">Worker Profile</div>
+  <h2 class="sec-title">Food Delivery Partner</h2>
+  <div class="grid-2" style="margin-top:24px">
+    <div class="card">
+      <div style="font-size:48px;margin-bottom:16px">🛵</div>
+      <h3 style="font-family:'Syne';font-size:20px;font-weight:700;margin-bottom:12px">Zomato / Swiggy Rider</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="card2"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Daily Hours</div><div style="font-family:'Syne';font-size:24px;font-weight:800;color:var(--orange)">8-12</div></div>
+        <div class="card2"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Monthly Income</div><div style="font-family:'Syne';font-size:24px;font-weight:800;color:var(--orange)">₹20-30K</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Income depends on:</strong> Orders/hour · Working hours · External conditions</div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,rgba(232,74,0,0.15),rgba(225,29,72,0.08));border-color:rgba(232,74,0,0.3)">
+      <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+      <h3 style="font-family:'Syne';font-size:20px;font-weight:700;margin-bottom:12px;color:var(--danger)">The Core Problem</h3>
+      <p style="font-size:18px;font-weight:600;margin-bottom:16px">If they <span style="color:var(--danger)">cannot work</span> → income = <span style="color:var(--danger)">₹0</span></p>
+      <p style="color:var(--muted);font-size:13px;line-height:1.7">Over 65% of surveyed workers cannot sustain basic living expenses if work is disrupted for more than 7 days. No formal safety net exists.</p>
+      <div style="margin-top:16px"><canvas id="bufferChart" height="180"></canvas></div>
+    </div>
+  </div>
+</div></section>
+
+<hr class="divider">
+
+<!-- LIVE WEATHER RISK -->
+<section id="weather"><div class="container">
+  <div class="sec-tag">Live Risk Dashboard</div>
+  <h2 class="sec-title">Real-Time Disruption Monitoring</h2>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+    <select class="city-select" id="citySelect">
+      <option value="28.6139,77.2090">Delhi</option>
+      <option value="19.0760,72.8777">Mumbai</option>
+      <option value="12.9716,77.5946">Bengaluru</option>
+      <option value="13.0827,80.2707">Chennai</option>
+    </select>
+    <span id="weatherStatus" style="color:var(--muted);font-size:12px">Loading weather data...</span>
+  </div>
+  <div class="grid-4" id="weatherCards">
+    <div class="weather-card"><div class="w-val" id="wTemp">--</div><div class="w-lbl">Temperature °C</div></div>
+    <div class="weather-card"><div class="w-val" id="wRain">--</div><div class="w-lbl">Rainfall mm</div></div>
+    <div class="weather-card"><div class="w-val" id="wHumid">--</div><div class="w-lbl">Humidity %</div></div>
+    <div class="weather-card"><div class="w-val" id="wWind">--</div><div class="w-lbl">Wind km/h</div></div>
+  </div>
+  <div id="riskBadge" style="margin-top:16px;text-align:center;font-size:18px;font-weight:700"></div>
+</div></section>
+
+<hr class="divider">
+
+<!-- DISRUPTION TABLES -->
+<section id="disruptions"><div class="container">
+  <div class="sec-tag">Disruption Matrix</div>
+  <h2 class="sec-title">Income Threat Categories</h2>
+  <p class="sec-desc">Three layers of disruption that directly impact gig worker earnings, each with measurable parameters for parametric triggers.</p>
+  <div class="tab-btns">
+    <div class="tab-btn active" onclick="switchTab('env')">🌡️ Environmental</div>
+    <div class="tab-btn" onclick="switchTab('soc')">🏛️ Social</div>
+    <div class="tab-btn" onclick="switchTab('plat')">📱 Platform</div>
+  </div>
+  <div class="card">
+    <div class="tab-content active" id="tab-env">
+      <table class="dtable"><thead><tr><th>Disruption</th><th>Example</th><th>Parameter</th><th>Impact</th><th>Severity</th></tr></thead><tbody>
+        <tr><td>Extreme Heat</td><td>42°C+ heatwave</td><td>Temperature, Heat Index</td><td>Reduced working hours → ↓ deliveries</td><td><span class="badge badge-crit">Critical</span></td></tr>
+        <tr><td>Heavy Rain</td><td>Monsoon bursts</td><td>Rainfall (mm/hr)</td><td>Order cancellations + slower delivery</td><td><span class="badge badge-high">High</span></td></tr>
+        <tr><td>Floods</td><td>Urban flooding</td><td>Govt alerts / rainfall threshold</td><td>Zero deliveries in affected zone</td><td><span class="badge badge-crit">Critical</span></td></tr>
+        <tr><td>Pollution</td><td>AQI > 300</td><td>AQI API</td><td>Health discomfort → reduced shifts</td><td><span class="badge badge-med">Medium</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="tab-content" id="tab-soc">
+      <table class="dtable"><thead><tr><th>Disruption</th><th>Example</th><th>Parameter</th><th>Impact</th><th>Severity</th></tr></thead><tbody>
+        <tr><td>Curfew</td><td>Govt restriction</td><td>Zone lockdown flag</td><td>100% income loss</td><td><span class="badge badge-crit">Critical</span></td></tr>
+        <tr><td>Strikes</td><td>Transport strike</td><td>Mobility index drop</td><td>Partial/zero delivery</td><td><span class="badge badge-high">High</span></td></tr>
+        <tr><td>Zone Closure</td><td>Political rally</td><td>Geo-fenced restriction</td><td>No pickup/drop</td><td><span class="badge badge-high">High</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="tab-content" id="tab-plat">
+      <table class="dtable"><thead><tr><th>Disruption</th><th>Example</th><th>Parameter</th><th>Impact</th><th>Severity</th></tr></thead><tbody>
+        <tr><td>Demand Crash</td><td>Low orders</td><td>Orders/hour ↓ 40%</td><td>Lower earnings</td><td><span class="badge badge-med">Medium</span></td></tr>
+        <tr><td>App Downtime</td><td>Server crash</td><td>API failure logs</td><td>No orders</td><td><span class="badge badge-high">High</span></td></tr>
+        <tr><td>Supply Chain</td><td>Restaurant shutdown</td><td>Active restaurants ↓</td><td>Earnings drop up to 50%</td><td><span class="badge badge-med">Medium</span></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div></section>
+
+<hr class="divider">
+
+<!-- PRICING MODELS -->
+<section id="pricing"><div class="container">
+  <div class="sec-tag">Weekly Pricing Models</div>
+  <h2 class="sec-title">4 Insurance Frameworks</h2>
+  <p class="sec-desc">Click any model to see detailed breakdown and trigger conditions.</p>
+  <div class="grid-2" id="pricingGrid">
+    <div class="price-card" onclick="toggleCard(this)">
+      <div class="model-tag">Model 1</div>
+      <h3>Baseline + Event Guarantee</h3>
+      <p>Minimum weekly income (₹2,500) if active hours met. Disruption hours count as worked.</p>
+      <div class="price-detail">
+        <strong>Trigger:</strong> Any verified disruption event<br>
+        <strong>Outcome:</strong> Income stability without forcing risky work<br>
+        <strong>Example:</strong> Worker logged 40hrs but city flooded 2 days → full ₹2,500 guaranteed
+      </div>
+    </div>
+    <div class="price-card" onclick="toggleCard(this)">
+      <div class="model-tag">Model 2</div>
+      <h3>Micro-Insurance (5% Pool)</h3>
+      <p>5% of weekly earnings → Resilience Pool (+ platform match). Automatic parametric payout.</p>
+      <div class="price-detail">
+        <strong>Trigger:</strong> Weather/event threshold crossed<br>
+        <strong>Outcome:</strong> Self-sustained parametric insurance fund<br>
+        <strong>Example:</strong> ₹5,000 weekly → ₹250 pooled + ₹250 platform match = ₹500 cover/week
+      </div>
+    </div>
+    <div class="price-card" onclick="toggleCard(this)">
+      <div class="model-tag">Model 3</div>
+      <h3>Hazard Multiplier Pay</h3>
+      <p>1.5× base pay during Hazard Days when heat/rain thresholds are crossed.</p>
+      <div class="price-detail">
+        <strong>Trigger:</strong> Heat index > 42°C or rainfall > 50mm/hr<br>
+        <strong>Outcome:</strong> Compensates risk instead of relying on surge pricing<br>
+        <strong>Example:</strong> Normal ₹30/delivery → ₹45/delivery on hazard days
+      </div>
+    </div>
+    <div class="price-card" onclick="toggleCard(this)">
+      <div class="model-tag">Model 4</div>
+      <h3>Tiered Stability Contracts</h3>
+      <p>Fixed weekly schedule → guaranteed income floor. Curfew/lockdown → 70% payout.</p>
+      <div class="price-detail">
+        <strong>Trigger:</strong> Curfew / lockdown declaration<br>
+        <strong>Outcome:</strong> Predictable weekly earnings<br>
+        <strong>Example:</strong> ₹6,000/week contract → ₹4,200 guaranteed during lockdown
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<hr class="divider">
+
+<!-- AI RISK SCORING -->
+<section id="ai"><div class="container">
+  <div class="sec-tag">AI / ML Engine</div>
+  <h2 class="sec-title">Dynamic Risk Scoring & Premium Calculator</h2>
+  <p class="sec-desc">Adjust parameters to see how the AI dynamically prices weekly insurance premiums based on risk + income patterns.</p>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="font-family:'Syne';font-weight:700;margin-bottom:20px">Risk Parameters</h3>
+      <div class="slider-group">
+        <label>Weather Forecast Risk <span id="weatherRiskVal">50</span></label>
+        <input type="range" id="weatherRisk" min="0" max="100" value="50" oninput="updatePremium()">
+      </div>
+      <div class="slider-group">
+        <label>Location Risk (Geoapify) <span id="locationRiskVal">40</span></label>
+        <input type="range" id="locationRisk" min="0" max="100" value="40" oninput="updatePremium()">
+      </div>
+      <div class="slider-group">
+        <label>Income Variability <span id="incomeVarVal">30</span></label>
+        <input type="range" id="incomeVar" min="0" max="100" value="30" oninput="updatePremium()">
+      </div>
+      <div class="slider-group">
+        <label>Coverage Level <span id="coverageVal">Medium</span></label>
+        <input type="range" id="coverage" min="1" max="3" value="2" oninput="updatePremium()">
+      </div>
+      <div class="card2" style="margin-top:16px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Formula</div>
+        <code style="font-size:12px;color:var(--accent)">Premium = Base + (Risk Score × Coverage × Income Variability)</code>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px"><strong style="color:var(--text)">AI/ML Models Used:</strong></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="card2" style="padding:10px;font-size:11px"><span style="color:var(--orange)">●</span> XGBoost — Income Prediction</div>
+          <div class="card2" style="padding:10px;font-size:11px"><span style="color:var(--teal)">●</span> Random Forest — Risk Prediction</div>
+          <div class="card2" style="padding:10px;font-size:11px"><span style="color:var(--danger)">●</span> Isolation Forest — Fraud Detection</div>
+          <div class="card2" style="padding:10px;font-size:11px"><span style="color:var(--accent)">●</span> Regression — Loss Estimation</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="result-box" id="premiumResult">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Estimated Weekly Premium</div>
+        <div class="premium" id="premiumAmount">₹60</div>
+        <div class="risk-label" id="riskLevel" style="color:var(--accent)">Medium Risk</div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted)">AI Risk Score: <span id="riskScore" style="color:var(--orange);font-weight:700">0.50</span></div>
+      </div>
+      <div style="margin-top:20px"><canvas id="premiumChart" height="220"></canvas></div>
+    </div>
+  </div>
+</div></section>
+
+<hr class="divider">
+
+<!-- PARAMETRIC TRIGGERS -->
+<section id="triggers"><div class="container">
+  <div class="sec-tag">Parametric Triggers</div>
+  <h2 class="sec-title">Automatic Payout Conditions</h2>
+  <p class="sec-desc">When real-time data crosses predefined thresholds, payouts are triggered automatically — no claims needed.</p>
+  <div class="card" id="triggerContainer">
+    <div class="trigger-row">
+      <div class="trigger-icon">🌧️</div>
+      <div class="trigger-info">
+        <div class="trigger-name">Rainfall Trigger</div>
+        <div class="trigger-vals">Threshold: 50 mm/hr · Current: <span id="trigRainVal">--</span> mm</div>
+        <div class="trigger-bar-wrap"><div class="trigger-bar" id="trigRainBar" style="width:0%;background:var(--orange)"></div></div>
+      </div>
+      <div class="trigger-status" id="trigRainStatus">Monitoring</div>
+    </div>
+    <div class="trigger-row">
+      <div class="trigger-icon">🌡️</div>
+      <div class="trigger-info">
+        <div class="trigger-name">Temperature Trigger</div>
+        <div class="trigger-vals">Threshold: 42°C · Current: <span id="trigTempVal">--</span>°C</div>
+        <div class="trigger-bar-wrap"><div class="trigger-bar" id="trigTempBar" style="width:0%;background:var(--deeporange)"></div></div>
+      </div>
+      <div class="trigger-status" id="trigTempStatus">Monitoring</div>
+    </div>
+    <div class="trigger-row">
+      <div class="trigger-icon">😷</div>
+      <div class="trigger-info">
+        <div class="trigger-name">AQI Trigger</div>
+        <div class="trigger-vals">Threshold: 300 · Current: <span id="trigAqiVal">--</span></div>
+        <div class="trigger-bar-wrap"><div class="trigger-bar" id="trigAqiBar" style="width:0%;background:var(--accent)"></div></div>
+      </div>
+      <div class="trigger-status" id="trigAqiStatus">Monitoring</div>
+    </div>
+    <div class="trigger-row">
+      <div class="trigger-icon">🚫</div>
+      <div class="trigger-info">
+        <div class="trigger-name">Curfew / Zone Closure</div>
+        <div class="trigger-vals">Trigger: Government declaration · Status: <span id="trigCurfewVal">None Active</span></div>
+        <div class="trigger-bar-wrap"><div class="trigger-bar" id="trigCurfewBar" style="width:0%;background:var(--danger)"></div></div>
+      </div>
+      <div class="trigger-status" id="trigCurfewStatus">Monitoring</div>
+    </div>
+  </div>
+</div></section>
+
+<footer>GigShield Prototype · Parametric Insurance for India's Gig Workforce · Data: Open-Meteo, NITI Aayog, IMD · 2025–2026</footer>
+
+<script>
+// --- SAVINGS BUFFER CHART ---
+new Chart(document.getElementById('bufferChart'),{type:'doughnut',data:{labels:['< 1 Week','1-2 Weeks','Up to 1 Month','> 1 Month'],datasets:[{data:[42,26,18,14],backgroundColor:['#e11d48','#d97706','#fcd34d','#0d9488'],borderColor:'#12122A',borderWidth:3}]},options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#8888AA',usePointStyle:true,padding:10,font:{size:10}}}}}});
+
+// --- PREMIUM TIER CHART ---
+const premCtx=document.getElementById('premiumChart');
+const premChart=new Chart(premCtx,{type:'bar',data:{labels:['Low Risk','Medium Risk','High Risk'],datasets:[{label:'Weekly Premium (₹)',data:[30,60,100],backgroundColor:['rgba(19,136,8,0.6)','rgba(255,179,71,0.6)','rgba(232,74,0,0.6)'],borderColor:['#2DB84B','#FFB347','#E84A00'],borderWidth:2,borderRadius:8}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,0.06)'},ticks:{color:'#8888AA',callback:v=>'₹'+v}},x:{grid:{display:false},ticks:{color:'#8888AA'}}}}});
+
+// --- TAB SWITCHING ---
+function switchTab(tab){document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['env','soc','plat'][i]===tab)});document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active')}
+
+// --- PRICING CARD TOGGLE ---
+function toggleCard(el){el.classList.toggle('open')}
+
+// --- AI PREMIUM CALCULATOR ---
+function updatePremium(){
+  const w=+document.getElementById('weatherRisk').value;
+  const l=+document.getElementById('locationRisk').value;
+  const i=+document.getElementById('incomeVar').value;
+  const c=+document.getElementById('coverage').value;
+  document.getElementById('weatherRiskVal').textContent=w;
+  document.getElementById('locationRiskVal').textContent=l;
+  document.getElementById('incomeVarVal').textContent=i;
+  const coverLabels=['Basic','Medium','Premium'];
+  document.getElementById('coverageVal').textContent=coverLabels[c-1];
+  const riskScore=((w*0.4+l*0.35+i*0.25)/100).toFixed(2);
+  const base=15;const premium=Math.round(base+(riskScore*c*i*0.5));
+  const clampedPremium=Math.max(30,Math.min(150,premium));
+  document.getElementById('riskScore').textContent=riskScore;
+  document.getElementById('premiumAmount').textContent='₹'+clampedPremium;
+  let level,color;
+  if(riskScore<0.35){level='Low Risk';color='#2DB84B'}
+  else if(riskScore<0.65){level='Medium Risk';color='#FFB347'}
+  else{level='High Risk';color='#E84A00'}
+  document.getElementById('riskLevel').textContent=level;
+  document.getElementById('riskLevel').style.color=color;
+  premChart.data.datasets[0].data=[30,clampedPremium,100];
+  premChart.data.datasets[0].backgroundColor[1]=color+'99';
+  premChart.data.datasets[0].borderColor[1]=color;
+  premChart.update();
+}
+
+// --- WEATHER FETCH ---
+async function fetchWeather(){
+  const sel=document.getElementById('citySelect');
+  const[lat,lon]=sel.value.split(',');
+  const cityName=sel.options[sel.selectedIndex].text;
+  document.getElementById('weatherStatus').textContent='Fetching weather for '+cityName+'...';
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,rain,wind_speed_10m&timezone=Asia/Kolkata`);
+    const d=await r.json();
+    const c=d.current;
+    const temp=c.temperature_2m,rain=c.rain,humid=c.relative_humidity_2m,wind=c.wind_speed_10m;
+    document.getElementById('wTemp').textContent=temp.toFixed(1);
+    document.getElementById('wRain').textContent=rain.toFixed(1);
+    document.getElementById('wHumid').textContent=humid;
+    document.getElementById('wWind').textContent=wind.toFixed(1);
+    document.getElementById('weatherStatus').textContent='✓ Live data for '+cityName+' · Updated now';
+    // Risk assessment
+    let riskLevel='LOW',riskColor='#2DB84B',riskEmoji='🟢';
+    if(temp>=42||rain>=50){riskLevel='CRITICAL';riskColor='#E84A00';riskEmoji='🔴'}
+    else if(temp>=38||rain>=20){riskLevel='HIGH';riskColor='#FF6B00';riskEmoji='🟠'}
+    else if(temp>=35||rain>=10){riskLevel='MEDIUM';riskColor='#FFB347';riskEmoji='🟡'}
+    document.getElementById('riskBadge').innerHTML=riskEmoji+' Overall Risk Level: <span style="color:'+riskColor+'">'+riskLevel+'</span>';
+    // Update triggers
+    updateTriggers(temp,rain);
+  }catch(e){
+    document.getElementById('weatherStatus').textContent='⚠ Failed to fetch — using mock data';
+    const mock={temp:36+Math.random()*8,rain:Math.random()*40,humid:55+Math.random()*30,wind:8+Math.random()*15};
+    document.getElementById('wTemp').textContent=mock.temp.toFixed(1);
+    document.getElementById('wRain').textContent=mock.rain.toFixed(1);
+    document.getElementById('wHumid').textContent=mock.humid.toFixed(0);
+    document.getElementById('wWind').textContent=mock.wind.toFixed(1);
+    updateTriggers(mock.temp,mock.rain);
+  }
+}
+
+// --- TRIGGER UPDATES ---
+function updateTriggers(temp,rain){
+  // Rain
+  const rainPct=Math.min(100,(rain/50)*100);
+  document.getElementById('trigRainVal').textContent=rain.toFixed(1);
+  document.getElementById('trigRainBar').style.width=rainPct+'%';
+  if(rain>=50){document.getElementById('trigRainStatus').innerHTML='<span class="triggered">🔴 PAYOUT</span>';document.getElementById('trigRainBar').style.background='#e11d48'}
+  else{document.getElementById('trigRainStatus').textContent='Monitoring';document.getElementById('trigRainBar').style.background='var(--orange)'}
+  // Temp
+  const tempPct=Math.min(100,(temp/42)*100);
+  document.getElementById('trigTempVal').textContent=temp.toFixed(1);
+  document.getElementById('trigTempBar').style.width=tempPct+'%';
+  if(temp>=42){document.getElementById('trigTempStatus').innerHTML='<span class="triggered">🔴 PAYOUT</span>';document.getElementById('trigTempBar').style.background='#e11d48'}
+  else{document.getElementById('trigTempStatus').textContent='Monitoring';document.getElementById('trigTempBar').style.background='var(--deeporange)'}
+  // Mock AQI (based on city — Delhi tends higher)
+  const mockAqi=Math.round(120+Math.random()*200);
+  const aqiPct=Math.min(100,(mockAqi/300)*100);
+  document.getElementById('trigAqiVal').textContent=mockAqi;
+  document.getElementById('trigAqiBar').style.width=aqiPct+'%';
+  if(mockAqi>=300){document.getElementById('trigAqiStatus').innerHTML='<span class="triggered">🔴 PAYOUT</span>';document.getElementById('trigAqiBar').style.background='#e11d48'}
+  else{document.getElementById('trigAqiStatus').textContent='Monitoring';document.getElementById('trigAqiBar').style.background='var(--accent)'}
+}
+
+// Init
+document.getElementById('citySelect').addEventListener('change',fetchWeather);
+fetchWeather();
+updatePremium();
+</script>
+</body>
+</html>
