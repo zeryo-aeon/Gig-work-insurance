@@ -51,8 +51,6 @@ Gig workers **adapt in real-time (reduce hours)** → direct income drop
 | Supply Chain    | Restaurant shutdown | Active restaurants ↓ | Earnings drop up to 50% |
 
 
-# AI/ML models
-Here’s your **refined version (AI added inside weekly pricing, title unchanged)**
 
 # WEEKLY PRICING MODELS
 
