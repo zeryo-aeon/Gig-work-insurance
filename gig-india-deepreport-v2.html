@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Gig Delivery Ecosystem · Deep Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── THEME VARIABLES ── */
+[data-theme="dark"] {
+  --bg: #080810;
+  --bg2: #0f0f1e;
+  --card: #13132a;
+  --card2: #1b1b35;
+  --card3: #222240;
+  --border: rgba(255,107,0,0.18);
+  --border2: rgba(255,255,255,0.07);
+  --text: #eeeef8;
+  --text2: #b0b0cc;
+  --muted: #6868aa;
+  --saffron: #FF6B00;
+  --accent: #FFB347;
+  --green: #2DB84B;
+  --red: #E84A00;
+  --shadow: 0 4px 32px rgba(0,0,0,0.5);
+  --hero-grad: linear-gradient(135deg, #080810 0%, #0f0f20 50%, #1a0800 100%);
+  --hero-glow: rgba(255,107,0,0.12);
+  --chart-grid: rgba(255,255,255,0.05);
+  --tooltip-bg: #1b1b35;
+}
+[data-theme="light"] {
+  --bg: #f5f4f0;
+  --bg2: #ede9e2;
+  --card: #ffffff;
+  --card2: #f0ede6;
+  --card3: #e8e3d8;
+  --border: rgba(200,80,0,0.2);
+  --border2: rgba(0,0,0,0.08);
+  --text: #1a1a2e;
+  --text2: #4a4a6a;
+  --muted: #7a7a9a;
+  --saffron: #d45500;
+  --accent: #c87000;
+  --green: #1a7a30;
+  --red: #c03000;
+  --shadow: 0 4px 32px rgba(0,0,0,0.1);
+  --hero-grad: linear-gradient(135deg, #f5f4f0 0%, #ede9e2 60%, #ffe8d0 100%);
+  --hero-glow: rgba(200,80,0,0.08);
+  --chart-grid: rgba(0,0,0,0.06);
+  --tooltip-bg: #ffffff;
+}
+
+/* ── RESET & BASE ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  line-height: 1.65;
+  transition: background 0.35s, color 0.35s;
+  overflow-x: hidden;
+}
+
+/* ── STICKY NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 54px;
+  backdrop-filter: blur(12px);
+  transition: background 0.35s;
+}
+.nav-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--saffron);
+  letter-spacing: -0.3px;
+}
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+  font-size: 12px; font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.3px;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-link:hover { color: var(--saffron); background: rgba(255,107,0,0.08); }
+
+.theme-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  padding: 4px 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--saffron); }
+.theme-btn {
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 18px;
+  border: none; background: transparent;
+  cursor: pointer;
+  transition: all 0.25s;
+  color: var(--muted);
+  font-family: inherit;
+}
+.theme-btn.active {
+  background: var(--saffron);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(255,107,0,0.4);
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--hero-grad);
+  padding: 90px 40px 70px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, var(--hero-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,107,0,0.1);
+  border: 1px solid rgba(255,107,0,0.3);
+  color: var(--saffron);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 6px 18px; border-radius: 20px;
+  margin-bottom: 28px;
+}
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(30px, 6vw, 72px);
+  font-weight: 800;
+  line-height: 1.02;
+  margin-bottom: 24px;
+  position: relative;
+}
+.hero h1 em { font-style: normal; color: var(--saffron); }
+.hero-sub {
+  color: var(--text2);
+  font-size: 16px; font-weight: 400;
+  max-width: 580px; margin: 0 auto 48px;
+}
+.hero-stats {
+  display: inline-flex; gap: 40px;
+  flex-wrap: wrap; justify-content: center;
+}
+.hero-stat-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px; font-weight: 800;
+  color: var(--saffron);
+}
+.hero-stat-lab { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+
+/* ── KPI STRIP ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+.kpi-cell {
+  padding: 22px 18px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+  transition: background 0.35s;
+}
+.kpi-cell:last-child { border-right: none; }
+.kpi-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: var(--saffron); line-height: 1;
+}
+.kpi-lab { font-size: 11px; color: var(--muted); margin-top: 5px; font-weight: 600; letter-spacing: 0.3px; }
+
+/* ── LAYOUT ── */
+.container { max-width: 1300px; margin: 0 auto; padding: 0 28px; }
+.section { padding: 64px 0; }
+.section + .section { border-top: 1px solid var(--border); }
+.s-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--saffron); margin-bottom: 6px;
+}
+.s-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(20px, 3vw, 36px);
+  font-weight: 700; line-height: 1.15;
+  margin-bottom: 12px;
+}
+.s-desc { color: var(--text2); font-size: 14px; max-width: 700px; margin-bottom: 36px; line-height: 1.7; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 28px;
+  transition: background 0.35s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: var(--shadow); }
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 4px; color: var(--text);
+}
+.card-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+
+/* ── PERSONA CARDS ── */
+.persona-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 24px;
+  transition: all 0.25s;
+  cursor: default;
+}
+.persona-card:hover { border-color: var(--saffron); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(255,107,0,0.12); }
+.p-icon { font-size: 30px; margin-bottom: 12px; }
+.p-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.p-plat { color: var(--saffron); font-size: 11px; font-weight: 600; letter-spacing: 0.4px; margin-bottom: 10px; }
+.p-desc { color: var(--text2); font-size: 13px; line-height: 1.65; margin-bottom: 14px; }
+.p-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.p-metric {
+  background: var(--card2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.p-metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--saffron); }
+.p-metric-lab { color: var(--muted); font-size: 10px; margin-top: 1px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.4px;
+}
+.tag-r { background: rgba(232,74,0,0.15); color: var(--red); border: 1px solid rgba(232,74,0,0.25); }
+.tag-o { background: rgba(255,107,0,0.12); color: var(--saffron); border: 1px solid rgba(255,107,0,0.22); }
+.tag-g { background: rgba(45,184,75,0.12); color: var(--green); border: 1px solid rgba(45,184,75,0.22); }
+
+/* ── NET LOSS SECTION ── */
+.loss-big {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 32px;
+}
+.loss-legend {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── ALGORITHM SECTION ── */
+.algo-mechanism {
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 12px;
+}
+.algo-mech-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.algo-mech-icon { font-size: 22px; }
+.algo-mech-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+.algo-mech-badge {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(232,74,0,0.18); color: var(--red);
+  border: 1px solid rgba(232,74,0,0.2);
+}
+.algo-mech-desc { color: var(--text2); font-size: 13px; line-height: 1.7; }
+.algo-mech-impact {
+  margin-top: 10px;
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.algo-impact-chip {
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--card3); color: var(--text2);
+  border: 1px solid var(--border2);
+}
+
+/* ── COMPANY ALGO CARDS ── */
+.company-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 26px;
+  transition: all 0.25s;
+}
+.company-card:hover { border-color: var(--border); box-shadow: var(--shadow); }
+.company-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+}
+.company-logo {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  background: var(--card2);
+  border: 1px solid var(--border2);
+}
+.company-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; }
+.company-model { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.score-badge {
+  margin-left: auto;
+  font-family: 'Syne', sans-serif;
+  font-size: 22px; font-weight: 800;
+}
+.score-label { font-size: 10px; color: var(--muted); text-align: right; }
+
+.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.pro-list, .con-list { background: var(--card2); border-radius: 12px; padding: 14px; }
+.pro-list-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+.pro-item, .con-item {
+  font-size: 12px; color: var(--text2);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border2);
+  display: flex; gap: 8px; align-items: flex-start;
+  line-height: 1.5;
+}
+.pro-item:last-child, .con-item:last-child { border-bottom: none; }
+.pro-item::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.con-item::before { content: '✗'; color: var(--red); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+.algo-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.algo-stat {
+  background: var(--card2); border-radius: 10px;
+  padding: 12px; text-align: center;
+}
+.algo-stat-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 20px; color: var(--saffron); }
+.algo-stat-lab { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+/* ── HEATMAP ── */
+.heatmap-wrap { overflow-x: auto; }
+.heatmap {
+  display: grid;
+  grid-template-columns: 160px repeat(6, 1fr);
+  gap: 5px;
+  min-width: 700px;
+}
+.hm-cell {
+  padding: 14px 8px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+}
+.hm-header { background: transparent; color: var(--muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hm-label {
+  background: var(--card2); color: var(--text);
+  font-size: 12px; font-weight: 600; text-align: left; padding-left: 14px;
+  border: 1px solid var(--border2);
+  display: flex; align-items: center;
+}
+.hm-extreme { background: rgba(220,50,0,0.5); color: #fff; border: 1px solid rgba(220,50,0,0.3); }
+.hm-high { background: rgba(255,107,0,0.38); color: #ffb880; border: 1px solid rgba(255,107,0,0.2); }
+.hm-moderate { background: rgba(255,179,71,0.22); color: #ffc060; border: 1px solid rgba(255,179,71,0.15); }
+.hm-low { background: rgba(45,184,75,0.2); color: #60d060; border: 1px solid rgba(45,184,75,0.15); }
+[data-theme="light"] .hm-high { color: #7a3500; }
+[data-theme="light"] .hm-moderate { color: #6a4000; }
+[data-theme="light"] .hm-low { color: #1a5a20; }
+
+/* ── POLLUTION BAR ── */
+.pollutant-row {
+  display: grid; grid-template-columns: 90px 1fr 80px;
+  align-items: center; gap: 16px;
+  padding: 14px 18px;
+  background: var(--card2); border-radius: 12px;
+  border: 1px solid var(--border2); margin-bottom: 10px;
+}
+.poll-name { font-weight: 700; font-size: 14px; }
+.poll-bar-wrap { height: 10px; background: var(--card3); border-radius: 5px; overflow: hidden; }
+.poll-bar { height: 100%; border-radius: 5px; transition: width 1.4s cubic-bezier(.4,0,.2,1); }
+.poll-mult { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; text-align: right; }
+.poll-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── MSD GRID ── */
+.msd-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.msd-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 16px; padding: 24px 18px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.msd-card::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--saffron), var(--accent));
+}
+.msd-pct { font-family: 'Syne', sans-serif; font-size: 44px; font-weight: 800; color: var(--saffron); line-height: 1; }
+.msd-pct sup { font-size: 22px; }
+.msd-region { font-weight: 700; font-size: 14px; margin-top: 6px; }
+.msd-driver { color: var(--muted); font-size: 12px; margin-top: 5px; line-height: 1.5; }
+
+/* ── EV SECTION ── */
+.ev-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.ev-side {
+  background: var(--card2); border-radius: 16px;
+  padding: 26px; border: 1px solid var(--border2);
+}
+.ev-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 18px; }
+.ev-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; color: var(--text2);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border2);
+  line-height: 1.5;
+}
+.ev-item:last-child { border-bottom: none; }
+.ev-arrow { flex-shrink: 0; margin-top: 2px; font-weight: 700; }
+
+/* ── STRIKE BOXES ── */
+.strike-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+.strike-box {
+  background: linear-gradient(135deg, rgba(232,74,0,0.1), rgba(255,107,0,0.04));
+  border: 1px solid rgba(232,74,0,0.25);
+  border-radius: 16px; padding: 24px 22px;
+}
+.strike-val { font-family: 'Syne', sans-serif; font-size: 42px; font-weight: 800; color: var(--saffron); line-height: 1; }
+.strike-lab { color: var(--text2); font-size: 13px; margin-top: 6px; line-height: 1.5; }
+
+/* ── MENTAL HEALTH ── */
+.mental-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px;
+  background: var(--card2); border-radius: 12px;
+  border: 1px solid var(--border2); margin-bottom: 10px;
+}
+.mental-icon { font-size: 24px; flex-shrink: 0; }
+.mental-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+.mental-desc { color: var(--text2); font-size: 12px; line-height: 1.5; }
+.mental-pct {
+  margin-left: auto; flex-shrink: 0;
+  font-family: 'Syne', sans-serif; font-size: 24px;
+  font-weight: 800; color: var(--red);
+}
+
+/* ── DIVIDER / FOOTNOTE ── */
+hr.div { border: none; border-top: 1px solid var(--border); margin: 0; }
+.footnote { color: var(--muted); font-size: 11px; margin-top: 8px; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 36px; text-align: center;
+  color: var(--muted); font-size: 12px; line-height: 1.8;
+  background: var(--bg2);
+}
+
+/* ── SCROLL REVEAL ── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+
+@media(max-width:900px){
+  .kpi-strip { grid-template-columns: repeat(3,1fr); }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .col-span-2, .col-span-3 { grid-column: auto; }
+  .msd-cards { grid-template-columns: repeat(2,1fr); }
+  .strike-grid { grid-template-columns: 1fr 1fr; }
+  .ev-panel { grid-template-columns: 1fr; }
+  .pros-cons { grid-template-columns: 1fr; }
+  .algo-stat-row { grid-template-columns: 1fr 1fr 1fr; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="nav-brand">🚴 GigIndia · Deep Report</div>
+  <div class="nav-links">
+    <a class="nav-link" href="#personas">Personas</a>
+    <a class="nav-link" href="#netloss">Net Loss</a>
+    <a class="nav-link" href="#algorithm">Algorithm</a>
+    <a class="nav-link" href="#companies">Companies</a>
+    <a class="nav-link" href="#health">Health</a>
+    <a class="nav-link" href="#pollution">Pollution</a>
+    <a class="nav-link" href="#labour">Labour</a>
+    <a class="nav-link" href="#ev">EVs</a>
+  </div>
+  <div class="theme-toggle" onclick="toggleTheme()">
+    <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark',event)">🌙 Dark</button>
+    <button class="theme-btn" id="btn-light" onclick="setTheme('light',event)">☀️ Light</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eyebrow">📊 Research Report · India · 2025–2026</div>
+  <h1>India's Gig Delivery<br><em>Ecosystem</em></h1>
+  <p class="hero-sub">A deep-dive into socio-environmental determinants, algorithmic control, net income loss drivers, and the invisible human cost of ultra-fast commerce.</p>
+  <div class="hero-stats">
+    <div><div class="hero-stat-val">7.7M</div><div class="hero-stat-lab">Current Gig Workers</div></div>
+    <div><div class="hero-stat-val">23.5M</div><div class="hero-stat-lab">Projected by 2030</div></div>
+    <div><div class="hero-stat-val">₹2.5L</div><div class="hero-stat-lab">Income cap for 77.6%</div></div>
+    <div><div class="hero-stat-val">10 min</div><div class="hero-stat-lab">Q-Commerce target</div></div>
+  </div>
+</section>
+
+<!-- ── KPI STRIP ── -->
+<div class="kpi-strip">
+  <div class="kpi-cell"><div class="kpi-val">59%</div><div class="kpi-lab">Suffer Lower Back Pain</div></div>
+  <div class="kpi-cell"><div class="kpi-val">12×</div><div class="kpi-lab">WHO Pollution Limit Exceeded</div></div>
+  <div class="kpi-cell"><div class="kpi-val">74%</div><div class="kpi-lab">Well-being Variance from Algorithms</div></div>
+  <div class="kpi-cell"><div class="kpi-val">4,446</div><div class="kpi-lab">Pothole Accidents (2022)</div></div>
+  <div class="kpi-cell"><div class="kpi-val">25%</div><div class="kpi-lab">EV Share of Delivery by 2025</div></div>
+  <div class="kpi-cell"><div class="kpi-val">2L+</div><div class="kpi-lab">Workers Struck Dec 31, 2025</div></div>
+</div>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: PERSONAS -->
+<!-- ═══════════════════════════════════════ -->
+<section id="personas" class="section">
+  <div class="container">
+    <div class="s-label">Workforce Taxonomy</div>
+    <h2 class="s-heading">6 Delivery Personas, 6 Distinct Realities</h2>
+    <p class="s-desc">The Indian gig economy is a stratified ecosystem — not a single workforce. Each persona operates under unique logistical constraints, weather exposure, algorithmic pressure, and social friction. Understanding these distinctions is critical to any policy or platform intervention.</p>
+    <div class="grid-3 reveal" id="persona-grid"></div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: NET LOSS BY FACTOR -->
+<!-- ═══════════════════════════════════════ -->
+<section id="netloss" class="section">
+  <div class="container">
+    <div class="s-label">Economic Impact</div>
+    <h2 class="s-heading">Estimated % Net Income Loss by Stressor</h2>
+    <p class="s-desc">A typical gig delivery worker's daily earnings are eroded by multiple overlapping factors. These estimates synthesize weather disruption data, algorithmic penalty reports, mental health productivity studies, road incident data, and healthcare cost surveys.</p>
+
+    <div class="grid-2 reveal">
+      <div class="loss-big">
+        <div class="card-title">Daily Net Earnings Loss by Stressor Category</div>
+        <div class="card-sub">% of potential daily income lost — composite estimate across worker population</div>
+        <canvas id="lossBarChart" height="280"></canvas>
+      </div>
+      <div class="loss-big">
+        <div class="card-title">Cumulative Annual Income Erosion</div>
+        <div class="card-sub">Stacked view showing how losses compound across different categories</div>
+        <canvas id="lossDonut" height="280"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-3 reveal" style="margin-top:20px;" id="loss-breakdown-cards"></div>
+
+    <div class="card reveal" style="margin-top:20px;">
+      <div class="card-title">Monthly Income Loss Trend — Weather Events (Monsoon Season)</div>
+      <div class="card-sub">Estimated % income loss month-by-month driven by rain disruption, flooding, and vehicle damage</div>
+      <canvas id="weatherLossLine" height="120"></canvas>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: ALGORITHM DEEP DIVE -->
+<!-- ═══════════════════════════════════════ -->
+<section id="algorithm" class="section">
+  <div class="container">
+    <div class="s-label">Algorithmic Control</div>
+    <h2 class="s-heading">The Digital Cage: How Algorithms Control 7.7M Lives</h2>
+    <p class="s-desc">Platform algorithms account for 74% of total variance in worker well-being. They operate as invisible supervisors — rewarding compliance and punishing deviation with zero human oversight or appeal mechanism. Understanding the architecture of this control is essential.</p>
+
+    <div class="grid-2 reveal" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">Algorithmic Control Radar</div>
+        <div class="card-sub">Intensity of each control mechanism across platforms</div>
+        <canvas id="algoRadar" height="240"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Worker Well-being Impact Score</div>
+        <div class="card-sub">Which algorithmic pressures most degrade quality of life</div>
+        <canvas id="wellbeingBar" height="240"></canvas>
+      </div>
+    </div>
+
+    <div class="reveal" id="algo-mechanisms"></div>
+
+    <div class="grid-3 reveal" style="margin-top: 24px;">
+      <div class="strike-box">
+        <div class="strike-val">74%</div>
+        <div class="strike-lab">Of worker well-being variance explained by algorithmic management alone — more than weather, income, or physical health combined.</div>
+      </div>
+      <div class="strike-box">
+        <div class="strike-val">12h+</div>
+        <div class="strike-lab">Average daily shift length when incentive-driven overtime thresholds are set — workers exceed safe limits to chase bonus milestones.</div>
+      </div>
+      <div class="strike-box">
+        <div class="strike-val">0</div>
+        <div class="strike-lab">Number of platforms offering a formal appeal mechanism for algorithmic ID deactivation — described as "algorithmic punishment" by union leaders.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: COMPANY ALGORITHM PROS/CONS -->
+<!-- ═══════════════════════════════════════ -->
+<section id="companies" class="section">
+  <div class="container">
+    <div class="s-label">Platform Analysis</div>
+    <h2 class="s-heading">Algorithm Pros & Cons: Platform by Platform</h2>
+    <p class="s-desc">Each major platform deploys a unique algorithmic model with distinct incentive structures, penalty mechanisms, and levels of transparency. Here is a detailed breakdown of what works for workers — and what doesn't.</p>
+    <div class="grid-2 reveal" id="company-grid"></div>
+    <div class="card reveal" style="margin-top:20px;">
+      <div class="card-title">Platform Fairness Score Comparison</div>
+      <div class="card-sub">Composite score based on pay transparency, appeal rights, incentive fairness, and worker safety provisions (0–100)</div>
+      <canvas id="fairnessChart" height="120"></canvas>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: MENTAL HEALTH -->
+<!-- ═══════════════════════════════════════ -->
+<section id="health" class="section">
+  <div class="container">
+    <div class="s-label">Psychological Impact</div>
+    <h2 class="s-heading">Mental Health: The Silent Crisis</h2>
+    <p class="s-desc">Beyond physical injury, the algorithmic "Digital Cage" creates a pervasive mental health crisis that is systematically underreported and undercompensated. Anxiety, social erosion, and burnout are endemic features of the gig delivery profession — not outliers.</p>
+
+    <div class="grid-2 reveal" style="margin-bottom:20px;">
+      <div class="card">
+        <div class="card-title">Mental Health Issue Prevalence</div>
+        <div class="card-sub">% of surveyed gig workers reporting each condition</div>
+        <canvas id="mentalChart" height="240"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Productivity Loss vs. Mental Stressor</div>
+        <div class="card-sub">% estimated decline in daily earnings linked to each mental health driver</div>
+        <canvas id="mentalLossChart" height="240"></canvas>
+      </div>
+    </div>
+
+    <div id="mental-rows" class="reveal"></div>
+
+    <div class="msd-cards reveal" style="margin-top:24px;">
+      <div class="msd-card"><div class="msd-pct">59<sup>%</sup></div><div class="msd-region">Lower Back Pain</div><div class="msd-driver">Vibration, road bumps, heavy delivery bags</div></div>
+      <div class="msd-card"><div class="msd-pct">53.8<sup>%</sup></div><div class="msd-region">Neck & Shoulders</div><div class="msd-driver">Static posture, helmet weight, prolonged riding</div></div>
+      <div class="msd-card"><div class="msd-pct">48.7<sup>%</sup></div><div class="msd-region">Upper Back</div><div class="msd-driver">Body bending, cargo handling, speed bumps</div></div>
+      <div class="msd-card"><div class="msd-pct">67<sup>%</sup></div><div class="msd-region">Unaware of Health Risks</div><div class="msd-driver">No institutional health monitoring or education</div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: POLLUTION -->
+<!-- ═══════════════════════════════════════ -->
+<section id="pollution" class="section">
+  <div class="container">
+    <div class="s-label">Occupational Health</div>
+    <h2 class="s-heading">Breathing Poison: Air Pollution at 12× WHO Limits</h2>
+    <p class="s-desc">Delivery partners in cities like Ghaziabad are exposed to carcinogenic pollutants at shocking multiples of international safety standards — for entire 8–12 hour shifts. Platforms provide almost no protective equipment or health monitoring.</p>
+
+    <div class="grid-2 reveal">
+      <div>
+        <div id="pollution-bars"></div>
+        <p class="footnote">Source: Preliminary study, Ghaziabad (Mongabay India, 2023). Levels recorded at traffic junctions during active delivery hours.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Pollution Exposure vs. WHO Safe Limits</div>
+        <div class="card-sub">Recorded µg/m³ vs. safe thresholds — logarithmic scale</div>
+        <canvas id="pollChart" height="280"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-3 reveal" style="margin-top:20px;">
+      <div class="strike-box">
+        <div class="strike-val">11.5×</div>
+        <div class="strike-lab">PM₂.₅ concentration above WHO annual safe limit (516 µg/m³ recorded vs. 45 limit)</div>
+      </div>
+      <div class="strike-box">
+        <div class="strike-val">12×</div>
+        <div class="strike-lab">PM₁₀ concentration above WHO limit (180 µg/m³ recorded vs. 15 limit)</div>
+      </div>
+      <div class="strike-box">
+        <div class="strike-val">3.8×</div>
+        <div class="strike-lab">Benzene (known carcinogen) above safe limit — highest at traffic junctions where riders wait for orders</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: RISK HEATMAP -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="s-label">Risk Matrix</div>
+    <h2 class="s-heading">Sectoral Impact Heatmap</h2>
+    <p class="s-desc">How heat, floods, algorithmic stress, social discrimination, health risk, and income loss severity vary across the six major delivery categories.</p>
+    <div class="card reveal heatmap-wrap">
+      <div class="heatmap">
+        <div class="hm-cell hm-header"></div>
+        <div class="hm-cell hm-header">☀️<br>Heat</div>
+        <div class="hm-cell hm-header">🌧️<br>Rain/Flood</div>
+        <div class="hm-cell hm-header">🤖<br>Algorithm</div>
+        <div class="hm-cell hm-header">⚖️<br>Discrimination</div>
+        <div class="hm-cell hm-header">🏥<br>Health Risk</div>
+        <div class="hm-cell hm-header">💰<br>Income Loss</div>
+
+        <div class="hm-cell hm-label">Q-Commerce</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-extreme">Critical</div>
+        <div class="hm-cell hm-extreme">Extreme</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-extreme">Extreme</div>
+
+        <div class="hm-cell hm-label">Food Delivery</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-high">High</div>
+
+        <div class="hm-cell hm-label">Medical / Lab</div>
+        <div class="hm-cell hm-extreme">Critical</div>
+        <div class="hm-cell hm-extreme">Critical</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-low">Low</div>
+        <div class="hm-cell hm-extreme">Critical</div>
+        <div class="hm-cell hm-high">High</div>
+
+        <div class="hm-cell hm-label">Heavy Goods</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-low">Low</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+
+        <div class="hm-cell hm-label">Hyperlocal</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-high">High</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+
+        <div class="hm-cell hm-label">Laundry / Gifts</div>
+        <div class="hm-cell hm-low">Low</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-low">Low</div>
+        <div class="hm-cell hm-moderate">Moderate</div>
+        <div class="hm-cell hm-low">Low</div>
+        <div class="hm-cell hm-low">Low</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: LABOUR -->
+<!-- ═══════════════════════════════════════ -->
+<section id="labour" class="section">
+  <div class="container">
+    <div class="s-label">Labour & Rights</div>
+    <h2 class="s-heading">Strikes, Discrimination & Legal Limbo</h2>
+    <p class="s-desc">India's gig workers exist in a legal grey zone — defined by the Code on Social Security (2020) but excluded from core benefits like EPF and ESIC. State-level interventions are emerging, but enforcement remains weak.</p>
+
+    <div class="strike-grid reveal">
+      <div class="strike-box">
+        <div class="strike-val">2L+</div>
+        <div class="strike-lab">Workers struck Dec 31, 2025, demanding fair wages, social security, and algorithmic transparency across India.</div>
+      </div>
+      <div class="strike-box">
+        <div class="strike-val">0</div>
+        <div class="strike-lab">Gig workers covered by EPF or ESIC — excluded from the Code on Social Security despite formal definition.</div>
+      </div>
+      <div class="strike-box">
+        <div class="strike-val">~8%</div>
+        <div class="strike-lab">Monsoon-season deaths in Mumbai linked to flood-related accidents — on par with cancer mortality during that period.</div>
+      </div>
+    </div>
+
+    <div class="grid-2 reveal">
+      <div class="card">
+        <div class="card-title">Road Safety: Annual Fatality Data</div>
+        <div class="card-sub">Pothole and construction-related accidents & deaths, India 2022</div>
+        <canvas id="roadChart" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Social Discrimination Dimensions</div>
+        <div class="card-sub">Types and frequency of reported incidents among delivery workers</div>
+        <canvas id="discriminationChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- SECTION: EV -->
+<!-- ═══════════════════════════════════════ -->
+<section id="ev" class="section">
+  <div class="container">
+    <div class="s-label">Future Outlook</div>
+    <h2 class="s-heading">The EV Transition: Opportunity & Reality</h2>
+    <p class="s-desc">By 2025, the delivery sector is projected to drive 25% of all EV sales in India. The economics are compelling, but infrastructure gaps, range anxiety, and upfront costs create significant barriers for daily-wage workers.</p>
+
+    <div class="ev-panel reveal" style="margin-bottom:20px;">
+      <div class="ev-side">
+        <div class="ev-title" style="color:var(--green);">⚡ Electric Vehicles — Advantages</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>30–35% cheaper total cost of ownership over vehicle lifetime vs. petrol</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>~₹0.03 per mile operating cost vs. ₹0.08–0.12 for ICE equivalents</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>Only 3 moving parts vs. 113 in ICE — significantly lower maintenance frequency</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>Zero tailpipe emissions — reduces PM₂.₅ and benzene exposure for riders</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>Battery swap networks enable continuous productivity without charging downtime</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>Lower noise — reduces stress and hearing fatigue during long urban shifts</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--green);">▸</span>FAME II subsidies reduce upfront cost for delivery fleet operators</div>
+      </div>
+      <div class="ev-side">
+        <div class="ev-title" style="color:var(--red);">⛽ Challenges & ICE Persistence</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>Higher upfront purchase cost — inaccessible without credit or platform subsidy</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>Range anxiety: 80–120 km range insufficient for heavy-delivery or inter-city routes</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>Charging infrastructure sparse outside Tier-1 cities — Tier-2/3 workers excluded</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>Battery degradation in extreme heat (45°C+) shortens lifespan unpredictably</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>Flooding risk — water ingress can destroy battery packs; ICE hydrostatic lock is recoverable</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>ICE servicing more universally available — any roadside mechanic can fix a petrol bike</div>
+        <div class="ev-item"><span class="ev-arrow" style="color:var(--red);">▸</span>₹1,500–3,000/month ICE maintenance still cheaper short-term for self-employed workers</div>
+      </div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-title">EV vs. ICE — Total Cost of Ownership Comparison Over 5 Years</div>
+      <div class="card-sub">Estimated cumulative cost in ₹ (thousands) including purchase, fuel/charging, maintenance, and insurance</div>
+      <canvas id="evTcoChart" height="130"></canvas>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+<footer>
+  <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--saffron); margin-bottom:8px;">India Gig Delivery Ecosystem · Deep Analysis Report</div>
+  Data sourced from NITI Aayog, IMD, ResearchGate, Mongabay India, Outlook Business, Fairwork India 2023, IJBARR, Frontiers in Public Health, and peer-reviewed journals · Research period 2022–2026.<br>
+  This dashboard synthesises findings for educational and policy purposes. Percentage loss estimates are composite projections based on available literature.
+</footer>
+
+<!-- ════════════════════════════════════════ -->
+<!-- JAVASCRIPT -->
+<!-- ════════════════════════════════════════ -->
+<script>
+/* ── THEME ── */
+function setTheme(t, e) {
+  if(e) e.stopPropagation();
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('btn-dark').classList.toggle('active', t==='dark');
+  document.getElementById('btn-light').classList.toggle('active', t==='light');
+  updateChartTheme();
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  setTheme(cur==='dark'?'light':'dark');
+}
+
+/* ── CHART DEFAULTS ── */
+function getThemeColors() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    text: s.getPropertyValue('--text').trim(),
+    muted: s.getPropertyValue('--muted').trim(),
+    grid: s.getPropertyValue('--chart-grid').trim(),
+    saffron: s.getPropertyValue('--saffron').trim(),
+    accent: s.getPropertyValue('--accent').trim(),
+    green: s.getPropertyValue('--green').trim(),
+    red: s.getPropertyValue('--red').trim(),
+    card: s.getPropertyValue('--card').trim(),
+    bg: s.getPropertyValue('--bg').trim(),
+  };
+}
+function applyChartDefaults() {
+  const tc = getThemeColors();
+  Chart.defaults.color = tc.muted;
+  Chart.defaults.font.family = 'Instrument Sans';
+  Chart.defaults.font.size = 12;
+}
+
+/* ── CHART REGISTRY ── */
+const chartInstances = {};
+function makeChart(id, config) {
+  if(chartInstances[id]) chartInstances[id].destroy();
+  chartInstances[id] = new Chart(document.getElementById(id), config);
+}
+function updateChartTheme() {
+  applyChartDefaults();
+  buildAllCharts();
+}
+
+/* ── DATA ── */
+const PERSONAS = [
+  { icon:'🍔', name:'Food Delivery', plat:'Zomato · Swiggy · EatFit', vehicle:'Two-wheelers (Bikes/Scooters)',
+    desc:'Operates during meal-time peaks (12–2pm, 7–10pm). Faces the "autonomy paradox" — flexibility in hours is undermined by rating systems that reward constant availability. High social exposure in gated communities causes significant friction.',
+    metrics:[{val:'45 min', lab:'Max Delivery Window'},{val:'35%', lab:'Est. Income Loss (Rain)'}],
+    tags:[{t:'High Algo Stress',c:'r'},{t:'Discrimination Risk',c:'r'},{t:'Meal-Peak Pressure',c:'o'}] },
+  { icon:'⚡', name:'Quick Commerce', plat:'Zepto · Blinkit · Swiggy Instamart', vehicle:'Two-wheelers / Electric Scooters',
+    desc:'The most extreme model: 10-minute delivery targets from dark stores within 1–3 km radius. Algorithmic penalty for any delay is immediate. Workers adopt dangerous traffic behaviour — speeding, red-light running — to avoid deactivation.',
+    metrics:[{val:'10 min', lab:'Delivery Target'},{val:'42%', lab:'Est. Income Loss (Algo)'}],
+    tags:[{t:'Extreme Algo Pressure',c:'r'},{t:'Speeding Risk',c:'r'},{t:'Dark Store Reliance',c:'o'}] },
+  { icon:'📦', name:'E-Commerce', plat:'Amazon · Flipkart · JioMart', vehicle:'Two/Three-wheelers, Vans',
+    desc:'More manageable pace with scheduled deliveries, but parcels are heavier. Route optimisation algorithms are less punitive but still incentivise volume. Monsoon disruptions cause order backlogs that compress later-day timelines.',
+    metrics:[{val:'2–4h', lab:'Delivery Window'},{val:'22%', lab:'Est. Income Loss (Weather)'}],
+    tags:[{t:'Lower Algo Stress',c:'g'},{t:'Heavy Load Risk',c:'o'},{t:'Route Optimised',c:'o'}] },
+  { icon:'💊', name:'Medical / Pharmacy', plat:'PharmEasy · Tata 1mg · Apollo', vehicle:'Two-wheelers (Temperature-controlled)',
+    desc:'Highest-stakes deliveries. Blood samples, pathology, organs — each requiring a strict "Chain of Custody". Pre-analytical errors from delays constitute 70% of diagnostic failures. A flooded road is not an inconvenience — it is a medical failure.',
+    metrics:[{val:'70%', lab:'Diagnostic Failures from Delay'},{val:'Critical', lab:'Sample Integrity Risk'}],
+    tags:[{t:'Chain of Custody',c:'r'},{t:'Temp Control',c:'o'},{t:'Low Discrimination',c:'g'}] },
+  { icon:'🚛', name:'Heavy Goods / B2B', plat:'Porter · Lalamove · ElasticRun', vehicle:'Tata Ace, Three-wheelers, Vans',
+    desc:'No-entry zones for commercial vehicles during daytime hours force graveyard shifts (11pm–6am). Circadian disruption is chronic. Fatigue-related accidents are disproportionately high. Vehicle stability on flooded roads is severely compromised.',
+    metrics:[{val:'Night Shift', lab:'Forced Operating Hours'},{val:'28%', lab:'Est. Income Loss (Road Closures)'}],
+    tags:[{t:'Night Shift Forced',c:'r'},{t:'Fatigue Risk',c:'r'},{t:'Lower Algo Stress',c:'g'}] },
+  { icon:'🌸', name:'Flowers / Gifts / Laundry', plat:'FNP · Floweraura · Tumbledry', vehicle:'Two-wheelers / Refrigerated Vans',
+    desc:'Highly seasonal — Valentine\'s Day, Diwali, Onam cause demand spikes of 3–5×. Up to 25% of flowers spoil in transit without cold chains. Midnight deliveries expose workers to heightened safety risks. Laundry bulk adds significant vehicle wear.',
+    metrics:[{val:'25%', lab:'Flower Spoilage Without Cold Chain'},{val:'15%', lab:'Added Logistics Cost (Heat)'}],
+    tags:[{t:'Seasonal Surges',c:'o'},{t:'Perishability Risk',c:'o'},{t:'Midnight Safety',c:'r'}] },
+];
+
+const ALGO_MECHS = [
+  { icon:'🎯', title:'Incentive-Driven Overtime', badge:'Severity: Extreme',
+    desc:'Platforms set bonus thresholds that require workers to complete a minimum number of trips — often 50–80 per week — to unlock meaningful pay. The threshold is calibrated just above what is achievable in 8 hours, systematically pushing workers into 12–14 hour shifts. This is not an accident; it is a deliberate architecture of manufactured overtime that bypasses labour law.',
+    impacts:['12–14h daily shifts', 'Chronic fatigue', 'Higher accident probability', 'Reduced recovery time'] },
+  { icon:'📡', title:'The Digital Tether (Constant Availability)', badge:'Severity: High',
+    desc:'Platform rankings penalise "offline time" even between accepted orders. Workers feel compelled to remain online continuously to maintain their position in the order allocation queue. This eliminates any meaningful boundary between work and rest — riders eat, manage family needs, and handle emergencies while tethered to the app. Research calls this "Social Life Erosion."',
+    impacts:['No work-rest boundary', 'Social life erosion', 'Relationship strain', 'Anxiety from constant monitoring'] },
+  { icon:'⚡', title:'Algorithmic Sanctions & Deactivation', badge:'Severity: Extreme',
+    desc:'Automated systems impose penalties for late deliveries, customer complaints, or perceived "inactivity." Crucially, the algorithm cannot distinguish between worker negligence and systemic failures (flooding, restaurant delays, power outages). ID deactivation — effectively termination — can occur with no human review, no appeal, and no notice. Zero platforms offer a formal redress mechanism.',
+    impacts:['Zero appeal rights', 'Loss of livelihood instantly', 'Psychological terror', 'Forces reckless speed'] },
+  { icon:'⭐', title:'Opaque Rating Systems', badge:'Severity: High',
+    desc:'Customer ratings directly determine order allocation, bonus eligibility, and account status. Yet rating criteria are opaque: a customer who gives 1 star for a restaurant mistake (not delivery) permanently harms the rider\'s score. Workers have no insight into how ratings are weighted, averaged, or time-decayed. This creates pervasive anxiety and helplessness known as "algorithmic injustice."',
+    impacts:['No rating transparency', 'Unfair attribution of restaurant errors', 'Constant anxiety', 'Helplessness cycle'] },
+  { icon:'🌐', title:'Surge & Zone Pricing Opacity', badge:'Severity: Moderate',
+    desc:'Surge multipliers and zone-level incentives are communicated in real time but the underlying formula is never disclosed. Workers cannot plan earnings in advance. Platforms can lower incentives retroactively, and workers have no mechanism to verify the accuracy of pay calculations. This asymmetric information is a fundamental power imbalance.',
+    impacts:['Unpredictable income', 'Cannot budget or plan', 'Retroactive pay changes', 'Platform accountability gap'] },
+  { icon:'🔄', title:'Gamification & Psychological Manipulation', badge:'Severity: Moderate',
+    desc:'Streaks, leaderboards, "level-up" mechanics, and push notifications ("You\'re just 3 orders away from Gold!") are borrowed from behavioural psychology to sustain engagement beyond rational economic incentives. Workers report being "unable to log off" even when exhausted — a form of engineered compulsive behaviour that blurs the line between choice and coercion.',
+    impacts:['Cannot disengage', 'Engineered compulsion', 'Overrides physical signals', 'Mimics addiction patterns'] },
+];
+
+const COMPANIES = [
+  { icon:'🟠', name:'Zomato', model:'Earnings-per-order + hourly surge + streak bonus', fairness:38, color:'#E23744',
+    stats:[{v:'₹15–25',l:'Base per order'},{v:'2–4×',l:'Surge multiplier'},{v:'Gold',l:'Tier system'},{v:'~4.2',l:'Avg rating cutoff'}],
+    pros:['Weather-linked surge pay activates during heavy rain, partially compensating risk','Gold/Platinum tier system rewards consistent performers with slightly better order allocation','Real-time heat index dashboard piloted in some cities for worker safety','App provides restaurant ETAs to reduce rider wait-time frustration'],
+    cons:['No formal appeal mechanism for rating penalties or account suspensions','Incentive thresholds structured to require 12+ hour days to achieve bonus milestones','Algorithm cannot distinguish restaurant delay from rider delay — both penalise rider','No guaranteed minimum daily earnings — income entirely variable and unpredictable','No EPF, ESIC, or accident insurance beyond minimal token cover'] },
+  { icon:'🟢', name:'Swiggy', model:'Base + incentive structures + Swiggy One benefits', fairness:41, color:'#FC8019',
+    stats:[{v:'₹16–28',l:'Base per order'},{v:'10-min',l:'Instamart target'},{v:'Bajaj Allianz',l:'Partner insurance'},{v:'4.0+',l:'Rating floor'}],
+    pros:['Bajaj Allianz accident insurance partnership — one of the better welfare provisions among platforms','Swiggy One loyalty program indirectly supports rider demand consistency','Piloted dedicated rest areas with water/cooling facilities in some metros','Instamart surge pay higher than standard to compensate for 10-minute pressure'],
+    cons:['Instamart\'s 10-minute target is structurally dangerous — no algorithm adjusts for weather or traffic in real time','Customer rating system includes restaurant quality feedback unfairly attributed to rider','Deactivation without human review remains standard practice','Migrant workers face documentation barriers — no language support in app for non-Hindi/English speakers','Gig status means no maternity/paternity benefit for any worker regardless of tenure'] },
+  { icon:'🔵', name:'Blinkit (Zepto-style)', model:'Per-order base + dark store proximity bonus + streak', fairness:29, color:'#F8D100',
+    stats:[{v:'10 min',l:'Delivery SLA'},{v:'1–3 km',l:'Dark store radius'},{v:'₹18–30',l:'Base per order'},{v:'Extreme',l:'Algo pressure level'}],
+    pros:['Short delivery radius (1–3 km) means less total road exposure per shift','Dark store model reduces restaurant wait-time — a key source of income loss','Higher per-order pay to attract workers to aggressive model'],
+    cons:['The 10-minute target is the most dangerous SLA in Indian gig economy — forces traffic violations','Weather-based pauses are algorithm-driven, not worker-initiated — workers lose income without consent','No weather exceptions built into penalty system — flood conditions still penalised','Dark store access during flooding often blocked, yet order cancellations still affect ratings','Among lowest scores for worker safety provisions in Fairwork India 2023 audit'] },
+  { icon:'🔴', name:'Amazon Flex', model:'Block-based pay + route efficiency bonus', fairness:52, color:'#FF9900',
+    stats:[{v:'Block-based',l:'Pay structure'},{v:'₹120–180',l:'Per hour estimate'},{v:'6–8h',l:'Typical block'},{v:'Moderate',l:'Algo pressure'}],
+    pros:['Block-based model provides more income predictability than per-order systems','Route efficiency algorithms share congestion data, helping riders avoid major delays','Larger vehicles (vans) offer weather protection unlike two-wheelers','Customer interaction lower — reduces social discrimination exposure','Formal background check and onboarding process provides some institutional structure'],
+    cons:['Block availability is algorithm-controlled — workers can lose entire workday if blocks unavailable','Income per hour is higher but blocks are scarce during low-demand periods','No guaranteed minimum blocks per week — effectively zero income security','GPS route suggestions optimised for Amazon delivery speed, not rider safety','No in-app mechanism to report road hazards, accidents, or unsafe conditions'] },
+  { icon:'🟡', name:'Porter / Lalamove', model:'Per-trip base + weight/distance charge', fairness:44, color:'#4CAF50',
+    stats:[{v:'Per-trip',l:'Pay model'},{v:'Night shift',l:'Forced by no-entry zones'},{v:'LCV/3W',l:'Primary vehicles'},{v:'Moderate',l:'Algo pressure'}],
+    pros:['Per-trip model with distance/weight adjustments is more transparent than black-box per-order','Heavy goods carry higher margins — experienced operators earn more than food delivery riders','Less frequent trips reduce per-shift algorithm touchpoints','B2B context means fewer capricious customer ratings'],
+    cons:['No-entry zone regulations force graveyard shift operations — platform does not compensate for social cost','Fatigue-related accident risk is highest in this category due to night hours and heavy loads','Vehicle depreciation and repair costs are entirely borne by the owner-operator','No platform support for navigating municipal no-entry zone changes','Insurance products available are generic — don\'t cover load-related damage or night-shift accidents'] },
+  { icon:'🟣', name:'Dunzo / Hyperlocal', model:'Per-delivery base + proximity surge', fairness:33, color:'#9C27B0',
+    stats:[{v:'Hyperlocal',l:'1–5 km radius'},{v:'Bicycles',l:'Increasing usage'},{v:'₹12–20',l:'Base per order'},{v:'High',l:'Order variability'}],
+    pros:['Hyperlocal radius reduces pollution exposure compared to cross-city routes','Bicycle option emerging — zero fuel cost and lower physical risk at lower speeds','High order variability means workers can sometimes choose package types'],
+    cons:['Among lowest per-order rates in the gig economy — income requires extremely high volume','Bicycle riders have zero weather protection — exposure is total during monsoon','No minimum income guarantee — workers can earn below minimum wage on slow days','Algorithm penalises workers for unavailability during surge periods even if they are completing other orders','Platform-level insurance is minimal or nonexistent for bicycle delivery partners'] },
+];
+
+const LOSS_DATA = {
+  categories: ['Rain / Flooding','Extreme Heat','Air Pollution (Health)','Algorithmic Penalties','Mental Burnout','Road Accidents / Damage','Social Discrimination','Vehicle Breakdown'],
+  values:      [18, 12, 8, 22, 14, 11, 7, 9],
+  colors:      ['#1a7ac0','#e84a00','#8b4513','#cc0000','#7b3fa0','#d4a017','#c04040','#404040'],
+};
+
+/* ── BUILD PERSONAS ── */
+function buildPersonas() {
+  const g = document.getElementById('persona-grid');
+  g.innerHTML = '';
+  PERSONAS.forEach(p => {
+    const tagHtml = p.tags.map(t=>`<span class="tag tag-${t.c}">${t.t}</span>`).join('');
+    const metHtml = p.metrics.map(m=>`<div class="p-metric"><div class="p-metric-val">${m.val}</div><div class="p-metric-lab">${m.lab}</div></div>`).join('');
+    g.innerHTML += `<div class="persona-card">
+      <div class="p-icon">${p.icon}</div>
+      <div class="p-name">${p.name}</div>
+      <div class="p-plat">${p.plat}</div>
+      <div class="p-desc">${p.desc}</div>
+      <div class="p-metrics">${metHtml}</div>
+      <div class="p-desc" style="font-size:11px;margin-bottom:10px;">🚗 Vehicle: ${p.vehicle}</div>
+      <div class="tags">${tagHtml}</div>
+    </div>`;
+  });
+}
+
+/* ── BUILD ALGO MECHS ── */
+function buildAlgoMechs() {
+  const el = document.getElementById('algo-mechanisms');
+  el.innerHTML = '';
+  ALGO_MECHS.forEach(m => {
+    const chips = m.impacts.map(i=>`<div class="algo-impact-chip">${i}</div>`).join('');
+    el.innerHTML += `<div class="algo-mechanism">
+      <div class="algo-mech-head">
+        <div class="algo-mech-icon">${m.icon}</div>
+        <div class="algo-mech-title">${m.title}</div>
+        <div class="algo-mech-badge">${m.badge}</div>
+      </div>
+      <div class="algo-mech-desc">${m.desc}</div>
+      <div class="algo-mech-impact">${chips}</div>
+    </div>`;
+  });
+}
+
+/* ── BUILD COMPANIES ── */
+function buildCompanies() {
+  const g = document.getElementById('company-grid');
+  g.innerHTML = '';
+  COMPANIES.forEach(c => {
+    const score = c.fairness;
+    const scoreColor = score < 35 ? 'var(--red)' : score < 50 ? 'var(--saffron)' : 'var(--green)';
+    const prosHtml = c.pros.map(p=>`<div class="pro-item">${p}</div>`).join('');
+    const consHtml = c.cons.map(n=>`<div class="con-item">${n}</div>`).join('');
+    const statsHtml = c.stats.map(s=>`<div class="algo-stat"><div class="algo-stat-val">${s.v}</div><div class="algo-stat-lab">${s.l}</div></div>`).join('');
+    g.innerHTML += `<div class="company-card">
+      <div class="company-head">
+        <div class="company-logo">${c.icon}</div>
+        <div>
+          <div class="company-name">${c.name}</div>
+          <div class="company-model">${c.model}</div>
+        </div>
+        <div style="text-align:right;margin-left:auto;">
+          <div class="score-badge" style="color:${scoreColor}">${score}</div>
+          <div class="score-label">Fairness Score /100</div>
+        </div>
+      </div>
+      <div class="algo-stat-row" style="margin-bottom:14px;">${statsHtml}</div>
+      <div class="pros-cons">
+        <div class="pro-list"><div class="pro-list-title" style="color:var(--green);">✓ WORKER BENEFITS</div>${prosHtml}</div>
+        <div class="con-list"><div class="pro-list-title" style="color:var(--red);">✗ WORKER HARMS</div>${consHtml}</div>
+      </div>
+    </div>`;
+  });
+}
+
+/* ── BUILD MENTAL HEALTH ROWS ── */
+function buildMentalRows() {
+  const items = [
+    { icon:'😰', title:'Chronic Work Anxiety', desc:'Constant fear of algorithmic deactivation, rating drops, and missing bonus thresholds keeps workers in a state of perpetual stress. Inability to "switch off" from the app is a defining feature.', pct:'68%' },
+    { icon:'😔', title:'Depression & Hopelessness', desc:'Low income, lack of career progression, and exclusion from formal labour protections create a sense of structural hopelessness. Workers feel trapped in a system designed to extract without reciprocating.', pct:'41%' },
+    { icon:'🧍', title:'Social Life Erosion', desc:'The "Digital Tether" effect — where platform ranking depends on constant availability — destroys family time, social relationships, and leisure. Workers report missing weddings, school events, and medical appointments.', pct:'74%' },
+    { icon:'😴', title:'Sleep Deprivation', desc:'Incentive structures encourage 12–14 hour shifts during peak demand. Night-shift workers (heavy goods) suffer circadian disruption. Together, chronic sleep loss contributes to reaction time deficits — increasing accident risk.', pct:'57%' },
+    { icon:'🤯', title:'Burnout & Emotional Exhaustion', desc:'The combination of physical pain (59% back pain), algorithmic stress, income uncertainty, and social exclusion creates rapid burnout. Workers cycle through months of high intensity followed by forced dropout — and many never return.', pct:'53%' },
+  ];
+  const el = document.getElementById('mental-rows');
+  el.innerHTML = items.map(i=>`
+    <div class="mental-row">
+      <div class="mental-icon">${i.icon}</div>
+      <div>
+        <div class="mental-title">${i.title}</div>
+        <div class="mental-desc">${i.desc}</div>
+      </div>
+      <div class="mental-pct">${i.pct}</div>
+    </div>`).join('');
+}
+
+/* ── BUILD POLLUTION BARS ── */
+function buildPollutionBars() {
+  const items = [
+    { name:'PM₂.₅', recorded:516, who:45, mult:'11.5×', pct:100, color:'#E84A00' },
+    { name:'PM₁₀', recorded:180, who:15, mult:'12×', pct:35, color:'#FF6B00' },
+    { name:'PM₁', recorded:113, who:null, mult:'Critical', pct:22, color:'#FFB347' },
+    { name:'Benzene', recorded:19, who:5, mult:'3.8×', pct:4, color:'#FF8C69' },
+  ];
+  const el = document.getElementById('pollution-bars');
+  el.innerHTML = items.map(p=>`
+    <div class="pollutant-row">
+      <div><div class="poll-name">${p.name}</div></div>
+      <div>
+        <div class="poll-bar-wrap"><div class="poll-bar" style="width:${p.pct}%;background:${p.color};"></div></div>
+        <div class="poll-sub">${p.recorded} µg/m³ recorded · WHO: ${p.who ? p.who + ' µg/m³' : 'No standard set'}</div>
+      </div>
+      <div class="poll-mult" style="color:${p.color}">${p.mult}</div>
+    </div>`).join('');
+}
+
+/* ── BUILD ALL CHARTS ── */
+function buildAllCharts() {
+  const tc = getThemeColors();
+  const grid = tc.grid;
+  const muted = tc.muted;
+
+  // Loss Bar
+  makeChart('lossBarChart', {
+    type:'bar',
+    data:{
+      labels: LOSS_DATA.categories,
+      datasets:[{
+        label:'% Net Income Lost',
+        data: LOSS_DATA.values,
+        backgroundColor: LOSS_DATA.colors.map(c=>c+'cc'),
+        borderColor: LOSS_DATA.colors,
+        borderWidth:1.5, borderRadius:8,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:grid}, ticks:{callback:v=>v+'%',color:muted}},
+        y:{grid:{display:false}, ticks:{color:muted,font:{size:11}}}
+      }
+    }
+  });
+
+  // Loss Donut
+  makeChart('lossDonut', {
+    type:'doughnut',
+    data:{
+      labels: LOSS_DATA.categories,
+      datasets:[{ data: LOSS_DATA.values, backgroundColor: LOSS_DATA.colors, borderColor: tc.card, borderWidth:3, hoverOffset:10 }]
+    },
+    options:{
+      responsive:true, cutout:'62%',
+      plugins:{legend:{position:'right', labels:{padding:12, usePointStyle:true, font:{size:11}, color:muted}}}
+    }
+  });
+
+  // Weather Loss Line
+  makeChart('weatherLossLine', {
+    type:'line',
+    data:{
+      labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+      datasets:[
+        {label:'Rain/Flood Loss %', data:[2,2,3,4,6,22,35,38,28,12,4,2], borderColor:'#1a7ac0', backgroundColor:'rgba(26,122,192,0.12)', fill:true, tension:0.4, borderWidth:2.5},
+        {label:'Heat Loss %', data:[4,5,8,14,18,16,8,7,9,10,7,4], borderColor:'#E84A00', backgroundColor:'rgba(232,74,0,0.1)', fill:true, tension:0.4, borderWidth:2.5},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom', labels:{color:muted, usePointStyle:true}}},
+      scales:{
+        x:{grid:{color:grid}, ticks:{color:muted}},
+        y:{grid:{color:grid}, ticks:{callback:v=>v+'%', color:muted}}
+      }
+    }
+  });
+
+  // Loss breakdown cards
+  const lbCards = [
+    { title:'Algorithmic Penalties', val:'22%', desc:'The single largest income loss driver. Bonus thresholds, rating penalties, and forced overtime together drain ~₹1,200–1,800/month from median earners.', color: tc.red },
+    { title:'Rain & Flooding', val:'18%', desc:'During peak monsoon (Jul–Sep), workers in Mumbai and Delhi lose 30–40% of potential earnings from route disruptions, order cancellations, and vehicle damage.', color:'#1a7ac0' },
+    { title:'Mental Burnout', val:'14%', desc:'Burnout-driven reduced productivity — slower completion times, more errors, involuntary log-offs — costs workers approximately 14% of potential earnings.', color:'#7b3fa0' },
+    { title:'Road Accidents & Damage', val:'11%', desc:'Pothole damage, accident repair costs, and hospitalisation create both direct out-of-pocket expenses and income loss from downtime averaging 7–10 days.', color:'#d4a017' },
+    { title:'Extreme Heat', val:'12%', desc:'Workers log off during peak afternoon heat (1–4pm) to avoid heatstroke, sacrificing meal-time surge earnings — one of the highest-value windows of the day.', color: tc.saffron },
+    { title:'Health Costs (Pollution)', val:'8%', desc:'Chronic respiratory issues, MSDs, and occupational illness generate cumulative healthcare costs of ₹8,000–15,000/year with no platform reimbursement.', color:'#8b4513' },
+  ];
+  const lbEl = document.getElementById('loss-breakdown-cards');
+  if(lbEl) lbEl.innerHTML = lbCards.map(c=>`<div class="card" style="border-color:${c.color}33;">
+    <div style="color:${c.color};font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1;">${c.val}</div>
+    <div style="font-weight:700;font-size:14px;margin:6px 0 8px;">${c.title}</div>
+    <div style="color:var(--text2);font-size:13px;line-height:1.65;">${c.desc}</div>
+  </div>`).join('');
+
+  // Algo Radar
+  makeChart('algoRadar', {
+    type:'radar',
+    data:{
+      labels:['Incentive\nOvertime','Digital Tether','Auto Sanctions','Rating Opacity','Surge Opacity','Gamification'],
+      datasets:[{
+        label:'Control Intensity',
+        data:[92,85,95,88,72,68],
+        borderColor: tc.saffron, backgroundColor: tc.saffron+'30',
+        pointBackgroundColor: tc.saffron, borderWidth:2.5, pointRadius:5,
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{r:{grid:{color:grid}, angleLines:{color:grid}, ticks:{display:false}, pointLabels:{color:muted, font:{size:10}}}}
+    }
+  });
+
+  // Wellbeing Impact Bar
+  makeChart('wellbeingBar', {
+    type:'bar',
+    data:{
+      labels:['Auto Deactivation','Rating Anxiety','Bonus Pressure','Constant Monitoring','Surge Opacity','Gamification'],
+      datasets:[{
+        label:'Well-being Impact Score',
+        data:[94, 87, 82, 78, 61, 55],
+        backgroundColor:['rgba(220,50,0,0.8)','rgba(200,60,0,0.7)','rgba(232,74,0,0.65)','rgba(255,107,0,0.6)','rgba(255,150,60,0.55)','rgba(255,179,71,0.6)'],
+        borderColor:['#dc3200','#c83c00','#e84a00','#ff6b00','#ff963c','#ffb347'],
+        borderWidth:1.5, borderRadius:6,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:grid}, max:100, ticks:{color:muted}},
+        y:{grid:{display:false}, ticks:{color:muted, font:{size:11}}}
+      }
+    }
+  });
+
+  // Mental Health Chart
+  makeChart('mentalChart', {
+    type:'doughnut',
+    data:{
+      labels:['Social Life Erosion','Work Anxiety','Sleep Deprivation','Burnout','Depression'],
+      datasets:[{
+        data:[74,68,57,53,41],
+        backgroundColor:['#7b3fa0cc','#E84A00cc','#1a7ac0cc','#d4a017cc','#4a4a4acc'],
+        borderColor: tc.card, borderWidth:3, hoverOffset:8,
+      }]
+    },
+    options:{
+      responsive:true, cutout:'65%',
+      plugins:{legend:{position:'bottom', labels:{color:muted, usePointStyle:true, padding:10, font:{size:11}}}}
+    }
+  });
+
+  // Mental Loss Chart
+  makeChart('mentalLossChart', {
+    type:'bar',
+    data:{
+      labels:['Algo Anxiety','Social Erosion','Burnout','Sleep Deprivation','Depression'],
+      datasets:[{
+        label:'% Productivity Loss',
+        data:[22,18,15,12,9],
+        backgroundColor:['rgba(220,50,0,0.8)','rgba(123,63,160,0.75)','rgba(212,160,23,0.75)','rgba(26,122,192,0.75)','rgba(74,74,74,0.7)'],
+        borderRadius:6, borderWidth:0,
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}, ticks:{color:muted, font:{size:11}}},
+        y:{grid:{color:grid}, ticks:{callback:v=>v+'%', color:muted}}
+      }
+    }
+  });
+
+  // Pollution Chart
+  makeChart('pollChart', {
+    type:'bar',
+    data:{
+      labels:['PM₂.₅','PM₁₀','PM₁','Benzene'],
+      datasets:[
+        {label:'Recorded Level',   data:[516,180,113,19], backgroundColor:'rgba(232,74,0,0.75)', borderColor:'#E84A00', borderWidth:1.5, borderRadius:6, stack:'a'},
+        {label:'WHO Safe Limit',   data:[45,15,null,5],   backgroundColor:'rgba(45,184,75,0.4)',  borderColor:'#2DB84B', borderWidth:1.5, borderRadius:6, stack:'b'},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom', labels:{color:muted, usePointStyle:true}}},
+      scales:{
+        x:{grid:{display:false}, ticks:{color:muted}},
+        y:{grid:{color:grid}, ticks:{color:muted}, title:{display:true, text:'µg/m³', color:muted}}
+      }
+    }
+  });
+
+  // Road Chart
+  makeChart('roadChart', {
+    type:'bar',
+    data:{
+      labels:['Pothole Accidents','Pothole Fatalities','Construction Deaths'],
+      datasets:[{
+        data:[4446,1856,9221],
+        backgroundColor:['rgba(232,74,0,0.75)','rgba(180,20,20,0.8)','rgba(255,107,0,0.6)'],
+        borderColor:['#E84A00','#b41414','#FF6B00'],
+        borderWidth:1.5, borderRadius:8,
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}, ticks:{color:muted}},
+        y:{grid:{color:grid}, ticks:{color:muted}}
+      }
+    }
+  });
+
+  // Discrimination Chart
+  makeChart('discriminationChart', {
+    type:'doughnut',
+    data:{
+      labels:['Elevator / Building Denial','Washroom Access Denial','Religious Targeting','Gender-based Exclusion','Caste-based Marginalization'],
+      datasets:[{
+        data:[28,22,18,17,15],
+        backgroundColor:['#E84A00cc','#FF6B00cc','#9C27B0cc','#1a7ac0cc','#4a4a4acc'],
+        borderColor: tc.card, borderWidth:3, hoverOffset:8,
+      }]
+    },
+    options:{
+      responsive:true, cutout:'60%',
+      plugins:{legend:{position:'bottom', labels:{color:muted, usePointStyle:true, padding:10, font:{size:11}}}}
+    }
+  });
+
+  // Fairness Chart
+  makeChart('fairnessChart', {
+    type:'bar',
+    data:{
+      labels: COMPANIES.map(c=>c.name),
+      datasets:[{
+        label:'Fairness Score /100',
+        data: COMPANIES.map(c=>c.fairness),
+        backgroundColor: COMPANIES.map(c=>c.fairness<35?'rgba(220,50,0,0.75)':c.fairness<50?'rgba(255,107,0,0.65)':'rgba(45,184,75,0.65)'),
+        borderColor: COMPANIES.map(c=>c.color),
+        borderWidth:2, borderRadius:8,
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}, ticks:{color:muted}},
+        y:{grid:{color:grid}, max:100, ticks:{callback:v=>v+'/100', color:muted}}
+      }
+    }
+  });
+
+  // EV TCO Chart
+  makeChart('evTcoChart', {
+    type:'line',
+    data:{
+      labels:['Year 1','Year 2','Year 3','Year 4','Year 5'],
+      datasets:[
+        {label:'EV Total Cost (₹ thousands)',  data:[95,115,130,148,160], borderColor: tc.green, backgroundColor: tc.green+'18', fill:true, tension:0.4, borderWidth:2.5, pointRadius:5, pointBackgroundColor: tc.green},
+        {label:'ICE Total Cost (₹ thousands)', data:[80,120,158,195,235], borderColor: tc.red,   backgroundColor: tc.red+'18',   fill:true, tension:0.4, borderWidth:2.5, pointRadius:5, pointBackgroundColor: tc.red},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom', labels:{color:muted, usePointStyle:true}}},
+      scales:{
+        x:{grid:{color:grid}, ticks:{color:muted}},
+        y:{grid:{color:grid}, ticks:{callback:v=>'₹'+v+'k', color:muted}}
+      }
+    }
+  });
+}
+
+/* ── SCROLL REVEAL ── */
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold:0.08 });
+function attachReveal() {
+  document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+}
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  applyChartDefaults();
+  buildPersonas();
+  buildAlgoMechs();
+  buildCompanies();
+  buildMentalRows();
+  buildPollutionBars();
+  buildAllCharts();
+  attachReveal();
+});
+</script>
+</body>
+</html>

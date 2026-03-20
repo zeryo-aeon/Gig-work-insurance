@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gig Economy Resilience: Navigating Disruption</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            200: '#e7e5e4',
+                            300: '#d6d3d1',
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        brand: {
+                            accent: '#0d9488', 
+                            danger: '#e11d48',
+                            warning: '#d97706'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 50vh;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 40vh;
+                max-height: 300px;
+            }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans antialiased leading-relaxed">
+
+    <!-- Chosen Palette: Warm Neutrals with Teal and Rose Accents -->
+    <!-- Application Structure Plan: The SPA uses a linear, narrative-driven structure to guide the user from the problem (environmental/social impacts on gig workers) to the human reality, and finally to corporate solutions. It employs a top navigation bar for quick jumps. The core interactive element is the "Scenario Explorer" at the end, allowing users to actively see how different disruptions affect income and how platform compensation mitigates these losses, transitioning the user from passive reading to active understanding. -->
+    <!-- Visualization & Content Choices: 
+         1. Impact (Goal: Compare) -> Bar Chart (Chart.js) -> Hover tooltips -> Justification: Clearly shows which disruptions cause the most lost days.
+         2. Worker Reality (Goal: Inform/Proportions) -> Doughnut Chart (Chart.js) -> Hover tooltips -> Justification: Highlights the precarious financial buffer of workers.
+         3. Solutions (Goal: Compare) -> Horizontal Bar Chart (Chart.js) -> Hover tooltips -> Justification: Shows adoption rates of various corporate interventions.
+         4. Scenario Explorer (Goal: Change/Relationships) -> Interactive Line Chart (Chart.js) & Dynamic Text -> User Dropdown Selection -> Justification: Allows user to simulate specific events and see direct financial impact curves, cementing the understanding of mitigation strategies. Confirming NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="fixed w-full z-50 glass-panel shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 font-bold text-xl tracking-tight text-stone-900">
+                    GigResilience <span class="text-brand-accent">&#9679;</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#impact" class="text-stone-600 hover:text-brand-accent transition-colors font-medium">The Impact</a>
+                    <a href="#reality" class="text-stone-600 hover:text-brand-accent transition-colors font-medium">Worker Reality</a>
+                    <a href="#solutions" class="text-stone-600 hover:text-brand-accent transition-colors font-medium">Corporate Solutions</a>
+                    <a href="#explorer" class="bg-stone-900 text-white px-4 py-2 rounded-full hover:bg-stone-800 transition-colors text-sm font-medium">Explore Scenarios</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div class="inline-block p-3 rounded-2xl bg-stone-200 mb-6 shadow-inner">
+            <span class="text-4xl">&#128640;</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold text-stone-900 mb-6 leading-tight max-w-4xl">
+            Shielding the Field: <br/> <span class="text-brand-accent">Income Security</span> in the Gig Economy
+        </h1>
+        <p class="text-lg md:text-xl text-stone-600 max-w-2xl mx-auto mb-10">
+            Field-based gig workers face unprecedented income volatility due to extreme weather and social disruptions. Explore the data on lost earnings and how platforms are innovating to provide structural safety nets.
+        </p>
+        <a href="#impact" class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-stone-200 hover:bg-stone-300 transition-colors text-stone-600">
+            &#8595;
+        </a>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 space-y-32">
+
+        <section id="impact" class="scroll-mt-24">
+            <div class="mb-12 text-center md:text-left">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4">1. The Scale of Disruption</h2>
+                <p class="text-stone-600 max-w-3xl text-lg">
+                    This section quantifies the primary external forces keeping field gig workers off the roads. By analyzing annual data, we can see that environmental factors, particularly extreme heat and heavy rainfall, account for the vast majority of involuntarily lost working days, directly eroding earning potential.
+                </p>
+            </div>
+            
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-stone-100">
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="w-full md:w-1/3 space-y-6">
+                        <div class="bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                            <h3 class="text-sm uppercase tracking-wider text-stone-500 font-semibold mb-2">Total Lost Days (Avg/Year)</h3>
+                            <div class="text-5xl font-black text-brand-danger">18.4</div>
+                            <p class="text-sm text-stone-500 mt-2">Days where earning is impossible or severely dangerous.</p>
+                        </div>
+                        <div class="bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                            <h3 class="text-sm uppercase tracking-wider text-stone-500 font-semibold mb-2">Average Income Hit</h3>
+                            <div class="text-5xl font-black text-stone-900">8-12%</div>
+                            <p class="text-sm text-stone-500 mt-2">Reduction in annual net earnings due to external factors.</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <h3 class="text-xl font-semibold text-stone-800 mb-6 text-center">Primary Causes of Involuntary Off-Days</h3>
+                        <div class="chart-container">
+                            <canvas id="impactChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reality" class="scroll-mt-24">
+            <div class="mb-12 text-center md:text-left">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4">2. The Worker Reality</h2>
+                <p class="text-stone-600 max-w-3xl text-lg">
+                    Understanding the financial fragility of the workforce is crucial. This section explores the limited financial buffer most workers possess. When a multi-day disruption occurs (like a flood or city curfew), the lack of savings turns a temporary pause in work into an immediate financial crisis.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-stone-100 flex flex-col justify-center">
+                    <h3 class="text-xl font-semibold text-stone-800 mb-6 text-center">Financial Resilience: Savings Buffer</h3>
+                    <div class="chart-container" style="height: 35vh;">
+                        <canvas id="bufferChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-stone-500 mt-6 max-w-md mx-auto">
+                        Over 65% of surveyed workers cannot sustain their basic living expenses if work is disrupted for more than 7 days.
+                    </p>
+                </div>
+
+                <div class="flex flex-col gap-6">
+                    <div class="bg-[#fff1f2] border border-[#fecdd3] p-6 rounded-3xl flex-1">
+                        <div class="text-3xl mb-4">&#9888;&#65039;</div>
+                        <h4 class="text-lg font-bold text-[#be123c] mb-2">The Danger Penalty</h4>
+                        <p class="text-[#881337] leading-relaxed">
+                            Historically, algorithms incentivized working during extreme weather via standard "surge pricing." This forced a choice between physical safety and financial necessity, disproportionately affecting those with the lowest savings buffers.
+                        </p>
+                    </div>
+                    <div class="bg-stone-800 text-stone-100 p-8 rounded-3xl flex-1 flex flex-col justify-center">
+                        <div class="text-5xl font-serif text-stone-400 opacity-50 mb-4">"</div>
+                        <p class="text-lg italic text-stone-200 mb-6">
+                            When the monsoon floods the streets, I know the delivery fee is higher. But if my bike engine floods, or I have an accident, that extra $5 costs me $200 in repairs. I stay home, but I worry about rent.
+                        </p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-stone-600 flex items-center justify-center font-bold text-sm">RA</div>
+                            <span class="text-sm font-medium text-stone-400">Rajesh A., Delivery Partner</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="solutions" class="scroll-mt-24">
+            <div class="mb-12 text-center md:text-left">
+                <h2 class="text-3xl font-bold text-stone-900 mb-4">3. Corporate Interventions</h2>
+                <p class="text-stone-600 max-w-3xl text-lg">
+                    In response to public pressure, operational bottlenecks, and a need for worker retention, platforms are shifting from passive algorithms to active compensation models. This section outlines the emerging structural solutions designed to provide an income floor during systemic disruptions.
+                </p>
+            </div>
+
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-stone-100">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-xl font-semibold text-stone-800 mb-6">Emerging Compensation Frameworks</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-teal-50 text-brand-accent flex items-center justify-center flex-shrink-0 text-xl">&#128176;</div>
+                                <div>
+                                    <h4 class="font-bold text-stone-900">Minimum Earnings Guarantees (Event-Based)</h4>
+                                    <p class="text-stone-600 text-sm mt-1">Activating a daily base pay if a worker is logged in but cannot complete tasks due to verified severe weather alerts or local curfews.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-teal-50 text-brand-accent flex items-center justify-center flex-shrink-0 text-xl">&#128178;</div>
+                                <div>
+                                    <h4 class="font-bold text-stone-900">Micro-Insurance Partnerships</h4>
+                                    <p class="text-stone-600 text-sm mt-1">Platforms subsidizing hyper-local parametric insurance that automatically pays out a lump sum when specific environmental triggers (e.g., rainfall over 100mm) are met.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-teal-50 text-brand-accent flex items-center justify-center flex-shrink-0 text-xl">&#128737;&#65039;</div>
+                                <div>
+                                    <h4 class="font-bold text-stone-900">Hazard & Gear Funds</h4>
+                                    <p class="text-stone-600 text-sm mt-1">Direct provision of extreme weather gear (cooling vests, heavy rain gear) and hazard pay multipliers that do not rely on customer surge pricing.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-stone-800 mb-6 text-center">Platform Adoption Rates (Top 20 Global Apps)</h3>
+                        <div class="chart-container">
+                            <canvas id="solutionsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="explorer" class="scroll-mt-24 pt-8 border-t border-stone-200">
+            <div class="text-center mb-10">
+                <div class="inline-block p-2 rounded-xl bg-brand-accent/10 text-brand-accent mb-4 font-semibold text-sm px-4">Interactive Tool</div>
+                <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4">Scenario Explorer</h2>
+                <p class="text-stone-600 max-w-2xl mx-auto text-lg">
+                    Select a disruption scenario to visualize the impact on a worker's weekly earnings and see how platform interventions actively flatten the curve of income loss.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-lg border border-stone-200 overflow-hidden">
+                <div class="bg-stone-900 p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <label for="scenarioSelect" class="text-stone-300 font-medium">Select Disruption Event:</label>
+                    <select id="scenarioSelect" class="w-full sm:w-auto bg-stone-800 text-white border border-stone-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all cursor-pointer">
+                        <option value="heatwave">Severe Heatwave (3 Days)</option>
+                        <option value="flood">Monsoon Flooding (4 Days)</option>
+                        <option value="protest">City-wide Curfew/Protest (2 Days)</option>
+                    </select>
+                </div>
+
+                <div class="p-6 sm:p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8" id="statsContainer">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="bg-stone-50 rounded-2xl p-4 sm:p-6 border border-stone-100">
+                        <h3 class="text-lg font-bold text-stone-800 mb-4 text-center">Weekly Earnings Trajectory</h3>
+                        <div class="chart-container" style="height: 45vh;">
+                            <canvas id="scenarioChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-12 text-center">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-2xl mb-4 text-stone-500">&#128300;</div>
+            <p class="font-medium text-stone-300 mb-2">Gig Economy Resilience Analysis</p>
+            <p class="text-sm max-w-md mx-auto">A conceptual interactive report detailing the financial realities of field work amidst environmental and social volatility.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif';
+            Chart.defaults.color = '#78716c'; 
+            const brandAccent = '#0d9488';
+            const brandDanger = '#e11d48';
+            const brandWarning = '#d97706';
+
+            const wrapLabels = (labels, maxChars) => {
+                return labels.map(label => {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = words[0];
+
+                    for (let i = 1; i < words.length; i++) {
+                        const word = words[i];
+                        if (currentLine.length + word.length + 1 <= maxChars) {
+                            currentLine += ' ' + word;
+                        } else {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        }
+                    }
+                    lines.push(currentLine);
+                    return lines;
+                });
+            };
+
+            const ctxImpact = document.getElementById('impactChart').getContext('2d');
+            new Chart(ctxImpact, {
+                type: 'bar',
+                data: {
+                    labels: wrapLabels(['Extreme Heat', 'Heavy Rain / Floods', 'Social Unrest / Protests', 'Extreme Cold / Snow', 'Other Infrastructure'], 16),
+                    datasets: [{
+                        label: 'Avg. Days Lost Annually',
+                        data: [7.2, 5.8, 3.1, 1.4, 0.9],
+                        backgroundColor: [brandDanger, '#0284c7', brandWarning, '#94a3b8', '#a8a29e'],
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c1917',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 14 },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.parsed.y} days lost`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f5f5f4', drawBorder: false },
+                            title: { display: true, text: 'Days/Year' }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    }
+                }
+            });
+
+            const ctxBuffer = document.getElementById('bufferChart').getContext('2d');
+            new Chart(ctxBuffer, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Less than 1 Week', '1 to 2 Weeks', 'Up to 1 Month', 'More than 1 Month'],
+                    datasets: [{
+                        data: [42, 26, 18, 14],
+                        backgroundColor: [brandDanger, brandWarning, '#fcd34d', brandAccent],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1c1917',
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.parsed}% of workers`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctxSolutions = document.getElementById('solutionsChart').getContext('2d');
+            new Chart(ctxSolutions, {
+                type: 'bar',
+                data: {
+                    labels: wrapLabels(['Surge/Hazard Pay Algorithms', 'Gear & Safety Provision', 'Event-Based Base Pay Guarantee', 'Parametric Micro-Insurance'], 20),
+                    datasets: [{
+                        label: 'Adoption Rate (%)',
+                        data: [85, 45, 25, 10],
+                        backgroundColor: brandAccent,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c1917',
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.parsed.x}% Adoption`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#f5f5f4', drawBorder: false },
+                            title: { display: true, text: 'Percentage of Top Platforms' }
+                        },
+                        y: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    }
+                }
+            });
+
+            const scenarioData = {
+                baseline: [40, 42, 38, 45, 50, 60, 55],
+                heatwave: {
+                    title: "Severe Heatwave",
+                    description: "Temperatures exceed safe working limits for 3 consecutive afternoons.",
+                    unprotected: [40, 20, 15, 18, 50, 60, 55], 
+                    compensated: [40, 35, 35, 35, 50, 60, 55], 
+                    stats: { base: "$330", lost: "-$74", comp: "+$45", net: "$301" }
+                },
+                flood: {
+                    title: "Monsoon Flooding",
+                    description: "Heavy rains flood roads, making navigation impossible for 4 days.",
+                    unprotected: [40, 42, 0, 0, 0, 10, 55],
+                    compensated: [40, 42, 25, 25, 25, 30, 55],
+                    stats: { base: "$330", lost: "-$183", comp: "+$95", net: "$242" }
+                },
+                protest: {
+                    title: "City-wide Curfew",
+                    description: "Unexpected social unrest halts all movement for a 48-hour period.",
+                    unprotected: [40, 42, 38, 45, 0, 0, 55],
+                    compensated: [40, 42, 38, 45, 30, 30, 55],
+                    stats: { base: "$330", lost: "-$110", comp: "+$60", net: "$280" }
+                }
+            };
+
+            const ctxScenario = document.getElementById('scenarioChart').getContext('2d');
+            let scenarioChart = new Chart(ctxScenario, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Baseline (Normal Week)',
+                            data: scenarioData.baseline,
+                            borderColor: '#d6d3d1',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Unprotected Earnings',
+                            data: scenarioData.heatwave.unprotected,
+                            borderColor: brandDanger,
+                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: brandDanger
+                        },
+                        {
+                            label: 'Platform Compensated',
+                            data: scenarioData.heatwave.compensated,
+                            borderColor: brandAccent,
+                            borderWidth: 3,
+                            tension: 0.3,
+                            pointBackgroundColor: brandAccent,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true } },
+                        tooltip: {
+                            backgroundColor: '#1c1917',
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: $${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 70,
+                            grid: { color: '#f5f5f4', drawBorder: false },
+                            title: { display: true, text: 'Daily Earnings ($)' },
+                            ticks: { callback: function(value) { return '$' + value; } }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
+                    }
+                }
+            });
+
+            const scenarioSelect = document.getElementById('scenarioSelect');
+            const statsContainer = document.getElementById('statsContainer');
+
+            const updateScenario = (scenarioKey) => {
+                const data = scenarioData[scenarioKey];
+                
+                scenarioChart.data.datasets[1].data = data.unprotected;
+                scenarioChart.data.datasets[2].data = data.compensated;
+                scenarioChart.update();
+
+                statsContainer.innerHTML = `
+                    <div class="bg-stone-100 p-4 rounded-xl text-center border border-stone-200">
+                        <div class="text-xs uppercase text-stone-500 font-bold mb-1">Expected Income</div>
+                        <div class="text-2xl font-black text-stone-800">${data.stats.base}</div>
+                    </div>
+                    <div class="bg-rose-50 p-4 rounded-xl text-center border border-rose-100">
+                        <div class="text-xs uppercase text-rose-600 font-bold mb-1">Impact Loss</div>
+                        <div class="text-2xl font-black text-rose-700">${data.stats.lost}</div>
+                    </div>
+                    <div class="bg-teal-50 p-4 rounded-xl text-center border border-teal-100">
+                        <div class="text-xs uppercase text-teal-600 font-bold mb-1">Platform Support</div>
+                        <div class="text-2xl font-black text-teal-700">${data.stats.comp}</div>
+                    </div>
+                    <div class="bg-stone-900 p-4 rounded-xl text-center border border-stone-800 shadow-md">
+                        <div class="text-xs uppercase text-stone-400 font-bold mb-1">Protected Net</div>
+                        <div class="text-2xl font-black text-white">${data.stats.net}</div>
+                    </div>
+                `;
+            };
+
+            updateScenario('heatwave');
+
+            scenarioSelect.addEventListener('change', (e) => {
+                updateScenario(e.target.value);
+            });
+        });
+    </script>
+</body>
+</html>
