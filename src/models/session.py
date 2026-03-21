@@ -38,6 +38,18 @@ class TokenData(BaseModel):
 # ─── Mock User DB ─────────────────────────────────────────────────────────────
 
 USERS_DB = {
+    "ADMIN-001": {
+        "rider_id": "ADMIN-001",
+        "name": "System Admin",
+        "phone": "0000000000",
+        "zone": "HQ",
+        "platform": "ShieldGig",
+        "weekly_plan": "N/A",
+        "active_since": "Jan 2024",
+        "role": "admin",
+        # password: admin123
+        "hashed_password": pwd_context.hash("admin123"),
+    },
     "GW-8821": {
         "rider_id": "GW-8821",
         "name": "Raju Kumar",
@@ -88,6 +100,25 @@ def authenticate_user(rider_id: str, password: str) -> Optional[dict]:
         return None
     return user
 
+def register_user(name: str, phone: str, zone: str, password: str) -> dict:
+    # Generate a random ID e.g. GW-1234
+    import random
+    new_id = f"GW-{random.randint(1000, 9999)}"
+    while new_id in USERS_DB:
+        new_id = f"GW-{random.randint(1000, 9999)}"
+        
+    user_doc = {
+        "rider_id": new_id,
+        "name": name,
+        "phone": phone,
+        "zone": zone,
+        "platform": "Independent",
+        "weekly_plan": "Basic Cover",
+        "active_since": "Just now",
+        "hashed_password": pwd_context.hash(password),
+    }
+    USERS_DB[new_id] = user_doc
+    return user_doc
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()

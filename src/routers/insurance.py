@@ -58,16 +58,20 @@ async def get_plans(request: Request):
     return {"plans": PLANS}
 
 
+from services.prediction_service import predictor
+
 @router.get("/ai-premium")
 async def get_ai_premium(request: Request, plan_id: str = "micro"):
-    require_auth(request)
+    user = require_auth(request)
     plan = next((p for p in PLANS if p["id"] == plan_id), PLANS[0])
     
-    # AI Premium Formula: Base + (RiskScore × CoverageLevel × IncomeVariability)
+    # Dynamic calculation using XGBoost model
+    risk_modifier = predictor.calculate_premium_modifier(user.rider_id)
+    risk_score = (risk_modifier - 1.0) * 2.0  # Scales 1.0-1.5 to 0.0-1.0
+    
     base = 30
-    risk_score = 0.68
     coverage_level = plan["coverage_level"]
-    income_variability = 1.10
+    income_variability = risk_modifier
     
     premium = base + (risk_score * coverage_level * income_variability * 100)
     premium_rounded = round(premium / 10) * 10  # round to nearest 10
@@ -76,16 +80,16 @@ async def get_ai_premium(request: Request, plan_id: str = "micro"):
         "plan_id": plan_id,
         "formula": {
             "base": base,
-            "risk_score": risk_score,
+            "risk_score": round(risk_score, 2),
             "coverage_level": coverage_level,
-            "income_variability": income_variability,
+            "income_variability": round(income_variability, 2),
         },
         "calculated": round(premium, 2),
         "final_premium": premium_rounded,
         "tier": "High" if risk_score > 0.6 else "Medium" if risk_score > 0.3 else "Low",
-        "weather_input": "High (Open-Meteo API)",
-        "location_input": "Medium (Geoapify)",
-        "earnings_input": "₹23.4K avg (4 weeks)",
+        "weather_input": "Live Data (Open-Meteo)",
+        "location_input": "Dynamic (Geoapify)",
+        "earnings_input": "XGBoost Prediction Model",
     }
 
 
