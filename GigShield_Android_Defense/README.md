@@ -21,7 +21,7 @@ We engineered **GigShield** to natively query the Android Kernel and act as a ha
 We highly encourage judges to try hacking this app themselves on a physical phone!
 
 1. **Download the APK File:**  
-   ⬇️ **[CLICK HERE TO DOWNLOAD `GigShield-app-debug.apk`](GigShield-app-debug.apk)** ⬇️  
+   ⬇️ **[CLICK HERE TO DOWNLOAD `GigShield-Defense-App.apk`](GigShield-Defense-App.apk)** ⬇️  
    *(Downloads directly from this repository folder)*
 2. **Transfer to your Android Phone:** E-mail it to yourself or use Google Drive. 
 3. **Install It:** Open the `.apk` on your phone. (If prompted, allow "Install from unknown sources").
