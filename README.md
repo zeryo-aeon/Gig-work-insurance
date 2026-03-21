@@ -14,7 +14,7 @@
 [![Download Android APK](https://img.shields.io/badge/Download-Android%20APK-3b82f6?style=for-the-badge&logo=android)](GigShield_Android_Defense/GigShield-app-debug.apk)  
 *(Read the full [GigShield Firmware Defense Architecture](GigShield_Android_Defense/README.md) here)*
 
----## Risk Assessment
+## Risk Assessment
 ![Risk](riskassement.png)
 
 ## Saving Buffer
