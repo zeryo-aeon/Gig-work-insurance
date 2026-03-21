@@ -19,7 +19,7 @@ from apis.openmentoapi import OpenMeteoWrapper
 from apis.Geoapify_ import GeoapifyWrapper
 from apis.mock_payment import MockPaymentSystem
 
-from routers import auth, dashboard, insurance, triggers, claims
+from routers import auth, dashboard, insurance, triggers, claims, admin
 from models.session import get_current_user, SessionUser
 
 weather_client = OpenMeteoWrapper()
@@ -50,6 +50,7 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"]
 app.include_router(insurance.router, prefix="/api/insurance", tags=["insurance"])
 app.include_router(triggers.router, prefix="/api/triggers", tags=["triggers"])
 app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 # ─── Data Routes ────────────────────────────────────────────────────────────
@@ -101,6 +102,11 @@ async def root(request: Request):
         return RedirectResponse(url="/dashboard")
     return RedirectResponse(url="/login")
 
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page(request: Request):
+    """Serve the Admin HTML Dashboard."""
+    return templates.TemplateResponse("admin.html", {"request": request})
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):

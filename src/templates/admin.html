@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldGig — Admin Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --bg:#0a0c10;--surface:#111318;--surface2:#181c24;
+    --border:#232733;--accent:#f97316;--accent2:#3b82f6;
+    --accent3:#10b981;--warn:#ef4444;
+    --text:#e8eaf0;--muted:#6b7280;--gold:#fbbf24;
+    --admin:#9333ea;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 60% at 50% -10%,rgba(147,51,234,0.06) 0%,transparent 80%);pointer-events:none;z-index:0;}
+
+  /* SIDEBAR */
+  .sidebar{width:260px;background:rgba(17,19,24,0.6);border-right:1px solid var(--border);display:flex;flex-direction:column;backdrop-filter:blur(10px);z-index:10;}
+  .logo{padding:30px;font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-1px;display:flex;align-items:center;gap:12px;}
+  .logo-icon{width:36px;height:36px;background:var(--admin);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(147,51,234,0.3);}
+  .nav-group{margin-top:20px;padding:0 20px;}
+  .nav-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-left:12px;}
+  .nav-item{display:flex;align-items:center;padding:12px 14px;color:var(--muted);text-decoration:none;border-radius:10px;margin-bottom:4px;font-weight:500;transition:all 0.2s;cursor:pointer;}
+  .nav-item:hover{color:var(--text);background:var(--surface2);}
+  .nav-item.active{color:var(--admin);background:rgba(147,51,234,0.08);border:1px solid rgba(147,51,234,0.15);}
+  .nav-item i{font-style:normal;margin-right:12px;font-size:18px;}
+  .user-profile{margin-top:auto;padding:24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+  .up-avatar{width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;}
+  
+  /* MAIN CONTENT */
+  .main-content{flex:1;display:flex;flex-direction:column;position:relative;z-index:1;overflow-y:auto;}
+  .top-bar{position:sticky;top:0;z-index:50;background:rgba(17,19,24,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:60px;}
+  .top-nav{display:flex;gap:4px;}
+  .top-nav-btn{background:transparent;border:none;color:var(--muted);padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+  .top-nav-btn.active{background:var(--surface2);color:var(--text);}
+  
+  /* CONTENT BLOCKS */
+  .page-header{margin:40px 36px 30px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .page-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;margin-bottom:8px;}
+  .page-subtitle{color:var(--muted);font-size:15px;max-width:600px;line-height:1.5;}
+  
+  .card{background:rgba(24,28,36,0.4);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(10px);margin:0 36px 30px;}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .card-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  
+  .ai-badge{background:rgba(147,51,234,0.1);color:var(--admin);border:1px solid rgba(147,51,234,0.2);padding:4px 10px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th{text-align:left;padding:14px 16px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);font-size:13px;}
+  td{padding:16px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text);vertical-align:middle;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  .status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;}
+  .status-active{background:rgba(16,185,129,0.1);color:var(--accent3);border:1px solid rgba(16,185,129,0.2);}
+  
+  /* ACTIONS */
+  .act-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Space Mono',monospace;}
+  .act-btn:hover{background:var(--admin);border-color:var(--admin);}
+
+  .tab-content{display:none;}
+  .tab-content.active{display:block;animation:fadeIn 0.4s ease forwards;}
+  @keyframes fadeIn {from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    ShieldGig
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Platform Admin</div>
+    <div class="nav-item active"><i>📈</i>XGBoost Analytics</div>
+    <div class="nav-item" onclick="window.location.href='/dashboard'"><i>⬅️</i>Return to App</div>
+  </div>
+  
+  <div class="user-profile">
+    <div class="up-avatar">👑</div>
+    <div>
+      <div style="font-weight:600;font-size:14px;">System Admin</div>
+      <div style="font-size:12px;color:var(--muted);">Global Operations</div>
+    </div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="top-bar">
+    <div class="top-nav">
+      <button class="top-nav-btn active" onclick="switchTab('models', this)">Model Performance</button>
+      <button class="top-nav-btn" onclick="switchTab('users', this)">User Management</button>
+    </div>
+    <div style="font-family:'Space Mono';font-size:12px;color:var(--muted);">ADMIN CONSOLE v1.2</div>
+  </div>
+
+  <!-- ═══ MODELS TAB ═══ -->
+  <div id="tab-models" class="tab-content active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">XGBoost Prediction Performance</div>
+        <div class="page-subtitle">Visualizing the deviation between Predicted Income vs Actual Income generated by the AI Risk Engine.</div>
+      </div>
+      <div>
+        <select id="userSelect" onchange="loadGraphData()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:8px;font-family:'DM Sans';font-size:14px;outline:none;">
+          <option value="GW-8821">GW-8821 (Raju Kumar)</option>
+          <option value="GW-4422">GW-4422 (Priya Sharma)</option>
+          <option value="GW-9901">GW-9901 (Karthik)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card" style="height: 450px; display:flex; flex-direction:column;">
+      <div class="card-header" style="margin-bottom:10px; padding-bottom:10px;">
+        <div class="card-title">X-Y Points Timeline <span class="ai-badge">XGBoost Regressor</span></div>
+      </div>
+      <div style="flex:1; position:relative;">
+        <canvas id="performanceChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ USERS TAB ═══ -->
+  <div id="tab-users" class="tab-content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">User Management</div>
+        <div class="page-subtitle">Manage gig riders and monitor their active insurance plans.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Registered Riders</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Rider ID</th>
+            <th>Name</th>
+            <th>Platform</th>
+            <th>Active Plan</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <!-- Populated via API -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let chartInstance = null;
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.top-nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  async function loadUsers() {
+    try {
+      const resp = await fetch('/api/admin/users');
+      const data = await resp.json();
+      
+      const tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = data.users.map(u => `
+        <tr>
+          <td style="font-family:'Space Mono'; color:var(--admin);">${u.rider_id}</td>
+          <td style="font-weight:600;">${u.name}<br><span style="font-size:11px;color:var(--muted);font-weight:normal;">${u.zone}</span></td>
+          <td>${u.platform}</td>
+          <td><span style="color:var(--accent2)">${u.weekly_plan}</span></td>
+          <td><span class="status-pill status-active">${u.status}</span></td>
+          <td><button class="act-btn" onclick="document.getElementById('userSelect').value='${u.rider_id}'; switchTab('models', document.querySelectorAll('.top-nav-btn')[0]); loadGraphData();">View Model</button></td>
+        </tr>
+      `).join('');
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  async function loadGraphData() {
+    const riderId = document.getElementById('userSelect').value;
+    try {
+      const resp = await fetch(`/api/admin/model-metrics?rider_id=${riderId}`);
+      const data = await resp.json();
+      renderChart(data);
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  function renderChart(data) {
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    Chart.defaults.color = '#6b7280';
+    Chart.defaults.font.family = "'Space Mono', monospace";
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [
+          {
+            label: 'Actual Earnings (₹)',
+            data: data.actual,
+            borderColor: '#10b981', // accent3 green
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 3,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Predicted Earnings (₹)',
+            data: data.predicted,
+            borderColor: '#9333ea', // admin purple
+            borderDash: [5, 5],
+            borderWidth: 3,
+            pointBackgroundColor: '#9333ea',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            fill: false,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: '#e8eaf0', usePointStyle: true, boxWidth: 8 }
+          },
+          tooltip: {
+            backgroundColor: '#181c24',
+            titleColor: '#e8eaf0',
+            bodyColor: '#e8eaf0',
+            borderColor: '#232733',
+            borderWidth: 1,
+            padding: 12
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { padding: 10 }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { padding: 10 }
+          }
+        }
+      }
+    });
+  }
+
+  // Init
+  window.addEventListener('DOMContentLoaded', () => {
+    loadUsers();
+    loadGraphData();
+  });
+</script>
+</body>
+</html>

@@ -217,6 +217,12 @@
       <div class="kpi-value" id="kpiWallet">₹0</div>
       <div class="kpi-change">Instant Payouts</div>
     </div>
+    <div class="kpi-card" style="--kpi-color:var(--accent2)">
+      <div class="ai-badge" style="margin-bottom:8px">🤖 XGBoost</div>
+      <div class="kpi-label">Predicted Tomorrow</div>
+      <div class="kpi-value" id="kpiPredict" style="color:var(--accent2)">₹0</div>
+      <div class="kpi-change">Confidence: High</div>
+    </div>
   </div>
 
   <div class="live-row" id="liveRow">
@@ -264,6 +270,32 @@
         </div>
         <div style="margin-top:12px; font-size:10px; color:var(--accent3); text-align:center; font-family:'Space Mono';">
           🛡️ Route risk analyzed for this trip
+        </div>
+      </div>
+    </div>
+    
+    <!-- Traffic Analytics -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Traffic Analytics</div>
+        <div class="ai-badge">Geoapify</div>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:8px">
+          <span style="font-size:13px;color:var(--muted)">Total Distance (7 Days)</span>
+          <span id="trafficDist" style="font-family:'Space Mono';font-weight:700;color:var(--accent3)">--</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:8px">
+          <span style="font-size:13px;color:var(--muted)">Est. Traffic Delay</span>
+          <span id="trafficDelay" style="font-family:'Space Mono';font-weight:700;color:var(--warn)">--</span>
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:12px;color:var(--muted)">
+        <div style="font-weight:600;margin-bottom:6px">Latest Route Analysis</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;justify-content:space-between"><span>Origin:</span> <span id="latestOrigin" style="color:var(--text);text-align:right">--</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Destination:</span> <span id="latestDest" style="color:var(--text);text-align:right">--</span></div>
+          <div style="display:flex;justify-content:space-between"><span>ETA (incl. traffic):</span> <span id="latestEta" style="color:var(--warn)">--</span></div>
         </div>
       </div>
     </div>
@@ -345,9 +377,9 @@
     <div class="card">
       <div class="card-header"><div class="card-title">Income Prediction (XGBoost)</div><div class="card-tag">Next 7 days</div></div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">Predicted Weekly Income</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent3)">₹19,200</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">Expected Loss (disruptions)</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--warn)">₹3,400</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(249,115,22,0.06);border-radius:8px;border:1px solid rgba(249,115,22,0.2)"><span style="font-size:13px;color:var(--muted)">Net Insured Income Floor</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)">₹17,800</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">Predicted Next Day</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent3)" id="riskPredictVal">₹0</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">Last 7 Days Avg</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--warn)" id="riskAvgVal">₹0</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(249,115,22,0.06);border-radius:8px;border:1px solid rgba(249,115,22,0.2)"><span style="font-size:13px;color:var(--muted)">Projected Weekly Net</span><span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)" id="riskProjectedVal">₹0</span></div>
       </div>
       <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">MODEL INPUTS</div>
@@ -447,6 +479,23 @@ async function loadDashboard() {
   document.getElementById('kpiRiskLevel').textContent = '▲ High Risk Week';
   document.getElementById('kpiPremium').textContent = `₹${w.premium}`;
   document.getElementById('kpiWallet').textContent = `₹${summary.wallet_balance.toLocaleString()}`;
+  document.getElementById('kpiPredict').textContent = `₹${w.predicted_next_day.toLocaleString()}`;
+
+  // Update Risk tab fields as well
+  document.getElementById('riskPredictVal').textContent = `₹${w.predicted_next_day.toLocaleString()}`;
+  document.getElementById('riskAvgVal').textContent = `₹${Math.round(w.earnings/7).toLocaleString()}`;
+  document.getElementById('riskProjectedVal').textContent = `₹${Math.round(w.predicted_next_day * 7).toLocaleString()}`;
+
+  // Update Traffic fields
+  if (w.total_distance !== undefined) {
+    document.getElementById('trafficDist').textContent = `${w.total_distance.toLocaleString()} km`;
+    document.getElementById('trafficDelay').textContent = `${w.total_traffic_delay.toLocaleString()} mins`;
+    if (w.recent_route && w.recent_route.origin) {
+      document.getElementById('latestOrigin').textContent = w.recent_route.origin;
+      document.getElementById('latestDest').textContent = w.recent_route.destination;
+      document.getElementById('latestEta').textContent = `${w.recent_route.eta} mins (+${w.recent_route.delay}m delay)`;
+    }
+  }
 
   // Live tiles
   const env = summary.environment;

@@ -36,11 +36,13 @@ async def login(
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
+    redirect_url = "/admin" if user.get("role") == "admin" else "/dashboard"
+    
     response = JSONResponse(content={
         "success": True,
         "rider_id": user["rider_id"],
         "name": user["name"],
-        "redirect": "/dashboard"
+        "redirect": redirect_url
     })
     response.set_cookie(
         key="access_token",
