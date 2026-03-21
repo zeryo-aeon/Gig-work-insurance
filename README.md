@@ -5,7 +5,7 @@
 ### 🌐 1. GigWorker Web App (Driver Dashboard)
 [![Watch the Gig Worker Prototype Demo](https://img.youtube.com/vi/AdO-Wwrh7vY/maxresdefault.jpg)](https://youtu.be/AdO-Wwrh7vY?si=-kEe7Zdh9-6sUIVo)  
 *Click the image above to watch the YouTube walk-through!*
-*   **Live Web Prototype:** [Try out the Live Gig Worker Web App Demo Here!](https://your-public-vercel-link.vercel.app)
+*   **Live Web Prototype:** [Try out the Live Gig Worker Web App Demo Here!](https://zeryo-aeon.github.io/Gig-work-insurance/)
 
 ### 🛡️ 2. GigShield (Android Anti-Spoofing Defense)
 *   **What is it?** Our Native Android App designed specifically to block the 24-hr Syndicate GPS-spoofing Crisis via OS-level hardware kernel checks.
