@@ -9,6 +9,7 @@ from datetime import timedelta
 from models.session import (
     authenticate_user, create_access_token,
     get_current_user, decode_token_payload,
+    register_user,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
@@ -50,6 +51,37 @@ async def login(
     )
     return response
 
+
+@router.post("/signup")
+async def signup(
+    request: Request,
+    name: str = Form(...),
+    phone: str = Form(...),
+    zone: str = Form(...),
+    password: str = Form(...)
+):
+    """Register a new rider and set JWT cookie."""
+    user = register_user(name.strip(), phone.strip(), zone.strip(), password.strip())
+    
+    token = create_access_token(
+        data={"sub": user["rider_id"]},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
+    response = JSONResponse(content={
+        "success": True,
+        "rider_id": user["rider_id"],
+        "name": user["name"],
+        "redirect": "/dashboard"
+    })
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax"
+    )
+    return response
 
 @router.post("/logout")
 async def logout():

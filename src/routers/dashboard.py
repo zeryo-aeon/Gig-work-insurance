@@ -5,8 +5,18 @@ routers/dashboard.py — Dashboard data API
 from fastapi import APIRouter, Request, HTTPException
 from models.session import get_current_user
 import random
+import os
+import sys
+
+# Ensure apis is searchable
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+from apis.openmentoapi import OpenMeteoWrapper
+from apis.mock_payment import MockPaymentSystem
 
 router = APIRouter()
+weather_client = OpenMeteoWrapper()
+payment_client = MockPaymentSystem()
 
 
 def require_auth(request: Request):
@@ -19,10 +29,24 @@ def require_auth(request: Request):
 @router.get("/summary")
 async def get_summary(request: Request):
     user = require_auth(request)
+    
+    # Fetch real live weather data (defaulting to Bangalore for demo)
+    user_zone = user.dict().get("zone", "Bangalore")
+    weather = weather_client.get_city_data(user_zone)
+    
+    # Get mock balance
+    balance_data = payment_client.get_wallet_balance(user.rider_id)
+    
+    # Determine statuses based on thresholds
+    temp_val = weather["current"].get("temperature_2m", 0)
+    rain_val = weather["current"].get("precipitation", 0)
+    aqi_val = weather["air_quality"].get("pm2_5", 0)
+    
     return {
         "rider": user.dict(),
+        "wallet_balance": balance_data["balance"],
         "week": {
-            "label": "16–22 Jun 2025",
+            "label": "Live Performance",
             "earnings": 4820,
             "payout": 680,
             "premium": 82,
@@ -30,9 +54,9 @@ async def get_summary(request: Request):
             "triggers_fired": 2,
         },
         "environment": {
-            "temperature": {"value": 38, "unit": "°C", "status": "watch", "threshold": 42},
-            "rainfall": {"value": 48, "unit": "mm/hr", "status": "triggered", "threshold": 30},
-            "aqi": {"value": 142, "unit": "AQI", "status": "clear", "threshold": 300},
+            "temperature": {"value": round(temp_val,1), "unit": "°C", "status": "warn" if temp_val > 35 else "clear", "threshold": 35},
+            "rainfall": {"value": round(rain_val,1), "unit": "mm", "status": "triggered" if rain_val > 5 else "clear", "threshold": 5},
+            "aqi": {"value": round(aqi_val,1), "unit": "μg/m³", "status": "warn" if aqi_val > 50 else "clear", "threshold": 50},
             "mobility": {"value": "Normal", "unit": "", "status": "clear", "threshold": "Any restriction"},
             "platform": {"value": "Online", "unit": "", "status": "clear", "threshold": "Downtime"},
         }

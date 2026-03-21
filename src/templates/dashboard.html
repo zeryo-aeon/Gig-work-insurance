@@ -55,7 +55,7 @@
   .alert-action:hover{opacity:0.85;}
 
   /* KPI */
-  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;}
   .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:transform 0.2s,border-color 0.2s;}
   .kpi-card:hover{transform:translateY(-2px);border-color:rgba(249,115,22,0.3);}
   .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
@@ -211,6 +211,12 @@
     <div class="kpi-card" style="--kpi-color:var(--accent2)"><div class="kpi-icon">🛡️</div><div class="kpi-label">Insurance Payout</div><div class="kpi-value" id="kpiPayout">—</div><div class="kpi-change" id="kpiTriggers">—</div></div>
     <div class="kpi-card" style="--kpi-color:var(--gold)"><div class="kpi-icon">⚡</div><div class="kpi-label">AI Risk Score</div><div class="kpi-value" id="kpiRisk" style="color:var(--gold)">—</div><div class="kpi-change" style="color:var(--gold)" id="kpiRiskLevel">—</div></div>
     <div class="kpi-card" style="--kpi-color:var(--accent)"><div class="kpi-icon">📦</div><div class="kpi-label">Weekly Premium</div><div class="kpi-value" id="kpiPremium">—</div><div class="kpi-change" style="color:var(--muted)">AI-adjusted</div></div>
+    <div class="kpi-card" style="--kpi-color:var(--accent3)">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Wallet Balance</div>
+      <div class="kpi-value" id="kpiWallet">₹0</div>
+      <div class="kpi-change">Instant Payouts</div>
+    </div>
   </div>
 
   <div class="live-row" id="liveRow">
@@ -227,15 +233,39 @@
         <div class="legend-item"><div class="legend-dot" style="background:rgba(249,115,22,0.3)"></div>Expected</div>
       </div>
     </div>
+    <!-- Trip Estimator -->
     <div class="card">
-      <div class="card-header"><div class="card-title">AI Risk Score</div><div class="ai-badge">🤖 ML Model</div></div>
-      <div style="text-align:center">
-        <div class="risk-arc">
-          <svg viewBox="0 0 160 160"><path d="M 20 130 A 60 60 0 0 1 140 130" fill="none" stroke="#232733" stroke-width="12" stroke-linecap="round"/><path d="M 20 130 A 60 60 0 0 1 140 130" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="60"/><defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10b981"/><stop offset="60%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs></svg>
-          <div class="risk-score-label"><div class="risk-score-val" id="riskVal">68</div><div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">/ 100</div></div>
+      <div class="card-header">
+        <div class="card-title">🛡️ Trip Protection Estimator</div>
+        <div class="ai-badge">Geoapify LIVE</div>
+      </div>
+      <div class="form-group" style="margin-top:0">
+        <label class="form-label">DESTINATION CITY</label>
+        <div style="display:flex;gap:8px">
+          <input class="form-input" list="cities" id="tripDest" placeholder="e.g. Chennai">
+          <button class="activate-btn" style="width:100px;margin-top:0;padding:8px;" onclick="estimateTrip()">Check</button>
+        </div>
+        <datalist id="cities">
+          <option value="Mumbai">
+          <option value="Chennai">
+          <option value="Delhi">
+          <option value="Bangalore">
+          <option value="Kolkata">
+        </datalist>
+      </div>
+      <div id="tripResult" style="margin-top:16px; padding:12px; border:1px dashed var(--border); border-radius:10px; display:none; background:var(--surface2);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-size:12px; color:var(--muted);">Distance</span>
+          <span id="tripDist" style="font-family:'Space Mono'; font-weight:700; color:var(--accent2);">--</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:12px; color:var(--muted);">Est. Travel Time</span>
+          <span id="tripTime" style="font-family:'Space Mono'; font-weight:700; color:var(--accent2);">--</span>
+        </div>
+        <div style="margin-top:12px; font-size:10px; color:var(--accent3); text-align:center; font-family:'Space Mono';">
+          🛡️ Route risk analyzed for this trip
         </div>
       </div>
-      <div class="risk-factors" id="riskFactors"></div>
     </div>
   </div>
 
@@ -416,6 +446,7 @@ async function loadDashboard() {
   document.getElementById('kpiRisk').textContent = `${w.risk_score}/100`;
   document.getElementById('kpiRiskLevel').textContent = '▲ High Risk Week';
   document.getElementById('kpiPremium').textContent = `₹${w.premium}`;
+  document.getElementById('kpiWallet').textContent = `₹${summary.wallet_balance.toLocaleString()}`;
 
   // Live tiles
   const env = summary.environment;
@@ -571,6 +602,23 @@ async function loadClaims() {
       <span class="status-pill ${statusClass(c.status)}" style="margin-left:auto;margin-right:8px">${statusLabel(c.status)}</span>
       <div class="claim-amount">₹${c.amount}</div>
     </div>`).join('');
+}
+
+async function estimateTrip() {
+  const dest = document.getElementById('tripDest').value.trim();
+  const summary = await fetch('/api/dashboard/summary').then(r=>r.json());
+  const origin = summary.rider.zone || 'Bangalore';
+  
+  if(!dest) return;
+  
+  const res = await fetch(`/api/route?origin=${origin}&destination=${dest}`);
+  const data = await res.json();
+  
+  if(data.distance_km) {
+    document.getElementById('tripResult').style.display = 'block';
+    document.getElementById('tripDist').textContent = data.distance_km + ' km';
+    document.getElementById('tripTime').textContent = Math.round(data.eta_minutes) + ' mins';
+  }
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
