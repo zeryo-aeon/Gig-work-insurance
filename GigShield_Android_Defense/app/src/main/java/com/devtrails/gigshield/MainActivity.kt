@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     // Firmware Lock
     private lateinit var lockOverlay: LinearLayout
+    private lateinit var btnRetryLock: Button
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var currentUserType = "HONEST"
@@ -87,8 +88,18 @@ class MainActivity : AppCompatActivity() {
         btnGnnBack = findViewById(R.id.btnGnnBack)
 
         lockOverlay = findViewById(R.id.lockOverlay)
+        btnRetryLock = findViewById(R.id.btnRetryLock)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        btnRetryLock.setOnClickListener {
+            if (checkFirmwareBlocked()) {
+                Toast.makeText(this, "Still Active! Turn off Developer Options first.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Integrity Restored.", Toast.LENGTH_SHORT).show()
+                lockOverlay.visibility = View.GONE
+            }
+        }
 
         
 
