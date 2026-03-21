@@ -12,8 +12,9 @@
 *Click the image above to watch the YouTube walk-through!*
 
 * **What is it?** Our Native Android App designed specifically to block the 24-hr Syndicate GPS-spoofing Crisis via OS-level hardware kernel checks.
-* **Download & Test on your phone:** [![Download Android APK](https://img.shields.io/badge/Download-Android%20APK-3b82f6?style=for-the-badge&logo=android)](GigShield_Android_Defense/GigShield-Defense-App.apk)  
+* **Download & Test on your phone:**  [![Download Android APK](https://img.shields.io/badge/Download-Android%20APK-3b82f6?style=for-the-badge&logo=android)](https://github.com/zeryo-aeon/Gig-work-insurance/raw/main/GigShield_Android_Defense/GigShield-Defense-App.apk)
 *(Read the full [GigShield Firmware Defense Architecture](GigShield_Android_Defense/README.md) here)*
+
 
 ## Risk Assessment
 ![Risk](riskassement.png)
