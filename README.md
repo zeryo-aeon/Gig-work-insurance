@@ -1,6 +1,20 @@
 # Gig-work-insurance
 
-## Risk Assessment
+## 🚀 Live Demonstrations & Downloads
+
+### 🌐 1. GigWorker Web App (Driver Dashboard)
+[![Watch the Gig Worker Prototype Demo](https://img.youtube.com/vi/AdO-Wwrh7vY/maxresdefault.jpg)](https://youtu.be/AdO-Wwrh7vY?si=-kEe7Zdh9-6sUIVo)  
+*Click the image above to watch the YouTube walk-through!*
+*   **Live Web Prototype:** [Try out the Live Gig Worker Web App Demo Here!](https://your-public-vercel-link.vercel.app)
+
+### 🛡️ 2. GigShield (Android Anti-Spoofing Defense)
+*   **What is it?** Our Native Android App designed specifically to block the 24-hr Syndicate GPS-spoofing Crisis via OS-level hardware kernel checks.
+*   **Watch the Native App Demo:** `[YouTube Link Coming Soon]`
+*   **Download & Test on your phone:**  
+[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK-3b82f6?style=for-the-badge&logo=android)](GigShield_Android_Defense/GigShield-app-debug.apk)  
+*(Read the full [GigShield Firmware Defense Architecture](GigShield_Android_Defense/README.md) here)*
+
+---## Risk Assessment
 ![Risk](riskassement.png)
 
 ## Saving Buffer

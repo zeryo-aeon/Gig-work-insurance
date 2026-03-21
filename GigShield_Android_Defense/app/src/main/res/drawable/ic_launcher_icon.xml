@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Deep Obsidian Background -->
+    <path
+        android:fillColor="#0b0f19"
+        android:pathData="M0,0h108v108h-108z" />
+        
+    <!-- Outer Cyber Blue Shield -->
+    <path
+        android:fillColor="#3b82f6"
+        android:pathData="M54,15 L20,30 V55 C20,78 35,98 54,105 C73,98 88,78 88,55 V30 Z"/>
+        
+    <!-- Inner Emerald Shield (Safety) -->
+    <path
+        android:fillColor="#10b981"
+        android:pathData="M54,25 L28,37 V55 C28,73 39,88 54,94 C69,88 80,73 80,55 V37 Z"/>
+        
+    <!-- Sparkle/Checkmark inside -->
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M48,70 L35,57 L40,52 L48,60 L68,40 L73,45 Z"/>
+</vector>

@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0b0f19">
+
+    <!-- 1. LOGIN SCREEN -->
+    <LinearLayout
+        android:id="@+id/layoutLogin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="30dp"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🛡️ GigShield"
+            android:textColor="#3b82f6"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="40dp"/>
+            
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="Username"
+            android:textColorHint="#94a3b8"
+            android:textColor="#ffffff"
+            android:backgroundTint="#3b82f6"
+            android:layout_marginBottom="16dp"/>
+            
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:textColorHint="#94a3b8"
+            android:textColor="#ffffff"
+            android:backgroundTint="#3b82f6"
+            android:layout_marginBottom="30dp"/>
+            
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="SECURE LOGIN"
+            android:backgroundTint="#3b82f6"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="40dp"/>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#1e293b"
+            app:cardCornerRadius="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Demo Accounts for Judges:"
+                    android:textColor="#cbd5e1"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1. Honest Worker (Tier 2 camera trigger)\nUser: rahul | Pass: 123\n\n2. Syndicate Hacker (GNN Block)\nUser: hacker | Pass: 123"
+                    android:textColor="#94a3b8"
+                    android:textSize="13sp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <!-- 2. DASHBOARD SCREEN -->
+    <LinearLayout
+        android:id="@+id/layoutDashboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <!-- Top App Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="#0f172a"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="🛡️ Dashboard"
+                android:textSize="20sp"
+                android:textColor="#ffffff"
+                android:textStyle="bold"/>
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="LOGOUT"
+                android:textSize="12sp"
+                android:backgroundTint="#ef4444"/>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="24dp">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvWelcome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hello, Worker"
+                    android:textColor="#ffffff"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp"/>
+
+                
+
+                <!-- Status Card (Real GPS) -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#1e293b"
+                    app:cardCornerRadius="16dp"
+                    android:layout_marginBottom="24dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+                        <TextView
+                            android:id="@+id/tvActiveZone"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Fetching Real Hardware GPS..."
+                            android:textColor="#cbd5e1"
+                            android:textSize="16sp"
+                            android:layout_marginBottom="8dp"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="🚨 Severe Rain Alert Active (Tier 2)"
+                            android:textColor="#ef4444"
+                            android:textSize="14sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                
+                <Button
+                    android:id="@+id/btnTechDocs"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="READ TECH DOCS (FOR JUDGES)"
+                    android:backgroundTint="#1e293b"
+                    android:textColor="#3b82f6"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="24dp"/>
+                <Button
+                    android:id="@+id/btnInitClaim"
+                    android:layout_width="match_parent"
+                    android:layout_height="65dp"
+                    android:text="FILE STRANDED CLAIM"
+                    android:backgroundTint="#3b82f6"
+                    android:textColor="#ffffff"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="20dp"/>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- 3. TIER 2 CAMERA UPLOAD -->
+    <LinearLayout
+        android:id="@+id/layoutCamera"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:padding="24dp"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📸 Micro-Proof of Presence"
+            android:textColor="#f59e0b"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+            
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tier 2 Protocol Initiated.\n\nYour network dropped. To avoid auto-denying your honest claim, please temporarily take a live photo of your flooded surroundings. We will verify your location via EXIF metadata."
+            android:textColor="#cbd5e1"
+            android:textSize="16sp"
+            android:textAlignment="center"
+            android:layout_marginBottom="40dp"/>
+
+        <Button
+            android:id="@+id/btnDemoCamera"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:text="[SIMULATE CAMERA FLASH]"
+            android:backgroundTint="#10b981"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- 4. GNN PROCESSING SCREEN -->
+    <LinearLayout
+        android:id="@+id/layoutGNN"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:padding="24dp"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginBottom="24dp"
+            android:indeterminateTint="#3b82f6"/>
+
+        <TextView
+            android:id="@+id/tvGnnLog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Checking GNN &amp; Network Nodes..."
+            android:textColor="#3b82f6"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textAlignment="center"
+            android:layout_marginBottom="30dp"/>
+
+        <TextView
+            android:id="@+id/tvGnnResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#f8fafc"
+            android:textSize="16sp"
+            android:textAlignment="center"/>
+            
+        <Button
+            android:id="@+id/btnGnnBack"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="BACK TO DASHBOARD"
+            android:backgroundTint="#ef4444"
+            android:layout_marginTop="30dp"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <!-- 5. FIRMWARE LOCK SCREEN -->
+    <LinearLayout
+        android:id="@+id/lockOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#e60f172a"
+        android:gravity="center"
+        android:padding="30dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️ APP LOCKED"
+            android:textColor="#ef4444"
+            android:textSize="32sp"
+            android:textStyle="bold"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OS Integrity Compromised. Developer options active."
+            android:textColor="#cbd5e1"
+            android:textSize="16sp"
+            android:textAlignment="center"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+
+
+    <!-- 6. TECH OVERVIEW DOCUMENTATION SCREEN -->
+    <LinearLayout
+        android:id="@+id/layoutInfo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:visibility="gone">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#0f172a"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="📚 System Documentation"
+                android:textSize="20sp"
+                android:textColor="#ffffff"
+                android:textStyle="bold"/>
+            <Button
+                android:id="@+id/btnInfoBack"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="BACK"
+                android:backgroundTint="#3b82f6"/>
+        </LinearLayout>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="GigShield Protocol Explained"
+                    android:textColor="#10b981"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="What we proposed vs What we built:\nWe proposed stopping the Syndicate crisis using advanced multi-layer logic. We literally built a Native Android App simulating those exact 3 layers:\n\n1) FIRMWARE DEFENSE (Developer Mode Lock)\nIf bad actors use rooting or Dev Mode to bypass GPS, this app queries the Android kernel OS. We physically prevent the app from executing on compromised software.\n\n2) VPN / MOCK LOCATION CATCH\nWe utilize Android's ConnectivityManager to natively check for 'NetworkCapabilities.TRANSPORT_VPN'. If you route via VPN to hide your IP, we flag the fingerprint mismatch.\n\n3) GNN BEHAVIORAL CLUSTERING\n(What happens 'In Real Life' vs this Demo): This app simulates hitting our theoretical Python GNN backend. In production, a Graph Neural Network treats each rider as a node. If 500 nodes suddenly spawn precisely inside a red-alert grid without traveling there via adjacent grid nodes, the GNN mathematically determines it is impossible teleportation and halts the syndicate.\n\n4) TIER 2 CAMERA (Honest Worker)\nIf legitimate grid infrastructure drops, we don't automatically deny honest claims. The app reverts to our Tier 2 'Micro-Proof of Presence'—requesting an EXIF-validated photo to release the funds."
+                    android:textColor="#cbd5e1"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="6dp"
+                    android:layout_marginBottom="20dp"/>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
