@@ -170,6 +170,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (checkFirmwareBlocked()) {
+            lockOverlay.visibility = View.VISIBLE
+        } else {
+            lockOverlay.visibility = View.GONE
+        }
+    }
+
     private fun showDashboard() {
         layoutLogin.visibility = View.GONE
         layoutDashboard.visibility = View.VISIBLE
