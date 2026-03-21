@@ -5,13 +5,14 @@
 ### 🌐 1. GigWorker Web App (Driver Dashboard)
 [![Watch the Gig Worker Prototype Demo](https://img.youtube.com/vi/AdO-Wwrh7vY/maxresdefault.jpg)](https://youtu.be/AdO-Wwrh7vY?si=-kEe7Zdh9-6sUIVo)  
 *Click the image above to watch the YouTube walk-through!*
-*   **Live Web Prototype:** [Try out the Live Gig Worker Web App Demo Here!](https://zeryo-aeon.github.io/Gig-work-insurance/)
+* **Live Web Prototype:** [Try out the Live Gig Worker Web App Demo Here!](https://zeryo-aeon.github.io/Gig-work-insurance/)
 
 ### 🛡️ 2. GigShield (Android Anti-Spoofing Defense)
-*   **What is it?** Our Native Android App designed specifically to block the 24-hr Syndicate GPS-spoofing Crisis via OS-level hardware kernel checks.
-*   **Watch the Native App Demo:** `https://youtu.be/DMuOYV21K7k`
-*   **Download & Test on your phone:**  
-[![Download Android APK](https://img.shields.io/badge/Download-Android%20APK-3b82f6?style=for-the-badge&logo=android)](GigShield_Android_Defense/GigShield-Defense-App.apk)  
+[![Watch the GigShield Native App Demo](https://img.youtube.com/vi/DMuOYV21K7k/maxresdefault.jpg)](https://youtu.be/DMuOYV21K7k)  
+*Click the image above to watch the YouTube walk-through!*
+
+* **What is it?** Our Native Android App designed specifically to block the 24-hr Syndicate GPS-spoofing Crisis via OS-level hardware kernel checks.
+* **Download & Test on your phone:** [![Download Android APK](https://img.shields.io/badge/Download-Android%20APK-3b82f6?style=for-the-badge&logo=android)](GigShield_Android_Defense/GigShield-Defense-App.apk)  
 *(Read the full [GigShield Firmware Defense Architecture](GigShield_Android_Defense/README.md) here)*
 
 ## Risk Assessment
