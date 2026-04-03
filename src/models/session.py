@@ -29,6 +29,7 @@ class SessionUser(BaseModel):
     phone: str
     weekly_plan: str
     active_since: str
+    role: str = "rider"
 
 
 class TokenData(BaseModel):
@@ -148,6 +149,7 @@ def get_current_user(token: str) -> SessionUser:
         phone=user["phone"],
         weekly_plan=user["weekly_plan"],
         active_since=user["active_since"],
+        role=user.get("role", "rider"),
     )
 
 

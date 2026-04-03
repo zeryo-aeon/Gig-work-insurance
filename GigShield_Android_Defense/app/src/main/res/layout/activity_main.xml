@@ -11,79 +11,276 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="30dp"
-        android:gravity="center"
         android:visibility="visible">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🛡️ GigShield"
-            android:textColor="#3b82f6"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="40dp"/>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
             
-        <EditText
-            android:id="@+id/etUsername"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:hint="Username"
-            android:textColorHint="#94a3b8"
-            android:textColor="#ffffff"
-            android:backgroundTint="#3b82f6"
-            android:layout_marginBottom="16dp"/>
-            
-        <EditText
-            android:id="@+id/etPassword"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:hint="Password"
-            android:inputType="textPassword"
-            android:textColorHint="#94a3b8"
-            android:textColor="#ffffff"
-            android:backgroundTint="#3b82f6"
-            android:layout_marginBottom="30dp"/>
-            
-        <Button
-            android:id="@+id/btnLogin"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="SECURE LOGIN"
-            android:backgroundTint="#3b82f6"
-            android:textColor="#ffffff"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="40dp"/>
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardBackgroundColor="#1e293b"
-            app:cardCornerRadius="12dp">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="24dp"
+                android:gravity="center">
+
+                <!-- HERO SECTION -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Demo Accounts for Judges:"
-                    android:textColor="#cbd5e1"
+                    android:text="ShieldGig"
+                    android:textColor="#f97316"
+                    android:textSize="42sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+                    android:fontFamily="sans-serif-black"
+                    android:letterSpacing="-0.02"/>
+
                 <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="// Parametric Insurance v1.0"
+                    android:textColor="#6b7280"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:layout_marginBottom="32dp"/>
+
+                <!-- LOGIN CARD -->
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="1. Honest Worker (Tier 2 camera trigger)\nUser: rahul | Pass: 123\n\n2. Syndicate Hacker (GNN Block)\nUser: hacker | Pass: 123"
-                    android:textColor="#94a3b8"
-                    android:textSize="13sp"/>
+                    app:cardBackgroundColor="#111318"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="28dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rider Sign In"
+                            android:textColor="#ffffff"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="4dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Enter your credentials &amp; server IP"
+                            android:textColor="#6b7280"
+                            android:textSize="13sp"
+                            android:layout_marginBottom="20dp"/>
+
+                        <EditText
+                            android:id="@+id/etUsername"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:hint="Rider ID (e.g. rahul)"
+                            android:textColorHint="#6b7280"
+                            android:textColor="#ffffff"
+                            android:background="@drawable/edit_text_bg"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
+                            android:textSize="14sp"
+                            android:layout_marginBottom="12dp"
+                            android:inputType="text"/>
+
+                        <EditText
+                            android:id="@+id/etPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:hint="Password"
+                            android:inputType="textPassword"
+                            android:textColorHint="#6b7280"
+                            android:textColor="#ffffff"
+                            android:background="@drawable/edit_text_bg"
+                            android:paddingLeft="16dp"
+                            android:paddingRight="16dp"
+                            android:textSize="14sp"
+                            android:layout_marginBottom="12dp"/>
+
+                        <!-- SERVER SETTINGS -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#232733"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginBottom="16dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="CONNECTION SETTINGS"
+                            android:textColor="#6b7280"
+                            android:textSize="10sp"
+                            android:fontFamily="monospace"
+                            android:letterSpacing="0.1"
+                            android:layout_marginBottom="12dp"/>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <EditText
+                                android:id="@+id/etServerIp"
+                                android:layout_width="0dp"
+                                android:layout_weight="3"
+                                android:layout_height="48dp"
+                                android:hint="Server IP (e.g. 192.168.1.5)"
+                                android:textColorHint="#6b7280"
+                                android:textColor="#ffffff"
+                                android:background="@drawable/edit_text_bg"
+                                android:paddingLeft="12dp"
+                                android:paddingRight="12dp"
+                                android:textSize="13sp"
+                                android:layout_marginRight="8dp"
+                                android:inputType="text"/>
+
+                            <EditText
+                                android:id="@+id/etServerPort"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="48dp"
+                                android:hint="8000"
+                                android:textColorHint="#6b7280"
+                                android:textColor="#ffffff"
+                                android:background="@drawable/edit_text_bg"
+                                android:paddingLeft="12dp"
+                                android:paddingRight="12dp"
+                                android:textSize="13sp"
+                                android:inputType="number"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginBottom="8dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="SWIPE FOR DEMO ACCOUNTS:"
+                                android:textColor="#6b7280"
+                                android:textSize="9sp"
+                                android:fontFamily="monospace"
+                                android:letterSpacing="0.1"/>
+                            <View
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="1px"
+                                android:background="#232733"
+                                android:layout_marginLeft="12dp"/>
+                        </LinearLayout>
+
+                        <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:scrollbars="none">
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <Button
+                                    android:id="@+id/btnDemoAdmin"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="40dp"
+                                    android:text="👑 ADMIN"
+                                    android:textSize="9sp"
+                                    android:backgroundTint="#9333ea"
+                                    android:textColor="#ffffff"
+                                    app:cornerRadius="6dp"
+                                    android:layout_marginRight="8dp"/>
+
+                                <Button
+                                    android:id="@+id/btnDemoRider1"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="40dp"
+                                    android:text="🛵 RAJU"
+                                    android:textSize="9sp"
+                                    android:backgroundTint="#111318"
+                                    android:textColor="#f97316"
+                                    app:strokeColor="#f97316"
+                                    app:strokeWidth="1dp"
+                                    app:cornerRadius="6dp"
+                                    android:layout_marginRight="8dp"/>
+
+                                <Button
+                                    android:id="@+id/btnDemoRider2"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="40dp"
+                                    android:text="🛵 PRIYA"
+                                    android:textSize="9sp"
+                                    android:backgroundTint="#111318"
+                                    android:textColor="#f97316"
+                                    app:strokeColor="#f97316"
+                                    app:strokeWidth="1dp"
+                                    app:cornerRadius="6dp"
+                                    android:layout_marginRight="8dp"/>
+
+                                <Button
+                                    android:id="@+id/btnDemoRider3"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="40dp"
+                                    android:text="🛵 VIKRAM"
+                                    android:textSize="9sp"
+                                    android:backgroundTint="#111318"
+                                    android:textColor="#f97316"
+                                    app:strokeColor="#f97316"
+                                    app:strokeWidth="1dp"
+                                    app:cornerRadius="6dp"/>
+                            </LinearLayout>
+                        </HorizontalScrollView>
+
+
+                        <Button
+                            android:id="@+id/btnLogin"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="SECURE LOGIN →"
+                            android:backgroundTint="#f97316"
+                            android:textColor="#ffffff"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="24dp"
+                            app:cornerRadius="12dp"/>
+
+                        <TextView
+                            android:id="@+id/tvToSignup"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Don't have an ID? Create Pilot Account"
+                            android:textColor="#f97316"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textAlignment="center"
+                            android:layout_marginTop="20dp"
+                            android:clickable="true"
+                            android:focusable="true"/>
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔐 Secured with JWT · Fingerprint Verified"
+                    android:textColor="#6b7280"
+                    android:textSize="11sp"
+                    android:layout_marginTop="20dp"/>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </ScrollView>
     </LinearLayout>
 
-    <!-- 2. DASHBOARD SCREEN -->
+    <!-- 2. DASHBOARD SCREEN (OVERHAULED) -->
     <LinearLayout
         android:id="@+id/layoutDashboard"
         android:layout_width="match_parent"
@@ -96,30 +293,57 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="#0f172a"
+            android:background="#111318"
             android:padding="20dp"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:elevation="4dp">
             <TextView
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="🛡️ Dashboard"
+                android:text="ShieldGig"
                 android:textSize="20sp"
-                android:textColor="#ffffff"
+                android:textColor="#f97316"
                 android:textStyle="bold"/>
+            
+            <LinearLayout
+                android:id="@+id/btnToSession"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#181c24"
+                android:padding="8dp"
+                android:layout_marginRight="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:focusable="true">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛵 Session Info"
+                    android:textSize="12sp"
+                    android:textColor="#cbd5e1"
+                    android:layout_marginRight="8dp"/>
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="#10b981" />
+            </LinearLayout>
+
             <Button
                 android:id="@+id/btnLogout"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="LOGOUT"
-                android:textSize="12sp"
-                android:backgroundTint="#ef4444"/>
+                android:text="OUT"
+                android:textSize="10sp"
+                android:backgroundTint="#ef4444"
+                app:cornerRadius="8dp"/>
         </LinearLayout>
 
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="24dp">
+            android:padding="20dp">
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -132,17 +356,199 @@
                     android:layout_height="wrap_content"
                     android:text="Hello, Worker"
                     android:textColor="#ffffff"
-                    android:textSize="28sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="16dp"/>
-
+                    android:layout_marginBottom="4dp"/>
                 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Verified GigShield Zone · Live Updates"
+                    android:textColor="#6b7280"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="20dp"/>
+
+                <!-- ALERT BANNER -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#271414"
+                    app:cardCornerRadius="12dp"
+                    android:layout_marginBottom="20dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🌧️"
+                            android:textSize="24sp"
+                            android:layout_marginRight="16dp"/>
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Parametric Trigger Active — Heavy Rain"
+                                android:textColor="#fca5a5"
+                                android:textSize="13sp"
+                                android:textStyle="bold"/>
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Payout of ₹340 queued for today."
+                                android:textColor="#6b7280"
+                                android:textSize="11sp"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- KPI GRID -->
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2"
+                    android:alignmentMode="alignMargins"
+                    android:columnOrderPreserved="false"
+                    android:layout_marginBottom="24dp">
+
+                    <!-- Earnings -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="4dp"
+                        app:cardBackgroundColor="#181c24"
+                        app:cardCornerRadius="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="EARNINGS"
+                                android:textColor="#6b7280"
+                                android:fontFamily="monospace"
+                                android:textSize="10sp"/>
+                            <TextView
+                                android:id="@+id/kpiEarnings"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹4,200"
+                                android:textColor="#10b981"
+                                android:textSize="20sp"
+                                android:textStyle="bold"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Payouts -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="4dp"
+                        app:cardBackgroundColor="#181c24"
+                        app:cardCornerRadius="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="INSURANCE"
+                                android:textColor="#6b7280"
+                                android:fontFamily="monospace"
+                                android:textSize="10sp"/>
+                            <TextView
+                                android:id="@+id/kpiPayout"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹340"
+                                android:textColor="#3b82f6"
+                                android:textSize="20sp"
+                                android:textStyle="bold"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Risk Score -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="4dp"
+                        app:cardBackgroundColor="#181c24"
+                        app:cardCornerRadius="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="RISK SCORE"
+                                android:textColor="#6b7280"
+                                android:fontFamily="monospace"
+                                android:textSize="10sp"/>
+                            <TextView
+                                android:id="@+id/kpiRisk"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="68/100"
+                                android:textColor="#fbbf24"
+                                android:textSize="20sp"
+                                android:textStyle="bold"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- Prediction -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="4dp"
+                        app:cardBackgroundColor="#181c24"
+                        app:cardCornerRadius="12dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PREDICTION"
+                                android:textColor="#6b7280"
+                                android:fontFamily="monospace"
+                                android:textSize="10sp"/>
+                            <TextView
+                                android:id="@+id/kpiPredict"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹550"
+                                android:textColor="#3b82f6"
+                                android:textSize="20sp"
+                                android:textStyle="bold"/>
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                </GridLayout>
 
                 <!-- Status Card (Real GPS) -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="#1e293b"
+                    app:cardBackgroundColor="#181c24"
                     app:cardCornerRadius="16dp"
                     android:layout_marginBottom="24dp">
                     <LinearLayout
@@ -154,44 +560,450 @@
                             android:id="@+id/tvActiveZone"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Fetching Real Hardware GPS..."
+                            android:text="Detecting Real GPS Hardware..."
                             android:textColor="#cbd5e1"
-                            android:textSize="16sp"
-                            android:layout_marginBottom="8dp"/>
+                            android:textSize="14sp"
+                            android:fontFamily="monospace"
+                            android:layout_marginBottom="12dp"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#232733"
+                            android:layout_marginBottom="12dp"/>
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="🚨 Severe Rain Alert Active (Tier 2)"
+                            android:text="🚨 High Risk Activity Detected (Tier 2 Protocol)"
                             android:textColor="#ef4444"
-                            android:textSize="14sp"
+                            android:textSize="13sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                
                 <Button
                     android:id="@+id/btnTechDocs"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:text="READ TECH DOCS (FOR JUDGES)"
-                    android:backgroundTint="#1e293b"
+                    android:text="SYSTEM PERFORMANCE LOGS"
+                    android:backgroundTint="#181c24"
                     android:textColor="#3b82f6"
                     android:textStyle="bold"
-                    android:layout_marginBottom="24dp"/>
+                    android:layout_marginBottom="16dp"
+                    app:cornerRadius="10dp"/>
                 <Button
                     android:id="@+id/btnInitClaim"
                     android:layout_width="match_parent"
                     android:layout_height="65dp"
-                    android:text="FILE STRANDED CLAIM"
-                    android:backgroundTint="#3b82f6"
+                    android:text="FILE DISRUPTION CLAIM"
+                    android:backgroundTint="#f97316"
                     android:textColor="#ffffff"
                     android:textStyle="bold"
-                    android:layout_marginBottom="20dp"/>
+                    android:layout_marginBottom="40dp"
+                    app:cornerRadius="12dp"/>
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
 
-    <!-- 3. TIER 2 CAMERA UPLOAD -->
+    <!-- 3. SIGNUP SCREEN -->
+    <LinearLayout
+        android:id="@+id/layoutSignup"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Join ShieldGig"
+                    android:textColor="#f97316"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="32dp"/>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#111318"
+                    app:cardCornerRadius="20dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="28dp">
+
+                        <EditText
+                            android:id="@+id/etSignupName"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:hint="Full Name"
+                            android:background="@drawable/edit_text_bg"
+                            android:textColorHint="#6b7280"
+                            android:textColor="#ffffff"
+                            android:paddingLeft="16dp"
+                            android:layout_marginBottom="12dp"/>
+
+                        <EditText
+                            android:id="@+id/etSignupPhone"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:hint="Phone Number"
+                            android:background="@drawable/edit_text_bg"
+                            android:textColorHint="#6b7280"
+                            android:textColor="#ffffff"
+                            android:paddingLeft="16dp"
+                            android:layout_marginBottom="12dp"
+                            android:inputType="phone"/>
+
+                        <EditText
+                            android:id="@+id/etSignupZone"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:hint="City / Zone"
+                            android:background="@drawable/edit_text_bg"
+                            android:textColorHint="#6b7280"
+                            android:textColor="#ffffff"
+                            android:paddingLeft="16dp"
+                            android:layout_marginBottom="12dp"/>
+
+                        <EditText
+                            android:id="@+id/etSignupPass"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:hint="Create Password"
+                            android:inputType="textPassword"
+                            android:background="@drawable/edit_text_bg"
+                            android:textColorHint="#6b7280"
+                            android:textColor="#ffffff"
+                            android:paddingLeft="16dp"
+                            android:layout_marginBottom="24dp"/>
+
+                        <Button
+                            android:id="@+id/btnSignup"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="SIGN UP &amp; JOIN →"
+                            android:backgroundTint="#f97316"
+                            android:textStyle="bold"/>
+                        
+                        <TextView
+                            android:id="@+id/tvToLogin"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Already have an account? Sign In"
+                            android:textColor="#6b7280"
+                            android:textAlignment="center"
+                            android:layout_marginTop="20dp"
+                            android:textSize="12sp"
+                            android:clickable="true"
+                            android:focusable="true"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- 4. ADMIN CONSOLE SCREEN (PURPLE THEME) -->
+    <LinearLayout
+        android:id="@+id/layoutAdmin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0a0c10"
+        android:visibility="gone">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#111318"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="ADMIN CONSOLE"
+                android:textColor="#9333ea"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+            <Button
+                android:id="@+id/btnAdminBack"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="RETURN"
+                android:backgroundTint="#181c24"
+                android:textSize="10sp"
+                app:cornerRadius="8dp"/>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="XGBoost Analytics"
+                    android:textColor="#ffffff"
+                    android:textSize="24sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Rider Profile:"
+                    android:textColor="#9333ea"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace"
+                    android:layout_marginBottom="12dp"/>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:layout_marginBottom="16dp">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <Button
+                            android:id="@+id/btnAdminSelectRaju"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:text="RAJU"
+                            android:textSize="9sp"
+                            android:backgroundTint="#181c24"
+                            android:textColor="#9333ea"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="#9333ea"
+                            android:layout_marginRight="8dp"/>
+                        <Button
+                            android:id="@+id/btnAdminSelectPriya"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:text="PRIYA"
+                            android:textSize="9sp"
+                            android:backgroundTint="#181c24"
+                            android:textColor="#9333ea"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="#9333ea"
+                            android:layout_marginRight="8dp"/>
+                        <Button
+                            android:id="@+id/btnAdminSelectVikram"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:text="VIKRAM"
+                            android:textSize="9sp"
+                            android:backgroundTint="#181c24"
+                            android:textColor="#9333ea"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="#9333ea"/>
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    app:cardBackgroundColor="#181c24"
+                    app:cardCornerRadius="16dp"
+                    android:layout_marginBottom="24dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="20dp"
+                        android:orientation="vertical">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="[AI MODEL PERFORMANCE LOG]"
+                            android:textColor="#9333ea"
+                            android:fontFamily="monospace"
+                            android:textSize="10sp"
+                            android:layout_marginBottom="16dp"/>
+
+                        <!-- MOCK GRAPH -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="bottom"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp">
+                            
+                            <View android:id="@+id/vBar1" android:layout_width="12dp" android:layout_height="80dp" android:background="#9333ea" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar2" android:layout_width="12dp" android:layout_height="120dp" android:background="#c084fc" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar3" android:layout_width="12dp" android:layout_height="100dp" android:background="#9333ea" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar4" android:layout_width="12dp" android:layout_height="150dp" android:background="#c084fc" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar5" android:layout_width="12dp" android:layout_height="90dp" android:background="#9333ea" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar6" android:layout_width="12dp" android:layout_height="130dp" android:background="#c084fc" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar7" android:layout_width="12dp" android:layout_height="110dp" android:background="#9333ea" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar8" android:layout_width="12dp" android:layout_height="160dp" android:background="#c084fc" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar9" android:layout_width="12dp" android:layout_height="140dp" android:background="#9333ea" android:layout_marginRight="8dp"/>
+                            <View android:id="@+id/vBar10" android:layout_width="12dp" android:layout_height="100dp" android:background="#c084fc"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvAdminAnalyticsMetrics"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MAE: 12.4 | R²: 0.94"
+                            android:textColor="#ffffff"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="16dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="User Management"
+                    android:textColor="#ffffff"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
+                
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#111318"
+                    app:cardCornerRadius="12dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="GW-8821 (Raju Kumar) — ACTIVE\nGW-4422 (Priya Sharma) — ACTIVE\nGW-9901 (Karthik) — FLAG"
+                            android:textColor="#cbd5e1"
+                            android:fontFamily="monospace"
+                            android:textSize="12sp"
+                            android:lineSpacingExtra="8dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- 5. SESSION INFO SCREEN -->
+    <LinearLayout
+        android:id="@+id/layoutSession"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0a0c10"
+        android:visibility="gone">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#111318"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="SESSION TRACE"
+                android:textColor="#3b82f6"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+            <Button
+                android:id="@+id/btnSessionBack"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="CLOSE"
+                android:backgroundTint="#181c24"
+                android:textSize="10sp"
+                app:cornerRadius="8dp"/>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#181c24"
+                    app:cardCornerRadius="16dp"
+                    android:layout_marginBottom="24dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="👤 Rider Profile"
+                            android:textColor="#ffffff"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="20dp"/>
+                        <TextView
+                            android:id="@+id/tvSessionDetails"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="ID: GW-8821\nZone: Bangalore South\nAuth: JWT · Admin Signed\nStatus: Secure Connection"
+                            android:textColor="#cbd5e1"
+                            android:fontFamily="monospace"
+                            android:textSize="13sp"
+                            android:lineSpacingExtra="10dp"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔐 JWT Payload"
+                    android:textColor="#6b7280"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace"
+                    android:layout_marginBottom="8dp"/>
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#000000"
+                    app:cardCornerRadius="8dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:text="{\n  'sub': 'GW-8821',\n  'iat': 1624362722,\n  'exp': 1624391522,\n  'alg': 'HS256'\n}"
+                        android:textColor="#10b981"
+                        android:fontFamily="monospace"
+                        android:textSize="12sp"/>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- 6. TIER 2 CAMERA UPLOAD -->
     <LinearLayout
         android:id="@+id/layoutCamera"
         android:layout_width="match_parent"
@@ -231,7 +1043,7 @@
             android:textStyle="bold"/>
     </LinearLayout>
 
-    <!-- 4. GNN PROCESSING SCREEN -->
+    <!-- 7. GNN PROCESSING SCREEN -->
     <LinearLayout
         android:id="@+id/layoutGNN"
         android:layout_width="match_parent"
@@ -277,7 +1089,7 @@
             android:visibility="gone"/>
     </LinearLayout>
 
-    <!-- 5. FIRMWARE LOCK SCREEN -->
+    <!-- 8. FIRMWARE LOCK SCREEN -->
     <LinearLayout
         android:id="@+id/lockOverlay"
         android:layout_width="match_parent"
@@ -326,7 +1138,7 @@
     </LinearLayout>
 
 
-    <!-- 6. TECH OVERVIEW DOCUMENTATION SCREEN -->
+    <!-- 9. TECH OVERVIEW DOCUMENTATION SCREEN -->
     <LinearLayout
         android:id="@+id/layoutInfo"
         android:layout_width="match_parent"
@@ -382,5 +1194,133 @@
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
+
+    <!-- NEW TABS LAYOUTS -->
+    <LinearLayout
+        android:id="@+id/layoutInsurance"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:paddingBottom="70dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🛡️ Insurance Plans"
+            android:textColor="#ffffff"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:padding="20dp"
+            android:background="#111318"/>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:id="@+id/listInsurance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"/>
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutTriggers"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:paddingBottom="70dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚡ Live Triggers"
+            android:textColor="#f97316"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:padding="20dp"
+            android:background="#111318"/>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:id="@+id/listTriggers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"/>
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutClaims"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:paddingBottom="70dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💰 Claims Log"
+            android:textColor="#ffffff"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:padding="20dp"
+            android:background="#111318"/>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:id="@+id/listClaims"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"/>
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutRisk"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#0b0f19"
+        android:paddingBottom="70dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🤖 AI Risk Engine"
+            android:textColor="#fbbf24"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:padding="20dp"
+            android:background="#111318"/>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:id="@+id/listRisk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"/>
+        </ScrollView>
+    </LinearLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_gravity="bottom"
+        android:background="#111318"
+        app:itemIconTint="#f97316"
+        app:itemTextColor="#f97316"
+        app:menu="@menu/bottom_nav_menu"
+        android:visibility="gone"/>
 
 </FrameLayout>

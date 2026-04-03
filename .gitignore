@@ -156,3 +156,14 @@ cython_debug/
 *.swo
 .DS_Store
 Thumbs.db
+
+# Android/Gradle
+.gradle/
+local.properties
+Captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aar
+*.keystore
+!debug.keystore
