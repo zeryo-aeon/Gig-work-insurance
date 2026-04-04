@@ -191,80 +191,77 @@ def decode_token_payload(token: str) -> dict:
 # ─── Seeding Logic ───────────────────────────────────────────────────────────
 
 def seed_db():
-    """Seed initial riders if not present."""
+    """Seed comprehensive initial riders, history, and payments for demo."""
     db = SessionLocal()
     try:
-        if db.query(User).count() > 0:
-            return
-        
-        initial_users = [
-            {
-                "rider_id": "ADMIN-001",
-                "name": "System Admin",
-                "phone": "0000000000",
-                "zone": "HQ",
-                "platform": "Zero-Aeon-GWI",
-                "weekly_plan": "N/A",
-                "active_since": "Jan 2024",
-                "role": "admin",
-                "password": "admin123",
-                "verified_orders": 5,
-                "is_insured": True,
-            },
-            {
-                "rider_id": "GW-8821",
-                "name": "Raju Kumar",
-                "phone": "9876543210",
-                "zone": "Bangalore South",
-                "platform": "Zomato",
-                "weekly_plan": "Micro-Insurance",
-                "active_since": "Jan 2024",
-                "password": "rider123",
-                "verified_orders": 2,
-                "is_insured": False,
-            },
-            {
-                "rider_id": "GW-4422",
-                "name": "Priya Sharma",
-                "phone": "9123456789",
-                "zone": "Mumbai Central",
-                "platform": "Swiggy",
-                "weekly_plan": "Hazard Multiplier",
-                "active_since": "Mar 2024",
-                "password": "rider456",
-                "verified_orders": 5,
-                "is_insured": True,
-            },
-            {
-                "rider_id": "GW-9901",
-                "name": "Vikram Singh",
-                "phone": "9988776655",
-                "zone": "Delhi NCR",
-                "platform": "Zomato",
-                "weekly_plan": "Stability Contract",
-                "active_since": "Nov 2023",
-                "password": "rider789",
-                "verified_orders": 0,
-                "is_insured": False,
-            },
-        ]
-        
-        for u in initial_users:
-            db_user = User(
-                rider_id=u["rider_id"],
-                name=u["name"],
-                phone=u["phone"],
-                zone=u["zone"],
-                platform=u["platform"],
-                weekly_plan=u["weekly_plan"],
-                active_since=u["active_since"],
-                role=u.get("role", "rider"),
-                hashed_password=pwd_context.hash(u["password"]),
-                verified_orders=u["verified_orders"],
-                is_insured=u["is_insured"],
-            )
-            db.add(db_user)
-        
-        db.commit()
+        # 1. Seed Users (if count == 0)
+        if db.query(User).count() == 0:
+            initial_users = [
+                {"rider_id": "ADMIN-001", "name": "System Admin", "phone": "0000000000", "zone": "HQ", "platform": "Zero-Aeon-GWI", "role": "admin", "password": "admin123", "orders": 5, "insured": True},
+                {"rider_id": "GW-8821", "name": "Raju Kumar", "phone": "9876543210", "zone": "Bangalore South", "platform": "Zomato", "password": "rider123", "orders": 3, "insured": True},
+                {"rider_id": "GW-4422", "name": "Priya Sharma", "phone": "9123456789", "zone": "Mumbai Central", "platform": "Swiggy", "password": "rider456", "orders": 5, "insured": True},
+                {"rider_id": "GW-9901", "name": "Vikram Singh", "phone": "9988776655", "zone": "Delhi NCR", "platform": "Zomato", "password": "rider789", "orders": 0, "insured": False},
+            ]
+            for u in initial_users:
+                db.add(User(
+                    rider_id=u["rider_id"], name=u["name"], phone=u["phone"], zone=u["zone"],
+                    platform=u["platform"], weekly_plan="Professional Plus", active_since="Jan 2024",
+                    role=u.get("role", "rider"), hashed_password=pwd_context.hash(u["password"]),
+                    verified_orders=u["orders"], is_insured=u["insured"]
+                ))
+            db.commit()
+            print("Users seeded.")
+
+        # 2. Seed Rider History (if count == 0)
+        if db.query(RiderHistory).count() == 0:
+            import random
+            
+            end_date = datetime.now()
+            riders = ["GW-8821", "GW-4422", "GW-9901"]
+            LOCS = ["Koramangala", "Indiranagar", "HSR Layout", "MG Road", "Whitefield", "Marathahalli", "BTM Layout"]
+            
+            for rid in riders:
+                for i in range(14): # 2 weeks of history
+                    day = (end_date - timedelta(days=i)).strftime("%Y-%m-%d")
+                    
+                    # Raju (8821) is stable (Higher earnings, consistent hours, low risk)
+                    # Priya (4422) is volatile (Random swings, high risk zone)
+                    if rid == "GW-8821":
+                        earn = 1200 + random.randint(-100, 100)
+                        hrs = 8.5 + random.uniform(-0.5, 0.5)
+                        risk = random.randint(10, 30)
+                    elif rid == "GW-4422":
+                        earn = 800 + random.randint(-400, 600)
+                        hrs = 6.0 + random.uniform(-2, 4)
+                        risk = random.randint(40, 90)
+                    else:
+                        earn = 950 + random.randint(-200, 200)
+                        hrs = 7.0 + random.uniform(-1, 1)
+                        risk = random.randint(20, 60)
+                        
+                    payout = 0.0
+                    # Occasional 'automated' trigger simulated in history
+                    if risk > 80 and random.random() > 0.5:
+                        payout = float(random.randint(200, 500))
+                        db.add(Payment(
+                            id=f"PAY-{rid}-{i}", rider_id=rid, amount=payout,
+                            type="insurance_payout", desc="Parametric Trigger: Heavy Rain (Simulated Payout)",
+                            timestamp=datetime.now().timestamp() - (i * 86400),
+                            date=day
+                        ))
+
+                    orig = random.choice(LOCS)
+                    dest = random.choice([l for l in LOCS if l != orig])
+                    dist = 4.0 + random.uniform(2, 12)
+                    
+                    db.add(RiderHistory(
+                        rider_id=rid, date=day, earnings=float(earn), hours_worked=float(hrs),
+                        weather_risk_score=risk, payouts=payout, trips=random.randint(8, 22),
+                        origin_address=f"{orig}, Bangalore", destination_address=f"{dest}, Bangalore",
+                        route_distance_km=round(dist, 1), route_eta_mins=round(dist * 2.5 + 5, 1),
+                        traffic_delay_mins=round(random.uniform(2, 15), 1)
+                    ))
+            db.commit()
+            print("History seeded.")
     finally:
         db.close()

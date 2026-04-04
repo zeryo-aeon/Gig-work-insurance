@@ -238,10 +238,14 @@
       <div class="kpi-change">Instant Payouts</div>
     </div>
     <div class="kpi-card" style="--kpi-color:var(--accent2)">
-      <div class="ai-badge" style="margin-bottom:8px">🤖 XGBoost</div>
+      <div class="ai-badge" style="margin-bottom:8px">🤖 XGBoost + Risk-Geo</div>
       <div class="kpi-label">Predicted Tomorrow</div>
       <div class="kpi-value" id="kpiPredict" style="color:var(--accent2)">₹0</div>
       <div class="kpi-change">Confidence: High</div>
+    </div>
+    <div class="kpi-card" id="aiInsightsCard" style="--kpi-color:var(--accent3); display:none; grid-column: span 2;">
+      <div class="ai-badge" style="margin-bottom:8px">💡 AI Insights</div>
+      <div id="aiInsightsText" style="font-size:12px; line-height:1.6; color:var(--accent3)"></div>
     </div>
   </div>
 
@@ -288,77 +292,6 @@
         <div class="legend-item"><div class="legend-dot" style="background:rgba(249,115,22,0.3)"></div>Expected</div>
       </div>
     </div>
-    <!-- Trip Estimator -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">🛡️ Trip Protection Estimator</div>
-        <div class="ai-badge">AI ROUTE ENGINE</div>
-      </div>
-      <div class="form-group" style="margin-top:0">
-        <label class="form-label">DESTINATION CITY</label>
-        <div style="display:flex;gap:8px">
-          <input class="form-input" list="cities" id="tripDest" placeholder="e.g. Chennai">
-          <button class="activate-btn" style="width:100px;margin-top:0;padding:8px;" onclick="estimateTrip()">Check</button>
-        </div>
-        <datalist id="cities">
-          <option value="Mumbai">
-          <option value="Chennai">
-          <option value="Delhi">
-          <option value="Bangalore">
-          <option value="Kolkata">
-        </datalist>
-      </div>
-      <div id="tripResult" style="margin-top:16px; padding:12px; border:1px dashed var(--border); border-radius:10px; display:none; background:var(--surface2);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <span style="font-size:12px; color:var(--muted);">Distance</span>
-          <span id="tripDist" style="font-family:'Space Mono'; font-weight:700; color:var(--accent2);">--</span>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
-          <span style="font-size:12px; color:var(--muted);">Est. Travel Time</span>
-          <span id="tripTime" style="font-family:'Space Mono'; font-weight:700; color:var(--accent2);">--</span>
-        </div>
-        <div style="margin-top:12px; font-size:10px; color:var(--accent3); text-align:center; font-family:'Space Mono';">
-          🛡️ Route risk analyzed for this trip
-        </div>
-        <!-- AI RISK REPORT -->
-        <div id="tripRiskReport" style="margin-top:12px; padding:10px; border-radius:8px; display:none; background:rgba(0,0,0,0.2); border:1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span style="font-size:10px; color:var(--muted); font-family:'Space Mono';">AI RISK ASSESSMENT</span>
-                <span id="tripRiskStatus" class="status-pill" style="font-size:9px; padding:2px 6px;">--</span>
-            </div>
-            <div id="tripRiskRec" style="font-size:11px; line-height:1.4; color:var(--text);">--</div>
-        </div>
-        <a href="/map" style="display:block; text-decoration:none; margin-top:16px;">
-          <button class="activate-btn" style="background:var(--accent2); margin-top:0;">Launch Smart Map →</button>
-        </a>
-      </div>
-    </div>
-    
-    <!-- Traffic Analytics -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Traffic Analytics</div>
-        <div class="ai-badge">AI ROUTE ENGINE</div>
-      </div>
-      <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:8px">
-          <span style="font-size:13px;color:var(--muted)">Total Distance (7 Days)</span>
-          <span id="trafficDist" style="font-family:'Space Mono';font-weight:700;color:var(--accent3)">--</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:8px">
-          <span style="font-size:13px;color:var(--muted)">Est. Traffic Delay</span>
-          <span id="trafficDelay" style="font-family:'Space Mono';font-weight:700;color:var(--warn)">--</span>
-        </div>
-      </div>
-      <div style="margin-top:16px;font-size:12px;color:var(--muted)">
-        <div style="font-weight:600;margin-bottom:6px">Latest Route Analysis</div>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;justify-content:space-between"><span>Origin:</span> <span id="latestOrigin" style="color:var(--text);text-align:right">--</span></div>
-          <div style="display:flex;justify-content:space-between"><span>Destination:</span> <span id="latestDest" style="color:var(--text);text-align:right">--</span></div>
-          <div style="display:flex;justify-content:space-between"><span>ETA (incl. traffic):</span> <span id="latestEta" style="color:var(--warn)">--</span></div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="card">
@@ -387,8 +320,18 @@
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">AI Pricing Formula</div><div class="ai-badge">🤖 XGBoost</div></div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.9;color:var(--accent3)">
-        Weekly Premium =<br>&nbsp;&nbsp;Base (₹30)<br>&nbsp;&nbsp;+ (AI Risk Score × Coverage Level)<br>&nbsp;&nbsp;× Income Variability
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.7;color:var(--accent3)">
+        Premium = (Base + Points Factor) × Risk Modifier<br>
+        <span style="color:var(--muted)">● Base: Tier specific (₹30 - ₹80)</span><br>
+        <span style="color:var(--muted)">● Points: -₹0.5 per positive trust point</span><br>
+        <span style="color:var(--muted)">● Risk: Predicted income volatility (XGBoost)</span>
+      </div>
+      <div style="margin-top:16px; border:1px solid var(--border); border-radius:10px; overflow:hidden;" id="pointsBreakdownWrap">
+        <div style="padding:10px; background:var(--surface2); border-bottom:1px solid var(--border); font-size:11px; font-family:'Space Mono',monospace; color:var(--muted); display:flex; justify-content:space-between;">
+           <span>POINTS ENGINE</span>
+           <span id="totalPointsVal" style="font-weight:700;">+0 Pts</span>
+        </div>
+        <div id="pointsList" style="padding:8px 0;"></div>
       </div>
       <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px" id="aiInputs"></div>
       <div style="margin-top:16px">
@@ -538,21 +481,20 @@ async function loadDashboard() {
   document.getElementById('kpiWallet').textContent = `₹${summary.wallet_balance.toLocaleString()}`;
   document.getElementById('kpiPredict').textContent = `₹${w.predicted_next_day.toLocaleString()}`;
 
+  // AI Pricing Insights
+  if (summary.pricing && summary.pricing.insights.length > 0) {
+    const insightCard = document.getElementById('aiInsightsCard');
+    const insightText = document.getElementById('aiInsightsText');
+    if (insightCard && insightText) {
+      insightCard.style.display = 'block';
+      insightText.innerHTML = summary.pricing.insights.map(i => `• ${i}`).join('<br>');
+    }
+  }
+
   // Update Risk tab fields as well
   document.getElementById('riskPredictVal').textContent = `₹${w.predicted_next_day.toLocaleString()}`;
   document.getElementById('riskAvgVal').textContent = `₹${Math.round(w.earnings/7).toLocaleString()}`;
   document.getElementById('riskProjectedVal').textContent = `₹${Math.round(w.predicted_next_day * 7).toLocaleString()}`;
-
-  // Update Traffic fields
-  if (w.total_distance !== undefined) {
-    document.getElementById('trafficDist').textContent = `${w.total_distance.toLocaleString()} km`;
-    document.getElementById('trafficDelay').textContent = `${w.total_traffic_delay.toLocaleString()} mins`;
-    if (w.recent_route && w.recent_route.origin) {
-      document.getElementById('latestOrigin').textContent = w.recent_route.origin;
-      document.getElementById('latestDest').textContent = w.recent_route.destination;
-      document.getElementById('latestEta').textContent = `${w.recent_route.eta} mins (+${w.recent_route.delay}m delay)`;
-    }
-  }
 
   // Eligibility
   const verified = summary.verified_orders || 0;
@@ -687,10 +629,30 @@ async function loadInsurance() {
     </div>`).join('');
 
   const f = aiData.formula;
+  // Update Points
+  const pts = aiData.points;
+  const ptsVal = document.getElementById('totalPointsVal');
+  if(ptsVal) {
+    ptsVal.textContent = (pts.total >= 0 ? '+' : '') + pts.total + ' Pts';
+    ptsVal.style.color = pts.total >= 20 ? 'var(--accent3)' : pts.total < 0 ? 'var(--warn)' : 'var(--gold)';
+  }
+  
+  const ptsList = document.getElementById('pointsList');
+  if(ptsList) {
+    ptsList.innerHTML = pts.breakdown.map(p => `
+      <div style="display:flex; justify-content:space-between; padding:4px 12px; font-size:12px;">
+        <span style="color:var(--muted);">${p.name}</span>
+        <span style="color:${p.type === 'positive' ? 'var(--accent3)' : 'var(--warn)'}; font-family:'Space Mono',monospace; font-weight:600;">
+          ${p.points >= 0 ? '+' : ''}${p.points}
+        </span>
+      </div>
+    `).join('');
+  }
+
   document.getElementById('aiInputs').innerHTML = `
-    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">🌦️</div><div><div style="font-weight:600">Weather Forecast Input</div><div style="color:var(--muted);font-size:11px">${aiData.weather_input}</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gold)">High</div></div>
-    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">📍</div><div><div style="font-weight:600">Location Risk</div><div style="color:var(--muted);font-size:11px">${aiData.location_input}</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent3)">Medium</div></div>
-    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">📈</div><div><div style="font-weight:600">Historical Earnings</div><div style="color:var(--muted);font-size:11px">${aiData.earnings_input}</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent3)">${aiData.earnings_input.split(' ')[0]}</div></div>`;
+    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">📊</div><div><div style="font-weight:600">Dynamic Base</div><div style="color:var(--muted);font-size:11px">Tier Base + Points Adjustment</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent3)">₹${f.dynamic_base}</div></div>
+    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">📈</div><div><div style="font-weight:600">Risk Modifier</div><div style="color:var(--muted);font-size:11px">Predicted Volatility</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gold)">×${f.risk_modifier}</div></div>
+    <div class="trigger-row" style="font-size:12px"><div style="font-size:18px">🛡️</div><div><div style="font-weight:600">Coverage Multiplier</div><div style="color:var(--muted);font-size:11px">Plan Tier Factor</div></div><div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent2)">×${f.coverage_multiplier}</div></div>`;
 }
 
 async function selectPlan(el, planId, price) {
@@ -700,6 +662,7 @@ async function selectPlan(el, planId, price) {
   selectedPlanPrice = price;
   const data = await fetch(`/api/insurance/ai-premium?plan_id=${planId}`).then(r=>r.json());
   document.getElementById('premiumDisplay').textContent = '₹'+data.final_premium;
+  updatePricingDisplay(data);
 }
 
 async function activatePlan() {
@@ -751,48 +714,6 @@ async function loadClaims() {
       <span class="status-pill ${statusClass(c.status)}" style="margin-left:auto;margin-right:8px">${statusLabel(c.status)}</span>
       <div class="claim-amount">₹${c.amount}</div>
     </div>`).join('');
-}
-
-async function estimateTrip() {
-  const dest = document.getElementById('tripDest').value.trim();
-  const summary = await fetch('/api/dashboard/summary').then(r=>r.json());
-  const origin = summary.rider.zone || 'Bangalore';
-  
-  if(!dest) return;
-  
-  const res = await fetch(`/api/route?origin=${origin}&destination=${dest}`);
-  const data = await res.json();
-  
-  if(data.distance_km) {
-    document.getElementById('tripResult').style.display = 'block';
-    document.getElementById('tripDist').textContent = data.distance_km + ' km';
-    document.getElementById('tripTime').textContent = Math.round(data.eta_minutes) + ' mins';
-    
-    // AI Report display
-    const report = data.ai_report;
-    const reportDiv = document.getElementById('tripRiskReport');
-    const statusPill = document.getElementById('tripRiskStatus');
-    const recText = document.getElementById('tripRiskRec');
-    
-    reportDiv.style.display = 'block';
-    statusPill.textContent = report.risk_status.toUpperCase();
-    recText.textContent = report.recommendation;
-    
-    // Status coloring
-    if (report.risk_status === 'Hazardous') {
-        statusPill.style.background = 'rgba(239,68,68,0.2)';
-        statusPill.style.color = 'var(--warn)';
-        statusPill.style.border = '1px solid var(--warn)';
-    } else if (report.risk_status === 'Cautious') {
-        statusPill.style.background = 'rgba(251,191,36,0.2)';
-        statusPill.style.color = 'var(--gold)';
-        statusPill.style.border = '1px solid var(--gold)';
-    } else {
-        statusPill.style.background = 'rgba(34,197,94,0.2)';
-        statusPill.style.color = 'var(--accent3)';
-        statusPill.style.border = '1px solid var(--accent3)';
-    }
-  }
 }
 
 async function uploadOrder(input) {

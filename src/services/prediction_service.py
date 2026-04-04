@@ -3,7 +3,18 @@ import pandas as pd
 import numpy as np
 import json
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+
+# --- Geo-Risk Registry (Simulated Hyper-local Risk Database) ---
+GEO_RISK_REGISTRY = {
+    "Bangalore South": {"water_logging_safe": True, "risk_score": 1, "avg_disruption_hrs": 2},
+    "Koramangala": {"water_logging_safe": True, "risk_score": 1, "avg_disruption_hrs": 3},
+    "Indiranagar": {"water_logging_safe": False, "risk_score": 3, "avg_disruption_hrs": 8},
+    "Whitefield": {"water_logging_safe": False, "risk_score": 4, "avg_disruption_hrs": 12},
+    "Mumbai Central": {"water_logging_safe": False, "risk_score": 5, "avg_disruption_hrs": 15},
+    "Delhi NCR": {"water_logging_safe": True, "risk_score": 2, "avg_disruption_hrs": 5},
+    "HQ": {"water_logging_safe": True, "risk_score": 0, "avg_disruption_hrs": 0},
+}
 
 class IncomePredictor:
     def __init__(self, history_file: str):
@@ -73,32 +84,126 @@ class IncomePredictor:
         prediction = self.model.predict(X_input)
         return float(prediction[0])
 
-    def calculate_premium_modifier(self, rider_id: str, current_weather_risk: int = 0) -> float:
+    def calculate_premium_modifier(self, rider_id: str, zone: str = "Unknown", current_weather_risk: int = 0) -> Dict[str, Any]:
         """
-        Calculates a dynamic premium modifier based on predicted income volatility relative to average.
-        Returns a factor between 1.0 (baseline) and 1.5 (high risk).
+        Calculates dynamic points, modifier, and AI insights.
+        Returns: {modifier, final_premium, discount_applied, points_total, points_breakdown, insights, is_safe_zone}
         """
         predicted_earnings = self.predict_next_day(rider_id, current_weather_risk)
-        if predicted_earnings is None:
-            return 1.10
-
+        
+        # Base modifier calculation
         data = self._load_history()
-        history = data[rider_id]['history']
-        if len(history) == 0:
-            return 1.10
+        history = data.get(rider_id, {}).get('history', [])
+        
+        avg_earnings = sum(h['earnings'] for h in history) / len(history) if history else 500
+        avg_hours = sum(h['hours_worked'] for h in history) / len(history) if history else 20
+        
+        if avg_earnings == 0: avg_earnings = 500
             
-        avg_earnings = sum(h['earnings'] for h in history) / len(history)
+        ratio = predicted_earnings / avg_earnings if predicted_earnings is not None else 1.0
+        
+        # Volatility factor
+        volatility_modifier = 1.0 + abs(1.0 - ratio) * 0.4
+        volatility_modifier = max(1.0, min(1.5, volatility_modifier))
 
-        if avg_earnings == 0:
-            return 1.10
+        # --- Unified Risk Tone Engine (Directional Consistency) ---
+        points_breakdown = []
+        raw_points = 0
         
-        ratio = predicted_earnings / avg_earnings
+        # 1. Evaluate All Risk/Trust Factors
+        # Safe Zone Factor
+        risk_info = GEO_RISK_REGISTRY.get(zone, {"water_logging_safe": False, "risk_score": 3})
+        if risk_info["water_logging_safe"]:
+            raw_points += 15
+        else:
+            raw_points -= 10
+            
+        # Activity Factor
+        if avg_hours > 30:
+            raw_points += 10
+        elif avg_hours < 15:
+            raw_points -= 15
+            
+        # Stability Factor
+        if len(history) > 3:
+            earnings_var = np.std([h['earnings'] for h in history]) / avg_earnings
+            if earnings_var < 0.2:
+                raw_points += 20
+            elif earnings_var > 0.5:
+                raw_points -= 20
+
+        # Volatility Factor (from Prediction ratio)
+        if ratio < 0.7:
+            raw_points -= 25
+        elif ratio > 0.95:
+            raw_points += 10
+
+        # 2. Determine UNIFIED DIRECTION
+        # If raw_points > 0, we are in "Incentive Mode"
+        # If raw_points <= 0, we are in "Penalty Mode"
+        is_positive_mode = raw_points > 0
+        total_points = 0
         
-        # Volatility modifier
-        modifier = 1.0 + abs(1.0 - ratio) * 0.4
+        if is_positive_mode:
+            # Only include positive points
+            if risk_info["water_logging_safe"]:
+                total_points += 15
+                points_breakdown.append({"name": "Safe Zone Bonus", "points": 15, "type": "positive"})
+            if avg_hours > 30:
+                total_points += 10
+                points_breakdown.append({"name": "High Activity Reward", "points": 10, "type": "positive"})
+            if len(history) > 3 and (np.std([h['earnings'] for h in history]) / avg_earnings) < 0.2:
+                total_points += 20
+                points_breakdown.append({"name": "Stability Incentive", "points": 20, "type": "positive"})
+            if ratio > 0.95:
+                total_points += 10
+                points_breakdown.append({"name": "Predictive Stability Bonus", "points": 10, "type": "positive"})
+            
+            # Force Modifier to be at or below baseline
+            volatility_modifier = max(0.85, min(1.0, 1.0 - (total_points / 200)))
+        else:
+            # Only include negative points
+            if not risk_info["water_logging_safe"] or risk_info["risk_score"] >= 4:
+                total_points -= 20
+                points_breakdown.append({"name": "High Risk Zone Penalty", "points": -20, "type": "negative"})
+            if avg_hours < 15:
+                total_points -= 15
+                points_breakdown.append({"name": "Low Activity Penalty", "points": -15, "type": "negative"})
+            if ratio < 0.7:
+                total_points -= 25
+                points_breakdown.append({"name": "High Volatility Penalty", "points": -25, "type": "negative"})
+            if len(history) > 3 and (np.std([h['earnings'] for h in history]) / avg_earnings) > 0.4:
+                total_points -= 10
+                points_breakdown.append({"name": "Historical Variance Penalty", "points": -10, "type": "negative"})
+
+            # Force Modifier to be at or above baseline
+            volatility_modifier = max(1.05, min(1.6, 1.0 + abs(total_points / 100)))
+
+        # Pts to Discount: 1 pt = ₹0.5
+        discount = total_points * 0.5 
         
-        # Bound between 1.0 and 1.5
-        return float(max(1.0, min(1.5, modifier)))
+        insights = []
+        if is_positive_mode:
+            insights.append(f"Excellent trust score! All dynamic factors are trending towards savings.")
+            if total_points > 30: insights.append(f"You've reached 'Elite' status. Premium significantly reduced.")
+        else:
+            insights.append("Risk levels are elevated. All dynamic factors are adjusting to protect your income buffer.")
+            insights.append("Consider shifts in safe zones to unlock trust incentives.")
+        
+        coverage_hours_bonus = 0
+        if not is_positive_mode:
+            coverage_hours_bonus = 8 # Extra protection in high risk mode
+            insights.append(f"Alert: High risk detected. ShieldGig has auto-extended protection by +{coverage_hours_bonus}hrs.")
+        
+        return {
+            "modifier": float(volatility_modifier),
+            "points_total": total_points,
+            "points_breakdown": points_breakdown,
+            "discount_applied": float(discount),
+            "coverage_hours_bonus": coverage_hours_bonus,
+            "insights": insights,
+            "is_safe_zone": risk_info["water_logging_safe"]
+        }
 
     def get_model_performance(self, rider_id: str) -> Dict[str, list]:
         """

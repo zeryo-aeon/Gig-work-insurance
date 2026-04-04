@@ -19,37 +19,29 @@ def require_auth(request: Request):
 
 PLANS = [
     {
-        "id": "micro",
-        "name": "Micro-Insurance",
-        "base_price": 60,
-        "description": "5% of weekly earnings → Resilience Pool + platform match. Auto payout on trigger.",
-        "coverage_level": 1.2,
-        "guarantee": "50% income loss covered",
-    },
-    {
-        "id": "hazard",
-        "name": "Hazard Multiplier",
-        "base_price": 100,
-        "description": "1.5× base pay on hazard days. Rain/heat threshold crossed → automatic upgrade.",
-        "coverage_level": 1.5,
-        "guarantee": "1.5× pay on hazard days",
-    },
-    {
-        "id": "stability",
-        "name": "Stability Contract",
-        "base_price": 80,
-        "description": "Fixed weekly schedule → 70% payout guaranteed on curfew / lockdown days.",
-        "coverage_level": 1.3,
-        "guarantee": "70% payout on lockdown",
-    },
-    {
-        "id": "baseline",
-        "name": "Baseline Guarantee",
-        "base_price": 50,
-        "description": "Min ₹2500/week if active hours met. Disruption hours counted as worked.",
+        "id": "basic",
+        "name": "Basic Protection",
+        "base_price": 30,
+        "description": "Essential coverage for income loss. 60% of daily average covered on trigger. Micro-savings matches.",
         "coverage_level": 1.0,
-        "guarantee": "₹2500 min weekly income",
+        "guarantee": "60% income loss protected",
     },
+    {
+        "id": "medium",
+        "name": "Professional Plus",
+        "base_price": 50,
+        "description": "Standard professional coverage. 80% coverage + hazard multiplier during extreme conditions.",
+        "coverage_level": 1.25,
+        "guarantee": "80% income + hazard bonus",
+    },
+    {
+        "id": "ultra",
+        "name": "Ultra Shield",
+        "base_price": 80,
+        "description": "Premium 100% income protection. Zero-touch refunds on safe days and peak payout guarantees.",
+        "coverage_level": 1.5,
+        "guarantee": "100% full income buffer",
+    }
 ]
 
 
@@ -63,35 +55,46 @@ async def get_plans(request: Request):
 from services.prediction_service import predictor
 
 @router.get("/ai-premium")
-async def get_ai_premium(request: Request, plan_id: str = "micro"):
+async def get_ai_premium(request: Request, plan_id: str = "basic"):
     user = require_auth(request)
-    app_logger.info(f"INSURANCE: Calculating AI premium for rider {user.rider_id} (Plan: {plan_id})")
+    app_logger.info(f"INSURANCE: Calculating AI premium for rider {user.rider_id} (Tier: {plan_id})")
     plan = next((p for p in PLANS if p["id"] == plan_id), PLANS[0])
     
-    # Dynamic calculation using XGBoost model
-    risk_modifier = predictor.calculate_premium_modifier(user.rider_id)
-    risk_score = (risk_modifier - 1.0) * 2.0  # Scales 1.0-1.5 to 0.0-1.0
+    # Dynamic calculation using our expanded Points Engine
+    pricing_res = predictor.calculate_premium_modifier(user.rider_id, zone=user.zone)
     
-    base = 30
-    coverage_level = plan["coverage_level"]
-    income_variability = risk_modifier
+    # Extract components
+    modifier = pricing_res["modifier"]
+    total_points = pricing_res["points_total"]
+    points_discount = pricing_res["discount_applied"]
     
-    premium = base + (risk_score * coverage_level * income_variability * 100)
-    premium_rounded = round(premium / 10) * 10  # round to nearest 10
+    coverage_multiplier = plan["coverage_level"]
+    
+    # Formula: (Base + Dynamic Offset from Points) * Risk Modifier
+    # Points reduce the base (positive points = lower base)
+    dynamic_base = plan["base_price"] - points_discount
+    premium = (dynamic_base * modifier * coverage_multiplier)
+    
+    premium_rounded = round(premium / 5) * 5  # round to nearest 5
     
     return {
         "plan_id": plan_id,
-        "formula": {
-            "base": base,
-            "risk_score": round(risk_score, 2),
-            "coverage_level": coverage_level,
-            "income_variability": round(income_variability, 2),
+        "points": {
+            "total": total_points,
+            "breakdown": pricing_res["points_breakdown"]
         },
-        "calculated": round(premium, 2),
-        "final_premium": premium_rounded,
-        "tier": "High" if risk_score > 0.6 else "Medium" if risk_score > 0.3 else "Low",
+        "formula": {
+            "tier_base": plan["base_price"],
+            "points_adjustment": -points_discount,
+            "dynamic_base": round(dynamic_base, 2),
+            "risk_modifier": round(modifier, 2),
+            "coverage_multiplier": coverage_multiplier,
+        },
+        "final_premium": float(max(5.0, premium_rounded)),
+        "tier_rating": "High Risk" if modifier > 1.3 else "Optimal" if total_points > 20 else "Standard",
+        "insights": pricing_res["insights"],
         "weather_input": "Live Data (Open-Meteo)",
-        "location_input": "Dynamic (Geoapify)",
+        "location_input": f"Dynamic (Zone: {user.zone})",
         "earnings_input": "XGBoost Prediction Model",
     }
 

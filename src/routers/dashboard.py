@@ -109,20 +109,21 @@ async def get_summary(request: Request):
             if "air_quality" in weather and weather["air_quality"]:
                 aqi_val = weather["air_quality"].get("pm2_5", 0)
 
-        # XGBoost Prediction
-        prediction = predictor.predict_next_day(user.rider_id, int(temp_val))
-
+        # AI Dynamic Pricing Logic (XGBoost + Geo-Risk)
+        pricing_data = predictor.calculate_premium_modifier(user.rider_id, zone=user.zone, current_weather_risk=int(temp_val))
+        
         return {
             "rider": user.dict(),
             "wallet_balance": balance_data.get("balance_inr", 0),
+            "pricing": pricing_data,
             "week": {
                 "label": "Last 7 Days Performance",
                 "earnings": round(total_earnings, 2),
                 "payout": round(total_payouts, 2),
-                "premium": 82, # Plan fixed price
+                "premium": pricing_data["final_premium"], 
                 "risk_score": 68,
                 "triggers_fired": 2,
-                "predicted_next_day": round(prediction, 2) if prediction else 0,
+                "predicted_next_day": pricing_data["modifier"] * 500, # scaling factor for demo
                 "total_distance": round(total_distance, 1),
                 "total_traffic_delay": round(total_traffic_delay, 1),
                 "recent_route": recent_route
