@@ -9,12 +9,19 @@ from datetime import timedelta
 from models.session import (
     authenticate_user, create_access_token,
     get_current_user, decode_token_payload,
-    register_user,
+    register_user, get_or_create_firebase_user,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from pydantic import BaseModel
 from utils.logger import app_logger
 
 router = APIRouter()
+
+
+class FirebaseAuthRequest(BaseModel):
+    uid: str
+    email: str
+    name: str
 
 
 @router.post("/login")
@@ -89,6 +96,37 @@ async def signup(
         samesite="lax"
     )
     return response
+
+
+@router.post("/firebase-login")
+async def firebase_login(data: FirebaseAuthRequest):
+    """Bridge Firebase UID/Email with a local JWT session."""
+    app_logger.info(f"AUTH: Firebase login attempt for {data.email} ({data.uid})")
+    
+    user = get_or_create_firebase_user(data.uid, data.email, data.name)
+    
+    token = create_access_token(
+        data={"sub": user.rider_id},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
+    redirect_url = "/admin" if user.role == "admin" else "/dashboard"
+    
+    response = JSONResponse(content={
+        "success": True,
+        "rider_id": user.rider_id,
+        "name": user.name,
+        "redirect": redirect_url
+    })
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        samesite="lax"
+    )
+    return response
+
 
 @router.post("/logout")
 async def logout():

@@ -9,6 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from fastapi import HTTPException
 import hashlib
+import time
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,9 @@ class User(Base):
     weekly_plan = Column(String)
     active_since = Column(String)
     role = Column(String, default="rider")
-    hashed_password = Column(String)
+    hashed_password = Column(String, nullable=True) # Optional if using Firebase only
+    firebase_uid = Column(String, unique=True, index=True, nullable=True)
+    email = Column(String, unique=True, index=True, nullable=True)
     verified_orders = Column(Integer, default=0)
     is_insured = Column(Boolean, default=False)
     
@@ -93,6 +96,8 @@ class SessionUser(BaseModel):
     weekly_plan: str
     active_since: str
     role: str = "rider"
+    firebase_uid: Optional[str] = None
+    email: Optional[str] = None
     verified_orders: int = 0
     is_insured: bool = False
 
@@ -152,6 +157,46 @@ def register_user(name: str, phone: str, zone: str, password: str) -> User:
         db.close()
 
 
+def get_or_create_firebase_user(uid: str, email: str, name: str) -> User:
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.firebase_uid == uid).first()
+        if not user:
+            # Check by email as fallback
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                user.firebase_uid = uid
+                db.commit()
+                db.refresh(user)
+            else:
+                # Create new
+                import random
+                new_id = f"GW-{random.randint(1000, 9999)}"
+                while db.query(User).filter(User.rider_id == new_id).first():
+                    new_id = f"GW-{random.randint(1000, 9999)}"
+                
+                user = User(
+                    rider_id=new_id,
+                    name=name,
+                    email=email,
+                    firebase_uid=uid,
+                    phone="", zone="Universal", platform="Independent",
+                    weekly_plan="Basic Cover", active_since="Joined via Firebase",
+                    is_insured=False,
+                    verified_orders=5 # Give demo feedback immediately
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+                
+                # Autoseed history for new user
+                seed_user_history(db, user.rider_id)
+                db.commit()
+        return user
+    finally:
+        db.close()
+
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
@@ -190,78 +235,239 @@ def decode_token_payload(token: str) -> dict:
 
 # ─── Seeding Logic ───────────────────────────────────────────────────────────
 
+
+
+def seed_user_history(db, rider_id: str, days: int = 30):
+    """Generate X days of history for a specific rider, relative to today."""
+    from datetime import datetime, timedelta
+    import random
+    
+    # Check if history already exists to avoid duplicates
+    if db.query(RiderHistory).filter(RiderHistory.rider_id == rider_id).count() >= days:
+        return
+
+    # Using current date as midpoint/end point for the demo
+    now = datetime.now()
+    
+    for i in range(days):
+        current_date = now - timedelta(days=(days - 1 - i))
+        date_str = current_date.strftime("%Y-%m-%d")
+        is_weekend = current_date.weekday() >= 4 # Fri-Sun surge
+        
+        import random
+        base_earnings = 600 + random.randint(0, 300)
+        if is_weekend: base_earnings *= 1.3 
+        
+        # High risk stors
+        risk = 10 + random.randint(0, 40)
+        payout = 0
+        if random.random() < 0.15: # 15% rainy days
+            risk = 85 + random.randint(0, 10)
+            payout = base_earnings * 0.4
+            base_earnings -= (payout * 0.5)
+        
+        hist = RiderHistory(
+            rider_id=rider_id,
+            date=date_str,
+            earnings=float(base_earnings),
+            hours_worked=float(random.randint(6, 12)),
+            weather_risk_score=risk,
+            payouts=float(payout),
+            trips=random.randint(8, 25),
+            origin_address="Sector " + str(random.randint(1, 15)),
+            destination_address="Point " + chr(random.randint(65, 80)),
+            route_distance_km=float(random.randint(4, 18)),
+            route_eta_mins=float(random.randint(15, 60)),
+            traffic_delay_mins=float(random.randint(0, 15))
+        )
+        db.add(hist)
+
+def seed_user_payments(db, rider_id: str):
+    """Seed realistic payment records (payouts + premiums) for a demo rider."""
+    from datetime import datetime, timedelta
+    import random
+    import uuid
+
+    # Don't re-seed if payments already exist
+    if db.query(Payment).filter(Payment.rider_id == rider_id).count() > 0:
+        return
+
+    now = datetime.now()
+
+    # ── Insurance Payouts (parametric trigger events) ─────────────────────────
+    payout_events = [
+        {
+            "offset_days": 25,
+            "desc": "Heavy Rain Trigger — 48mm/hr detected",
+            "amount": 340.0,
+        },
+        {
+            "offset_days": 18,
+            "desc": "Extreme Heat Trigger — 44°C in zone",
+            "amount": 210.0,
+        },
+        {
+            "offset_days": 11,
+            "desc": "AQI Pollution Alert — PM2.5 > 300",
+            "amount": 150.0,
+        },
+        {
+            "offset_days": 5,
+            "desc": "Heavy Rain Trigger — 52mm/hr detected",
+            "amount": 380.0,
+        },
+    ]
+
+    # Add random variation per rider so each accounts looks unique
+    random.seed(hash(rider_id) % 2**31)
+    for evt in payout_events:
+        # Small random offset so dates differ per rider
+        actual_offset = evt["offset_days"] + random.randint(-2, 2)
+        evt_date = now - timedelta(days=actual_offset)
+        amount = round(evt["amount"] * random.uniform(0.85, 1.15), 2)
+        pay = Payment(
+            id=f"PAY-{uuid.uuid4().hex[:8].upper()}",
+            rider_id=rider_id,
+            amount=amount,
+            type="insurance_payout",
+            desc=evt["desc"],
+            timestamp=evt_date.timestamp(),
+            date=evt_date.strftime("%Y-%m-%d"),
+        )
+        db.add(pay)
+
+    # ── Weekly Premium Charges (last 4 weeks) ────────────────────────────────
+    premium_amounts = [60.0, 60.0, 80.0, 60.0]  # slight variation
+    for week_i, premium in enumerate(premium_amounts):
+        charge_date = now - timedelta(weeks=(4 - week_i), days=1)
+        charge = Payment(
+            id=f"PAY-{uuid.uuid4().hex[:8].upper()}",
+            rider_id=rider_id,
+            amount=-premium,  # negative = charge
+            type="premium_charge",
+            desc=f"Weekly Premium — Micro-Insurance Plan (Week {4 - week_i})",
+            timestamp=charge_date.timestamp(),
+            date=charge_date.strftime("%Y-%m-%d"),
+        )
+        db.add(charge)
+
+
 def seed_db():
     """Seed comprehensive initial riders, history, and payments for demo."""
     db = SessionLocal()
     try:
-        # 1. Seed Users (if count == 0)
-        if db.query(User).count() == 0:
-            initial_users = [
-                {"rider_id": "ADMIN-001", "name": "System Admin", "phone": "0000000000", "zone": "HQ", "platform": "Zero-Aeon-GWI", "role": "admin", "password": "admin123", "orders": 5, "insured": True},
-                {"rider_id": "GW-8821", "name": "Raju Kumar", "phone": "9876543210", "zone": "Bangalore South", "platform": "Zomato", "password": "rider123", "orders": 3, "insured": True},
-                {"rider_id": "GW-4422", "name": "Priya Sharma", "phone": "9123456789", "zone": "Mumbai Central", "platform": "Swiggy", "password": "rider456", "orders": 5, "insured": True},
-                {"rider_id": "GW-9901", "name": "Vikram Singh", "phone": "9988776655", "zone": "Delhi NCR", "platform": "Zomato", "password": "rider789", "orders": 0, "insured": False},
-            ]
-            for u in initial_users:
-                db.add(User(
-                    rider_id=u["rider_id"], name=u["name"], phone=u["phone"], zone=u["zone"],
-                    platform=u["platform"], weekly_plan="Professional Plus", active_since="Jan 2024",
-                    role=u.get("role", "rider"), hashed_password=pwd_context.hash(u["password"]),
-                    verified_orders=u["orders"], is_insured=u["insured"]
-                ))
+        # Seed payments for existing riders on every startup (idempotent)
+        if db.query(User).count() > 0:
+            for rid in ["GW-8821", "GW-4422", "GW-9901"]:
+                seed_user_history(db, rid)
+                seed_user_payments(db, rid)
             db.commit()
-            print("Users seeded.")
+            return
 
-        # 2. Seed Rider History (if count == 0)
-        if db.query(RiderHistory).count() == 0:
-            import random
-            
-            end_date = datetime.now()
-            riders = ["GW-8821", "GW-4422", "GW-9901"]
-            LOCS = ["Koramangala", "Indiranagar", "HSR Layout", "MG Road", "Whitefield", "Marathahalli", "BTM Layout"]
-            
-            for rid in riders:
-                for i in range(14): # 2 weeks of history
-                    day = (end_date - timedelta(days=i)).strftime("%Y-%m-%d")
-                    
-                    # Raju (8821) is stable (Higher earnings, consistent hours, low risk)
-                    # Priya (4422) is volatile (Random swings, high risk zone)
-                    if rid == "GW-8821":
-                        earn = 1200 + random.randint(-100, 100)
-                        hrs = 8.5 + random.uniform(-0.5, 0.5)
-                        risk = random.randint(10, 30)
-                    elif rid == "GW-4422":
-                        earn = 800 + random.randint(-400, 600)
-                        hrs = 6.0 + random.uniform(-2, 4)
-                        risk = random.randint(40, 90)
-                    else:
-                        earn = 950 + random.randint(-200, 200)
-                        hrs = 7.0 + random.uniform(-1, 1)
-                        risk = random.randint(20, 60)
-                        
-                    payout = 0.0
-                    # Occasional 'automated' trigger simulated in history
-                    if risk > 80 and random.random() > 0.5:
-                        payout = float(random.randint(200, 500))
-                        db.add(Payment(
-                            id=f"PAY-{rid}-{i}", rider_id=rid, amount=payout,
-                            type="insurance_payout", desc="Parametric Trigger: Heavy Rain (Simulated Payout)",
-                            timestamp=datetime.now().timestamp() - (i * 86400),
-                            date=day
-                        ))
+        initial_users = [
+            {
+                "rider_id": "ADMIN-001",
+                "name": "System Administrator",
+                "phone": "0000000000",
+                "zone": "Global Operations",
+                "platform": "ShieldGig Console",
+                "weekly_plan": "Admin Tier",
+                "active_since": "System Launch",
+                "password": "admin123",
+                "role": "admin",
+                "verified_orders": 5,
+                "is_insured": True,
+            },
+            {
+                "rider_id": "ADMIN-002",
+                "name": "Operations Lead",
+                "phone": "0000000001",
+                "zone": "Regional Operations",
+                "platform": "ShieldGig Console",
+                "weekly_plan": "Admin Tier",
+                "active_since": "Jan 2024",
+                "password": "admin456",
+                "role": "admin",
+                "verified_orders": 5,
+                "is_insured": True,
+            },
+            {
+                "rider_id": "ADMIN-003",
+                "name": "Audit Manager",
+                "phone": "0000000002",
+                "zone": "Compliance Dept",
+                "platform": "ShieldGig Console",
+                "weekly_plan": "Admin Tier",
+                "active_since": "Feb 2024",
+                "password": "admin789",
+                "role": "admin",
+                "verified_orders": 5,
+                "is_insured": True,
+            },
+            {
+                "rider_id": "GW-8821",
+                "name": "Raju Kumar",
+                "phone": "9876543210",
+                "zone": "Bangalore Central",
+                "platform": "Swiggy",
+                "weekly_plan": "Micro-Insurance",
+                "active_since": "Dec 2023",
+                "password": "rider123",
+                "role": "rider",
+                "verified_orders": 5,
+                "is_insured": True,
+            },
+            {
+                "rider_id": "GW-4422",
+                "name": "Priya Sharma",
+                "phone": "8877665544",
+                "zone": "Mumbai West",
+                "platform": "Uber Eats",
+                "weekly_plan": "Micro-Insurance",
+                "active_since": "Jan 2024",
+                "password": "rider456",
+                "role": "rider",
+                "verified_orders": 5,
+                "is_insured": True,
+            },
+            {
+                "rider_id": "GW-9901",
+                "name": "Vikram Singh",
+                "phone": "9988776655",
+                "zone": "Delhi NCR",
+                "platform": "Zomato",
+                "weekly_plan": "Micro-Insurance",
+                "active_since": "Feb 2024",
+                "password": "rider789",
+                "role": "rider",
+                "verified_orders": 5,
+                "is_insured": False,
+            }
+        ]
 
-                    orig = random.choice(LOCS)
-                    dest = random.choice([l for l in LOCS if l != orig])
-                    dist = 4.0 + random.uniform(2, 12)
-                    
-                    db.add(RiderHistory(
-                        rider_id=rid, date=day, earnings=float(earn), hours_worked=float(hrs),
-                        weather_risk_score=risk, payouts=payout, trips=random.randint(8, 22),
-                        origin_address=f"{orig}, Bangalore", destination_address=f"{dest}, Bangalore",
-                        route_distance_km=round(dist, 1), route_eta_mins=round(dist * 2.5 + 5, 1),
-                        traffic_delay_mins=round(random.uniform(2, 15), 1)
-                    ))
-            db.commit()
-            print("History seeded.")
+        # Seed Users
+        for u in initial_users:
+            if not db.query(User).filter(User.rider_id == u["rider_id"]).first():
+                db_user = User(
+                    rider_id=u["rider_id"],
+                    name=u["name"],
+                    phone=u["phone"],
+                    zone=u["zone"],
+                    platform=u["platform"],
+                    weekly_plan=u["weekly_plan"],
+                    active_since=u["active_since"],
+                    hashed_password=pwd_context.hash(u["password"]),
+                    role=u["role"],
+                    verified_orders=u["verified_orders"],
+                    is_insured=u["is_insured"],
+                )
+                db.add(db_user)
+
+        # Generate history and payments for each rider
+        for rid in ["GW-8821", "GW-4422", "GW-9901"]:
+            seed_user_history(db, rid)
+            seed_user_payments(db, rid)
+
+        db.commit()
     finally:
         db.close()

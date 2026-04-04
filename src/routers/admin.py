@@ -76,3 +76,27 @@ async def get_payments(request: Request):
         return {"payments": []}
     finally:
         db.close()
+
+@router.get("/claims")
+async def get_all_claims(request: Request):
+    """Return mock active claims for admin management."""
+    return {
+        "claims": [
+            {"id": "CLM-7701", "rider": "Raju Kumar", "type": "Weather", "trigger": "Heavy Rain", "benefit": "₹340", "status": "Paid", "date": "2024-04-01"},
+            {"id": "CLM-7702", "rider": "Priya Sharma", "type": "Weather", "trigger": "Extreme Heat", "benefit": "₹210", "status": "Pending", "date": "2024-04-02"},
+            {"id": "CLM-7703", "rider": "Vikram Singh", "type": "Mobility", "trigger": "Zone Lock", "benefit": "₹500", "status": "Rejected", "date": "2024-04-03"},
+            {"id": "CLM-7704", "rider": "Raju Kumar", "type": "Environmental", "trigger": "AQI Alert", "benefit": "₹150", "status": "Paid", "date": "2024-04-03"},
+        ]
+    }
+
+@router.get("/policies")
+async def get_all_policies(request: Request):
+    """Return all active insurance policies for admin management."""
+    return {
+        "policies": [
+            {"id": "POL-1001", "rider": "Raju Kumar", "plan": "Micro-Insurance", "premium": "₹60/wk", "coverage": "₹50,000", "status": "Active"},
+            {"id": "POL-1002", "rider": "Priya Sharma", "plan": "Premium Cover", "premium": "₹120/wk", "coverage": "₹1,50,000", "status": "Active"},
+            {"id": "POL-1003", "rider": "Vikram Singh", "plan": "Basic Protection", "premium": "₹45/wk", "coverage": "₹30,000", "status": "Expired"},
+            {"id": "POL-1004", "rider": "Ananya K.", "plan": "Micro-Insurance", "premium": "₹60/wk", "coverage": "₹50,000", "status": "Pending"},
+        ]
+    }

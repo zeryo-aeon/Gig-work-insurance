@@ -1,79 +1,160 @@
 import os
-import requests
+import json
+from typing import Dict, Any
 from dotenv import load_dotenv
 
 try:
     from utils.logger import app_logger
 except ImportError:
     import logging
+    logging.basicConfig(level=logging.INFO)
     app_logger = logging.getLogger("OCRWrapper")
 
+# ✅ Safe imports (won’t break app startup)
+try:
+    import easyocr
+    EASY_OCR_AVAILABLE = True
+except Exception as e:
+    EASY_OCR_AVAILABLE = False
+    app_logger.warning(f"EasyOCR not available: {e}")
+
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+except Exception as e:
+    GROQ_AVAILABLE = False
+    app_logger.warning(f"Groq not available: {e}")
+
+
 class OCRWrapper:
-    def __init__(self, api_token: str = None):
-        """Initialize OCR wrapper with Hugging Face API token."""
-        self.env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
-        load_dotenv(self.env_path)
-        
-        self.api_token = api_token or os.getenv("HF_TOKEN")
-        self.api_url = "https://router.huggingface.co/v1/chat/completions"
-        self.headers = {
-            "Authorization": f"Bearer {self.api_token}",
+    def __init__(self, groq_api_key: str = None):
+        """Initialize OCR + Groq pipeline safely."""
+        load_dotenv()
+        self.groq_api_key = groq_api_key or os.getenv("GROQ_API_KEY")
+
+        self.reader = None
+        self.client = None
+
+    # ✅ Lazy load EasyOCR (only when needed)
+    def _init_ocr(self):
+        if not EASY_OCR_AVAILABLE:
+            app_logger.error("EasyOCR not installed.")
+            return False
+
+        if self.reader is None:
+            try:
+                app_logger.info("Initializing EasyOCR...")
+                self.reader = easyocr.Reader(['en'], gpu=False)
+            except Exception as e:
+                app_logger.error(f"EasyOCR Init Error: {e}")
+                return False
+        return True
+
+    # ✅ Lazy load Groq
+    def _init_groq(self):
+        if not GROQ_AVAILABLE:
+            app_logger.error("Groq SDK not installed.")
+            return False
+
+        if self.client is None:
+            try:
+                self.client = Groq(api_key=self.groq_api_key)
+            except Exception as e:
+                app_logger.error(f"Groq Init Error: {e}")
+                return False
+        return True
+
+    def extract_text(self, image_path: str) -> str:
+        """Extract raw text using EasyOCR safely."""
+        if not os.path.exists(image_path):
+            app_logger.error(f"File not found: {image_path}")
+            return ""
+
+        if not self._init_ocr():
+            return ""
+
+        try:
+            app_logger.info(f"OCR: Reading {image_path}")
+            results = self.reader.readtext(image_path)
+
+            extracted_text = " ".join([r[1] for r in results])
+
+            if not extracted_text.strip():
+                app_logger.warning("No text detected.")
+                return ""
+
+            return extracted_text
+
+        except Exception as e:
+            app_logger.error(f"OCR Error: {e}")
+            return ""
+
+    def refine_with_groq(self, raw_text: str) -> Dict[str, Any]:
+        """Structure text using Groq safely."""
+
+        if not raw_text.strip():
+            return {
+                "platform": "Unknown",
+                "order_id": None,
+                "date": None,
+                "total_amount": 0.0,
+                "items": [],
+                "error": "No OCR text"
+            }
+
+        if not self._init_groq():
+            return {
+                "error": "Groq not available",
+                "raw_text": raw_text
+            }
+
+        try:
+            prompt = f"""
+            Extract structured information from this OCR text.
+            Return ONLY JSON.
+
+            OCR TEXT:
+            {raw_text}
+            """
+
+            response = self.client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[
+                    {"role": "system", "content": "Return strict JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                response_format={"type": "json_object"}
+            )
+
+            return json.loads(response.choices[0].message.content)
+
+        except Exception as e:
+            app_logger.error(f"Groq Error: {e}")
+            return {
+                "error": "Groq processing failed",
+                "details": str(e)
+            }
+
+    def process_image(self, image_path: str) -> Dict[str, Any]:
+        """Full pipeline"""
+        raw_text = self.extract_text(image_path)
+        structured = self.refine_with_groq(raw_text)
+
+        return {
+            "file": os.path.basename(image_path),
+            "status": "success" if raw_text else "failed",
+            "raw_text": raw_text,
+            "structured": structured
         }
 
-    def query(self, payload: dict) -> dict:
-        """Query the OCR/VLM model with a payload."""
-        app_logger.info(f"OCR: Querying VLM model: {payload.get('model')}")
-        
-        try:
-            response = requests.post(self.api_url, headers=self.headers, json=payload)
-            app_logger.debug(f"OCR: API Response Status: {response.status_code}")
-            response.raise_for_status()
-            
-            result = response.json()
-            if "choices" in result:
-                content = result["choices"][0]["message"]["content"]
-                app_logger.info(f"OCR: Successfully extracted content ({len(content)} chars)")
-            
-            return result
-        except Exception as e:
-            app_logger.error(f"OCR: API Error: {str(e)}")
-            return {"error": str(e)}
-
-    @staticmethod
-    def bytes_to_base64_data_url(image_bytes: bytes, mime_type: str = "image/png") -> str:
-        """Convert image bytes to a base64 Data URL."""
-        import base64
-        encoded = base64.b64encode(image_bytes).decode("utf-8")
-        return f"data:{mime_type};base64,{encoded}"
 
 if __name__ == "__main__":
     ocr = OCRWrapper()
-    
-    # Test Payload
-    payload = {
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "Describe this image in one sentence."
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": "https://cdn.britannica.com/61/93061-050-99147DCE/Statue-of-Liberty-Island-New-York-Bay.jpg"
-                        }
-                    }
-                ]
-            }
-        ],
-        "model": "Qwen/Qwen2.5-VL-72B-Instruct:ovhcloud"
-    }
 
-    result = ocr.query(payload)
-    if "choices" in result:
-        print("\n✅ OCR API Response:")
-        print(result["choices"][0]["message"]["content"])
-    else:
-        print("\n❌ Error in OCR API:", result)
+    images = ["receipt1.png", "receipt2.jpg"]
+
+    for img in images:
+        result = ocr.process_image(img)
+        print(f"\n--- {result['file']} ---")
+        print(json.dumps(result, indent=2))

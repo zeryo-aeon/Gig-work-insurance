@@ -96,7 +96,9 @@
     <div class="top-nav">
       <button class="top-nav-btn active" onclick="switchTab('models', this)">Model Performance</button>
       <button class="top-nav-btn" onclick="switchTab('users', this)">User Management</button>
-      <button class="top-nav-btn" onclick="switchTab('payments', this); loadPayments();">Transaction Logs</button>
+      <button class="top-nav-btn" onclick="switchTab('payments', this); loadPayments();">Transactions</button>
+      <button class="top-nav-btn" onclick="switchTab('claims', this); loadClaims();">Claims Pool</button>
+      <button class="top-nav-btn" onclick="switchTab('policies', this); loadPolicies();">Policies</button>
     </div>
     <div style="font-family:'Space Mono';font-size:12px;color:var(--muted);">ADMIN CONSOLE v1.2</div>
   </div>
@@ -110,9 +112,7 @@
       </div>
       <div>
         <select id="userSelect" onchange="loadGraphData()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:8px;font-family:'DM Sans';font-size:14px;outline:none;">
-          <option value="GW-8821">GW-8821 (Raju Kumar)</option>
-          <option value="GW-4422">GW-4422 (Priya Sharma)</option>
-          <option value="GW-9901">GW-9901 (Karthik)</option>
+          <option value="">Select Rider...</option>
         </select>
       </div>
     </div>
@@ -155,6 +155,65 @@
         <tbody id="usersTableBody">
           <!-- Populated via API -->
         </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ CLAIMS TAB ═══ -->
+  <div id="tab-claims" class="tab-content" style="display:none;">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Claims Management</div>
+        <div class="page-subtitle">Process automated parametric triggers and manual overrides.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Active Claims Pool</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Rider</th>
+            <th>Type</th>
+            <th>Trigger</th>
+            <th>Benefit</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="claimsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ POLICIES TAB ═══ -->
+  <div id="tab-policies" class="tab-content" style="display:none;">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Policy Lifecycle Management</div>
+        <div class="page-subtitle">Monitor risk coverage and fleet-wide premium performance.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Live Policy Registry</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Rider</th>
+            <th>Plan</th>
+            <th>Premium</th>
+            <th>Coverage</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="policiesTableBody"></tbody>
       </table>
     </div>
   </div>
@@ -226,6 +285,18 @@
           <td><button class="act-btn" onclick="document.getElementById('userSelect').value='${u.rider_id}'; switchTab('models', document.querySelectorAll('.top-nav-btn')[0]); loadGraphData();">View Model</button></td>
         </tr>
       `).join('');
+
+      const select = document.getElementById('userSelect');
+      const currentVal = select.value;
+      select.innerHTML = '<option value="">Select Rider...</option>' + data.users.map(u => `
+        <option value="${u.rider_id}">${u.rider_id} (${u.name})</option>
+      `).join('');
+      if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+        select.value = currentVal;
+      } else if (data.users.length > 0) {
+        select.value = data.users[0].rider_id;
+        loadGraphData();
+      }
     } catch(err) {
       console.error(err);
     }

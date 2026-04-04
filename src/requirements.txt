@@ -16,3 +16,4 @@ retry-requests==2.0.0
 feedparser==6.0.11
 groq==0.9.0
 python-dotenv==1.0.1
+firebase-admin==6.5.0

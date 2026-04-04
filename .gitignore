@@ -121,6 +121,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+gig-work-insurence-firebase-adminsdk-fbsvc-75417b9102.json
 .env
 .venv
 env/

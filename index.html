@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>DevTrails</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       margin: 0;
@@ -13,23 +15,54 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       min-height: 100vh;
       text-align: center;
     }
-    h1 { font-size: 2.8rem; margin-bottom: 10px; }
-    p { color: #94a3b8; margin-bottom: 30px; }
-    .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-top: 30px;
+    }
+
+    p {
+      color: #94a3b8;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      margin-top: 40px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #38bdf8;
+      padding-bottom: 10px;
+      width: 80%;
+    }
+
+    .container {
+      display: none;
+      /* hidden by default */
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
     .card {
       background: #1e293b;
       padding: 20px;
       border-radius: 12px;
       width: 260px;
       transition: 0.3s;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
-    .card:hover { transform: translateY(-8px) scale(1.03); background: #334155; }
-    .card h2 { margin-bottom: 15px; }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.03);
+      background: #334155;
+    }
+
+    .card h2 {
+      margin-bottom: 15px;
+    }
+
     .card a {
       text-decoration: none;
       color: #38bdf8;
@@ -40,38 +73,136 @@
       display: inline-block;
       transition: 0.3s;
     }
-    .card a:hover { background: #38bdf8; color: #0f172a; }
-    .card.highlight { border: 2px solid #FF6B00; }
-    .card.highlight a { color: #FF6B00; border-color: #FF6B00; }
-    .card.highlight a:hover { background: #FF6B00; color: #0f172a; }
+
+    .card a:hover {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    .highlight {
+      border: 2px solid #FF6B00;
+    }
+
+    .highlight a {
+      color: #FF6B00;
+      border-color: #FF6B00;
+    }
+
+    .highlight a:hover {
+      background: #FF6B00;
+      color: #0f172a;
+    }
+
+    .video-container {
+      max-width: 800px;
+      width: 90%;
+      margin: 0 auto 40px auto;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    video {
+      width: 100%;
+      border-radius: 8px;
+      border: 2px solid #38bdf8;
+    }
+
+    .toggle-btn {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: #0ea5e9;
+    }
   </style>
 </head>
+
 <body>
+
   <h1>🚀 DevTrails</h1>
   <p>Gig Economy & Insurance Presentations</p>
-  <div class="container">
+
+  <!-- ================= PHASE 2 (VISIBLE FIRST) ================= -->
+  <h2 class="section-title">Phase 2: Project Demo</h2>
+
+  <div class="video-container">
+    <video controls>
+      <source src="demo.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <!-- Toggle Button -->
+  <button class="toggle-btn" onclick="togglePhase1()">▶ Show Phase 1</button>
+
+  <!-- ================= PHASE 1 (HIDDEN INITIALLY) ================= -->
+  <h2 id="phase1Title" class="section-title" style="display:none;">
+    Phase 1: Overview & Presentations
+  </h2>
+
+  <div id="phase1Section" class="container">
+
     <div class="card highlight">
       <a href="prototype.html">
-        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=300&q=80" alt="App Thumbnail" style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px; border:2px solid #38bdf8;">
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=300&q=80"
+          style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
       </a>
       <h2>🛡️ Insurance Prototype</h2>
       <a href="prototype.html">🌐 Open Live Web App</a>
     </div>
+
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=300&q=80" alt="Weather" style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+      <img src="https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=300&q=80"
+        style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
       <h2>Environmental Effects</h2>
       <a href="enviAffects.html">Open</a>
     </div>
+
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=300&q=80" alt="Economy" style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+      <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=300&q=80"
+        style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
       <h2>Gig Economy India</h2>
       <a href="gig-economy-india.html">Open</a>
     </div>
+
     <div class="card">
-      <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=300&q=80" alt="Report" style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+      <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=300&q=80"
+        style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
       <h2>Deep Report</h2>
       <a href="gig-india-deepreport-v2.html">Open</a>
     </div>
+
   </div>
+
+  <script>
+    function togglePhase1() {
+      const section = document.getElementById("phase1Section");
+      const title = document.getElementById("phase1Title");
+      const btn = document.querySelector(".toggle-btn");
+
+      if (section.style.display === "none" || section.style.display === "") {
+        section.style.display = "flex";
+        title.style.display = "block";
+        btn.innerText = "▼ Hide Phase 1";
+      } else {
+        section.style.display = "none";
+        title.style.display = "none";
+        btn.innerText = "▶ Show Phase 1";
+      }
+    }
+  </script>
+
 </body>
+
 </html>
