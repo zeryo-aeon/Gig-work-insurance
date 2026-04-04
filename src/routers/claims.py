@@ -4,6 +4,7 @@ routers/claims.py — Claims history API
 
 from fastapi import APIRouter, Request, HTTPException
 from models.session import get_current_user
+from utils.logger import app_logger
 
 router = APIRouter()
 
@@ -17,7 +18,8 @@ def require_auth(request: Request):
 
 @router.get("/summary")
 async def get_claims_summary(request: Request):
-    require_auth(request)
+    user = require_auth(request)
+    app_logger.info(f"CLAIMS: Fetching claims summary for rider {user.rider_id}")
     return {
         "month": "June 2025",
         "total_paid": 1840,
@@ -29,7 +31,8 @@ async def get_claims_summary(request: Request):
 
 @router.get("/history")
 async def get_claims_history(request: Request):
-    require_auth(request)
+    user = require_auth(request)
+    app_logger.info(f"CLAIMS: Fetching full history for rider {user.rider_id}")
     return {
         "claims": [
             {

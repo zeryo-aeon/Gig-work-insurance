@@ -5,15 +5,23 @@ from retry_requests import retry
 import requests
 from typing import Optional, Dict, Any, Tuple
 
+try:
+    from utils.logger import app_logger
+except ImportError:
+    import logging
+    app_logger = logging.getLogger("OpenMeteoWrapper")
+
 class OpenMeteoWrapper:
     def __init__(self, cache_expire: int = 3600, retries: int = 5, backoff_factor: float = 0.2):
         """Initialize the OpenMeteo wrapper with caching and retry logic."""
         self.cache_session = requests_cache.CachedSession('.cache', expire_after=cache_expire)
         self.retry_session = retry(self.cache_session, retries=retries, backoff_factor=backoff_factor)
         self.openmeteo = openmeteo_requests.Client(session=self.retry_session)
+        app_logger.info("WEATHER: Initialized OpenMeteoWrapper with caching")
 
     def get_coordinates(self, city: str) -> Tuple[Optional[float], Optional[float]]:
         """Get the latitude and longitude for a given city."""
+        app_logger.debug(f"WEATHER: Resolving coordinates for {city}")
         url = "https://geocoding-api.open-meteo.com/v1/search"
         params = {"name": city, "count": 1}
         try:
@@ -21,12 +29,13 @@ class OpenMeteoWrapper:
             if "results" in res and res["results"]:
                 r = res["results"][0]
                 return float(r["latitude"]), float(r["longitude"])
-        except Exception:
-            pass
+        except Exception as e:
+            app_logger.error(f"WEATHER: Geocoding error: {e}")
         return None, None
 
     def get_weather(self, lat: float, lon: float) -> Dict[str, Any]:
         """Fetch current and hourly weather data for the given coordinates."""
+        app_logger.info(f"WEATHER: Fetching weather for ({lat}, {lon})")
         weather_params = {
             "latitude": lat,
             "longitude": lon,
@@ -52,6 +61,7 @@ class OpenMeteoWrapper:
         rain = hourly.Variables(1).ValuesAsNumpy()[0]
         wind = hourly.Variables(2).ValuesAsNumpy()[0]
 
+        app_logger.info(f"WEATHER: Success - Current Temp: {current_temp:.1f}°C")
         return {
             "current": {
                 "temperature_c": round(float(current_temp), 1),

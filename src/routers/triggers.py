@@ -4,6 +4,7 @@ routers/triggers.py — Live parametric triggers API
 
 from fastapi import APIRouter, Request, HTTPException
 from models.session import get_current_user
+from utils.logger import app_logger
 
 router = APIRouter()
 
@@ -17,7 +18,8 @@ def require_auth(request: Request):
 
 @router.get("/live")
 async def get_live_triggers(request: Request):
-    require_auth(request)
+    user = require_auth(request)
+    app_logger.info(f"TRIGGERS: Fetching live triggers for rider {user.rider_id}")
     return {
         "active_count": 2,
         "last_updated": "2025-06-22T14:32:00Z",

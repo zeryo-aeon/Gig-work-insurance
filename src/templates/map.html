@@ -365,6 +365,22 @@ input:checked + .slider:before { transform: translateX(22px); }
       </label>
     </div>
 
+    <!-- Hotspot Legend -->
+    <div id="hotspotLegend" style="margin-top:12px; display:none; flex-direction:column; gap:8px; padding:12px; background:rgba(0,0,0,0.2); border-radius:10px; border:1px solid var(--border); animation:fadeIn 0.3s ease;">
+      <div style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase; margin-bottom:4px;">Hotspot Intensity</div>
+      <div style="display:flex; gap:4px; height:8px; border-radius:4px; overflow:hidden;">
+        <div style="flex:1; background:#ef4444;" title="High"></div>
+        <div style="flex:1; background:#f97316;" title="Medium-High"></div>
+        <div style="flex:1; background:#fbbf24;" title="Medium"></div>
+        <div style="flex:1; background:#86efac;" title="Low"></div>
+        <div style="flex:1; background:#22c55e;" title="Safe"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--muted); font-family:'Space Mono';">
+        <span>HOTSPOT</span>
+        <span>SAFE ZONE</span>
+      </div>
+    </div>
+
     <div class="error" id="error"></div>
 
     <div class="results" id="results">
@@ -615,16 +631,21 @@ let hotspotLayer = null;
 
 async function toggleHotspots() {
   const isEnabled = document.getElementById("hotspotToggle").checked;
+  const legend = document.getElementById("hotspotLegend");
+  
   if (!isEnabled) {
     if (hotspotLayer) hotspotLayer.remove();
+    legend.style.display = "none";
     return;
   }
+
+  legend.style.display = "flex";
 
   const center = map.getCenter();
   btn.innerText = "Scanning Area...";
   
   try {
-    const res = await fetch(`https://api.tomtom.com/search/2/nearbySearch/.json?key=${TOMTOM_KEY}&lat=${center.lat}&lon=${center.lng}&radius=5000&categorySet=7315,9361&limit=100`);
+    const res = await fetch(`https://api.tomtom.com/search/2/nearbySearch/.json?key=${TOMTOM_KEY}&lat=${center.lat}&lon=${center.lng}&radius=5000&categorySet=7315,7348,9361,9376&limit=100`);
     const data = await res.json();
     
     if (!data.results) throw new Error("No data found");
@@ -665,13 +686,16 @@ function renderHexagons(counts) {
   const max = Math.max(...Object.values(counts));
 
   hotspotLayer = L.geoJSON({ type: "FeatureCollection", features }, {
-    style: (f) => ({
-      fillColor: getColor(f.properties.count, max),
-      weight: 1,
-      opacity: 0.2,
-      color: 'white',
-      fillOpacity: 0.6
-    })
+    style: (f) => {
+      const density = f.properties.count / max;
+      return {
+        fillColor: getColor(f.properties.count, max),
+        weight: 1,
+        opacity: 0.15,
+        color: 'white',
+        fillOpacity: 0.3 + (density * 0.4) // Dynamic opacity
+      };
+    }
   }).addTo(map);
   
   map.fitBounds(hotspotLayer.getBounds(), { padding: [50, 50] });
@@ -679,10 +703,14 @@ function renderHexagons(counts) {
 
 function getColor(val, max) {
   const ratio = val / max;
-  return ratio > 0.8 ? '#ef4444' : // Red
-         ratio > 0.5 ? '#f97316' : // Orange
-         ratio > 0.2 ? '#eab308' : // Yellow
-                       '#fef08a';   // Light Yellow
+  // High density = Hot (Red)
+  if (ratio > 0.8) return '#ef4444'; 
+  if (ratio > 0.6) return '#f97316'; 
+  // Medium density = Warning (Yellow/Amber)
+  if (ratio > 0.4) return '#fbbf24';
+  // Low density = Safe/Non-hotspot (Green)
+  if (ratio > 0.2) return '#86efac'; // Light Green
+  return '#22c55e';                 // Solid Green
 }
 
 // ================= LOAD LAST ROUTE =================

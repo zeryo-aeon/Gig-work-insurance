@@ -12,6 +12,7 @@ from models.session import (
     register_user,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from utils.logger import app_logger
 
 router = APIRouter()
 
@@ -25,23 +26,25 @@ async def login(
     """Authenticate rider and set JWT cookie."""
     user = authenticate_user(rider_id.strip(), password.strip())
     if not user:
+        app_logger.warning(f"AUTH: Failed login attempt for Rider ID: {rider_id}")
         # Return error — frontend reads this JSON
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"detail": "Invalid Rider ID or password"}
         )
 
+    app_logger.info(f"AUTH: Successful login for {user.name} ({user.rider_id}) - Role: {user.role}")
     token = create_access_token(
-        data={"sub": user["rider_id"]},
+        data={"sub": user.rider_id},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    redirect_url = "/admin" if user.get("role") == "admin" else "/dashboard"
+    redirect_url = "/admin" if user.role == "admin" else "/dashboard"
     
     response = JSONResponse(content={
         "success": True,
-        "rider_id": user["rider_id"],
-        "name": user["name"],
+        "rider_id": user.rider_id,
+        "name": user.name,
         "redirect": redirect_url
     })
     response.set_cookie(
@@ -63,17 +66,19 @@ async def signup(
     password: str = Form(...)
 ):
     """Register a new rider and set JWT cookie."""
+    app_logger.info(f"AUTH: New signup request - Name: {name}, Phone: {phone}")
     user = register_user(name.strip(), phone.strip(), zone.strip(), password.strip())
     
+    app_logger.info(f"AUTH: Created new user account: {user.rider_id}")
     token = create_access_token(
-        data={"sub": user["rider_id"]},
+        data={"sub": user.rider_id},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
     response = JSONResponse(content={
         "success": True,
-        "rider_id": user["rider_id"],
-        "name": user["name"],
+        "rider_id": user.rider_id,
+        "name": user.name,
         "redirect": "/dashboard"
     })
     response.set_cookie(
@@ -88,6 +93,7 @@ async def signup(
 @router.post("/logout")
 async def logout():
     """Clear session cookie."""
+    app_logger.info("AUTH: POST logout - Clearing session")
     response = JSONResponse(content={"success": True, "redirect": "/login"})
     response.delete_cookie("access_token")
     return response
@@ -96,6 +102,7 @@ async def logout():
 @router.get("/logout")
 async def logout_get():
     """GET logout for convenience."""
+    app_logger.info("AUTH: GET logout - Redirecting to login")
     response = RedirectResponse(url="/login")
     response.delete_cookie("access_token")
     return response

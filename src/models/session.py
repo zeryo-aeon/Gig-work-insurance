@@ -21,11 +21,13 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # ─── Database Models ─────────────────────────────────────────────────────────
 
-from sqlalchemy import Column, String, Integer, Boolean, DateTime
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from models.database import Base, engine, SessionLocal
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = {"extend_existing": True}
 
     rider_id = Column(String, primary_key=True, index=True)
     name = Column(String)
@@ -38,7 +40,43 @@ class User(Base):
     hashed_password = Column(String)
     verified_orders = Column(Integer, default=0)
     is_insured = Column(Boolean, default=False)
+    
+    payments = relationship("Payment", back_populates="user")
+    history = relationship("RiderHistory", back_populates="user")
 
+class Payment(Base):
+    __tablename__ = "payments"
+    __table_args__ = {"extend_existing": True}
+    
+    id = Column(String, primary_key=True, index=True)
+    rider_id = Column(String, ForeignKey("users.rider_id"))
+    amount = Column(Float)
+    type = Column(String) # premium_charge, insurance_payout
+    desc = Column(String)
+    timestamp = Column(Float)
+    date = Column(String)
+    
+    user = relationship("User", back_populates="payments")
+
+class RiderHistory(Base):
+    __tablename__ = "rider_history"
+    __table_args__ = {"extend_existing": True}
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rider_id = Column(String, ForeignKey("users.rider_id"))
+    date = Column(String)
+    earnings = Column(Float)
+    hours_worked = Column(Float)
+    weather_risk_score = Column(Integer)
+    payouts = Column(Float)
+    trips = Column(Integer)
+    origin_address = Column(String)
+    destination_address = Column(String)
+    route_distance_km = Column(Float)
+    route_eta_mins = Column(Float)
+    traffic_delay_mins = Column(Float)
+    
+    user = relationship("User", back_populates="history")
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -220,7 +258,7 @@ def seed_db():
                 platform=u["platform"],
                 weekly_plan=u["weekly_plan"],
                 active_since=u["active_since"],
-                role=u["role"],
+                role=u.get("role", "rider"),
                 hashed_password=pwd_context.hash(u["password"]),
                 verified_orders=u["verified_orders"],
                 is_insured=u["is_insured"],

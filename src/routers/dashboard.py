@@ -16,15 +16,39 @@ from apis.openmentoapi import OpenMeteoWrapper
 from apis.mock_payment import MockPaymentWrapper
 from services.prediction_service import predictor
 import json
-
-HISTORY_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "rider_history.json")
+from utils.logger import app_logger
+from models.database import SessionLocal
+from models.session import RiderHistory
 
 def load_history_for_rider(rider_id: str):
-    if not os.path.exists(HISTORY_FILE):
-        return None
-    with open(HISTORY_FILE, "r") as f:
-        data = json.load(f)
-        return data.get(rider_id)
+    """Load historical earnings and risk data from database."""
+    db = SessionLocal()
+    try:
+        history = db.query(RiderHistory).filter(RiderHistory.rider_id == rider_id).order_by(RiderHistory.date.desc()).all()
+        if not history:
+            return None
+        
+        # Convert to the original dict format expected by the frontend
+        return {
+            "rider_id": rider_id,
+            "history": [
+                {
+                    "date": h.date,
+                    "earnings": h.earnings,
+                    "hours_worked": h.hours_worked,
+                    "weather_risk_score": h.weather_risk_score,
+                    "payouts": h.payouts,
+                    "trips": h.trips,
+                    "origin_address": h.origin_address,
+                    "destination_address": h.destination_address,
+                    "route_distance_km": h.route_distance_km,
+                    "route_eta_mins": h.route_eta_mins,
+                    "traffic_delay_mins": h.traffic_delay_mins
+                } for h in history
+            ]
+        }
+    finally:
+        db.close()
 
 router = APIRouter()
 weather_client = OpenMeteoWrapper()
@@ -114,6 +138,7 @@ async def get_summary(request: Request):
             "is_insured": user.is_insured
         }
     except Exception as e:
+        app_logger.error(f"DASHBOARD: Error fetching summary for rider {user.rider_id}: {str(e)}")
         import traceback
         traceback.print_exc()
         raise e
@@ -122,6 +147,7 @@ async def get_summary(request: Request):
 @router.get("/earnings-chart")
 async def get_earnings_chart(request: Request):
     user = require_auth(request)
+    app_logger.info(f"DASHBOARD: Fetching earnings chart for rider {user.rider_id}")
     rider_data = load_history_for_rider(user.rider_id)
     
     if not rider_data:
@@ -149,8 +175,10 @@ async def get_earnings_chart(request: Request):
 @router.get("/analytics")
 async def get_analytics(request: Request):
     user = require_auth(request)
+    app_logger.info(f"DASHBOARD: Fetching full analytics for rider {user.rider_id}")
     rider_data = load_history_for_rider(user.rider_id)
     if not rider_data:
+        app_logger.warning(f"DASHBOARD: No historical data found for rider {user.rider_id}")
         raise HTTPException(status_code=404, detail="No historical data found")
     return rider_data
 

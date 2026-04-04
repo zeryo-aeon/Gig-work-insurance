@@ -5,6 +5,12 @@ import json
 from groq import Groq
 from dotenv import load_dotenv
 
+try:
+    from utils.logger import app_logger
+except ImportError:
+    import logging
+    app_logger = logging.getLogger("NewsWrapper")
+
 class NewsWrapper:
     # Traffic & Filtering Constants
     FEEDS = [
@@ -60,8 +66,7 @@ class NewsWrapper:
         self.min_groq_score = 3
 
     def debug_print(self, msg: str):
-        if self.debug:
-            print(f"[DEBUG] {msg}")
+        app_logger.debug(f"NEWS: {msg}")
 
     def clean_text(self, text: str) -> str:
         try:

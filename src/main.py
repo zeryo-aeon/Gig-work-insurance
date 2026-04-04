@@ -3,15 +3,16 @@ ShieldGig — FastAPI Backend
 Run: uvicorn main:app --reload
 """
 
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Depends, HTTPException, status, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
-import uvicorn
 import os
 import sys
+import time
+from utils.logger import app_logger, setup_logger
 
 # Add parent directory to route to apis module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -47,6 +48,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Middleware to log every incoming request and its response."""
+    start_time = time.time()
+    path = request.url.path
+    method = request.method
+    
+    app_logger.info(f"🚀 INCOMING: {method} {path}")
+    
+    response = await call_next(request)
+    
+    process_time = (time.time() - start_time) * 1000
+    formatted_process_time = "{0:.2f}".format(process_time)
+    
+    app_logger.info(f"🏁 COMPLETED: {method} {path} - Status: {response.status_code} ({formatted_process_time}ms)")
+    
+    return response
 
 # Static files & templates
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -84,7 +103,7 @@ async def get_weather(city: str = "Bangalore"):
 
 @app.get("/api/route", tags=["routing"])
 async def get_route(origin: str = "Bangalore", destination: str = "Chennai"):
-    """Get route distance and ETA between two cities using GeoapifyWrapper."""
+    """Get route distance and ETA between two cities using GeoapifyWrapper with AI analysis."""
     lat1, lon1 = geoapify_client.get_coordinates(origin)
     lat2, lon2 = geoapify_client.get_coordinates(destination)
     if None in [lat1, lon1, lat2, lon2]:
@@ -93,12 +112,37 @@ async def get_route(origin: str = "Bangalore", destination: str = "Chennai"):
     distance, eta = geoapify_client.get_route(lat1, lon1, lat2, lon2)
     if distance is None:
         raise HTTPException(status_code=500, detail="Could not calculate route")
+    
+    # AI Intelligence Injection: Weather Risk
+    weather = weather_client.get_city_data(destination)
+    risk_score = 0
+    risk_status = "Optimal"
+    recommendation = "Clear route. Safe to proceed."
+    
+    if weather and 'weather' in weather:
+        rain = weather['weather']['snapshot'].get('rain_mm', 0)
+        pm25 = weather.get('air_quality', {}).get('pm2_5', 0)
         
+        # Simple risk calculation
+        risk_score = min(int((rain * 15) + (pm25 / 2)), 100)
+        
+        if risk_score > 60:
+            risk_status = "Hazardous"
+            recommendation = "High risk of parametric trigger (Rain/AQI). Expect delays."
+        elif risk_score > 20:
+            risk_status = "Cautious"
+            recommendation = "Moderate risk found. Keep ShieldGig triggers active."
+            
     return {
         "origin": {"city": origin, "latitude": lat1, "longitude": lon1},
         "destination": {"city": destination, "latitude": lat2, "longitude": lon2},
         "distance_km": round(distance, 2),
-        "eta_minutes": round(eta, 2)
+        "eta_minutes": round(eta, 2),
+        "ai_report": {
+            "risk_score": risk_score,
+            "risk_status": risk_status,
+            "recommendation": recommendation
+        }
     }
 
 @app.post("/api/payment/payout", tags=["payment"])
@@ -114,48 +158,79 @@ async def get_wallet_balance(rider_id: str):
 # ─── OCR & Eligibility Routes ───────────────────────────────────────────────
 
 @app.post("/api/ocr/upload-order", tags=["ocr"])
-async def upload_past_order(request: Request):
+async def upload_past_order(request: Request, file: UploadFile = File(...)):
     """
     Handle past order upload. Extracts data via OCR and increments verified count.
     Once 5 orders are verified, the user is insured.
     """
+    app_logger.info(f"OCR: Processing upload for file: {file.filename}")
+    
     token = request.cookies.get("access_token")
     if not token:
+        app_logger.error("OCR: Auth failure - No token in cookies")
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     user_session = get_current_user(token)
+    app_logger.info(f"OCR: User session identified: {user_session.rider_id}")
+
+    # Read and encode the image
+    file_bytes = await file.read()
+    app_logger.debug(f"OCR: Read {len(file_bytes)} bytes from upload")
     
-    # Process the uploaded file (mocking the extraction logic)
-    # In a real scenario, we'd use: ocr_client.query({"image": ...})
+    base64_img = ocr_client.bytes_to_base64_data_url(file_bytes, file.content_type)
     
-    # Call the OCR Wrapper to demonstrate integration
-    ocr_result = ocr_client.query({
-        "messages": [{"role": "user", "content": [{"type": "text", "text": "Extract order ID and amount."}]}],
-        "model": "Qwen/Qwen2.5-VL-72B-Instruct:ovhcloud"
-    })
-    
-    from models.session import USERS_DB
-    user = USERS_DB.get(user_session.rider_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
-    user["verified_orders"] = user.get("verified_orders", 0) + 1
-    
-    # Check eligibility
-    if user["verified_orders"] >= 5:
-        user["is_insured"] = True
-        message = "Order verified via AI! You are now fully INSURED. 🎉"
-    else:
-        needed = 5 - user["verified_orders"]
-        message = f"AI verified your order. Upload {needed} more to activate coverage."
-        
-    return {
-        "status": "success",
-        "verified_orders": user["verified_orders"],
-        "is_insured": user["is_insured"],
-        "message": message,
-        "ocr_analysis": "Order data successfully extracted and validated."
+    # Payload for OCR API
+    payload = {
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "This is a delivery platform order receipt. Extract the Order ID and Total Amount. Respond with 'ID: [id], Amount: [amount]'."},
+                    {"type": "image_url", "image_url": {"url": base64_img}}
+                ]
+            }
+        ],
+        "model": "Qwen/Qwen2.5-VL-72B-Instruct:ovhcloud",
+        "max_tokens": 300
     }
+    
+    # Process the uploaded file
+    app_logger.info("OCR: Calling Hugging Face VLM...")
+    ocr_result = ocr_client.query(payload)
+    
+    from models.session import SessionLocal, User
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.rider_id == user_session.rider_id).first()
+        if not user:
+            app_logger.error(f"OCR: Database error - User {user_session.rider_id} not found")
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        app_logger.info(f"OCR: User current verified count: {user.verified_orders}")
+        
+        user.verified_orders += 1
+        app_logger.info(f"OCR: Verified count incremented to {user.verified_orders}")
+        
+        # Check eligibility
+        if user.verified_orders >= 5:
+            user.is_insured = True
+            app_logger.info("OCR: Eligibility reached - Setting is_insured=True")
+            db.commit()
+            message = "Order verified via AI! You are now fully INSURED. 🎉"
+        else:
+            db.commit()
+            needed = 5 - user.verified_orders
+            message = f"AI verified your order. Upload {needed} more to activate coverage."
+            
+        return {
+            "status": "success",
+            "verified_orders": user.verified_orders,
+            "is_insured": user.is_insured,
+            "message": message,
+            "ocr_analysis": ocr_result.get("choices", [{}])[0].get("message", {}).get("content", "Analysis successful.")
+        }
+    finally:
+        db.close()
 
 @app.get("/api/news/traffic", tags=["news"])
 async def get_traffic_news():

@@ -5,6 +5,7 @@ routers/insurance.py — Insurance plans & pricing API
 from fastapi import APIRouter, Request, HTTPException
 from pydantic import BaseModel
 from models.session import get_current_user
+from utils.logger import app_logger
 
 router = APIRouter()
 
@@ -54,7 +55,8 @@ PLANS = [
 
 @router.get("/plans")
 async def get_plans(request: Request):
-    require_auth(request)
+    user = require_auth(request)
+    app_logger.info(f"INSURANCE: Fetching available plans for rider {user.rider_id}")
     return {"plans": PLANS}
 
 
@@ -63,6 +65,7 @@ from services.prediction_service import predictor
 @router.get("/ai-premium")
 async def get_ai_premium(request: Request, plan_id: str = "micro"):
     user = require_auth(request)
+    app_logger.info(f"INSURANCE: Calculating AI premium for rider {user.rider_id} (Plan: {plan_id})")
     plan = next((p for p in PLANS if p["id"] == plan_id), PLANS[0])
     
     # Dynamic calculation using XGBoost model
@@ -100,8 +103,10 @@ class ActivatePlanRequest(BaseModel):
 @router.post("/activate")
 async def activate_plan(request: Request, body: ActivatePlanRequest):
     user = require_auth(request)
+    app_logger.info(f"INSURANCE: Rider {user.rider_id} activating plan: {body.plan_id}")
     plan = next((p for p in PLANS if p["id"] == body.plan_id), None)
     if not plan:
+        app_logger.error(f"INSURANCE: Invalid plan ID {body.plan_id} requested by {user.rider_id}")
         raise HTTPException(status_code=400, detail="Invalid plan ID")
     return {
         "success": True,
