@@ -3,5 +3,21 @@ name = "gig-work-insurance"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
-dependencies = []
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "jinja2",
+    "python-multipart",
+    "requests",
+    "python-dotenv",
+    "openmeteo-requests",
+    "pandas",
+    "requests-cache",
+    "retry-requests",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "pydantic",
+    "xgboost",
+    "numpy",
+]
