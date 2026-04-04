@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShieldGig — Dashboard</title>
+<title>Zero-Aeon-GWI — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -11,6 +11,12 @@
     --border:#232733;--accent:#f97316;--accent2:#3b82f6;
     --accent3:#10b981;--warn:#ef4444;
     --text:#e8eaf0;--muted:#6b7280;--gold:#fbbf24;
+  }
+  [data-theme="light"] {
+    --bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--accent:#f97316;--accent2:#2563eb;
+    --accent3:#059669;--warn:#dc2626;
+    --text:#0f172a;--muted:#64748b;--gold:#d97706;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
@@ -174,11 +180,12 @@
     <button class="top-nav-btn" onclick="switchTab('triggers',this)">⚡ Triggers <span id="triggerBadge" style="background:var(--warn);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:2px">2</span></button>
     <button class="top-nav-btn" onclick="switchTab('claims',this)">💰 Claims</button>
     <button class="top-nav-btn" onclick="switchTab('risk',this)">🤖 Risk AI</button>
+    <a href="/map" class="top-nav-btn" style="text-decoration:none">🗺️ Smart Map</a>
     {% if user.role == 'admin' %}
     <a href="/admin" class="top-nav-btn" style="text-decoration:none">👑 Admin Console</a>
     {% endif %}
   </div>
-  <div class="top-right">
+    <button id="themeToggle" class="top-nav-btn" style="font-size:18px;padding:6px 10px;" onclick="toggleTheme()">🌓</button>
     <a href="/session-info" class="rider-chip">
       <div class="chip-avatar">🛵</div>
       <span id="headerName">{{ user.name }}</span>
@@ -232,6 +239,35 @@
     <!-- Populated by JS -->
   </div>
 
+  <!-- Eligibility Section -->
+  <div class="card" style="margin-bottom:24px; border:2px solid var(--border);" id="eligibilitySection">
+    <div style="display:flex; align-items:center; gap:20px;">
+      <div style="font-size:40px;">🛡️</div>
+      <div style="flex:1;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="card-title" style="font-size:18px;">Insurance Coverage Eligibility</div>
+            <div style="font-size:13px; color:var(--muted); margin-top:2px;" id="eligibilityText">Verify 5 past platform orders via OCR to activate your Zero-Aeon-GWI protection.</div>
+          </div>
+          <div id="insuredBadge" style="display:none;" class="status-pill sp-paid">FULLY INSURED</div>
+        </div>
+        <div class="rf-bar-wrap" style="height:10px; margin-top:12px; margin-bottom:8px; background:var(--surface2);">
+          <div id="verifiedBar" class="rf-bar" style="width:0%; background:linear-gradient(90deg, var(--accent2), var(--accent3));"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:11px;">
+          <span id="verifiedCount" style="color:var(--accent2)">0 / 5 Orders Verified</span>
+          <span id="eligibilityStatus" style="color:var(--warn)">INELIGIBLE</span>
+        </div>
+      </div>
+      <div style="width:180px;">
+        <label class="activate-btn" style="display:block; text-align:center; cursor:pointer; margin-top:0;">
+          Verify Order OCR
+          <input type="file" id="orderUpload" style="display:none" onchange="uploadOrder(this)">
+        </label>
+      </div>
+    </div>
+  </div>
+
   <div class="grid3">
     <div class="card">
       <div class="card-header"><div class="card-title">Weekly Earnings Breakdown</div><div class="card-tag">Mon–Sun</div></div>
@@ -274,6 +310,9 @@
         <div style="margin-top:12px; font-size:10px; color:var(--accent3); text-align:center; font-family:'Space Mono';">
           🛡️ Route risk analyzed for this trip
         </div>
+        <a href="/map" style="display:block; text-decoration:none; margin-top:20px;">
+          <button class="activate-btn" style="background:var(--accent2); margin-top:0;">Launch Smart Map →</button>
+        </a>
       </div>
     </div>
     
@@ -326,7 +365,7 @@
         <div><div style="font-size:12px;color:var(--muted)">AI-Adjusted Weekly Premium</div><div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:'Space Mono',monospace">Risk Score 68 · Medium-High</div></div>
         <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent)" id="premiumDisplay">₹60</div>
       </div>
-      <button class="activate-btn" onclick="activatePlan()">Activate This Week's Coverage →</button>
+      <button class="activate-btn activate-btn-main" onclick="activatePlan()">Activate This Week's Coverage →</button>
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">AI Pricing Formula</div><div class="ai-badge">🤖 XGBoost</div></div>
@@ -422,6 +461,7 @@
 const API = '';  // Same origin
 let selectedPlanId = 'micro';
 let selectedPlanPrice = 60;
+let userIsInsured = false;
 
 // ─── NAVIGATION ──────────────────────────────────────────────────────────────
 function switchTab(name, btn) {
@@ -493,6 +533,40 @@ async function loadDashboard() {
       document.getElementById('latestOrigin').textContent = w.recent_route.origin;
       document.getElementById('latestDest').textContent = w.recent_route.destination;
       document.getElementById('latestEta').textContent = `${w.recent_route.eta} mins (+${w.recent_route.delay}m delay)`;
+    }
+  }
+
+  // Eligibility
+  const verified = summary.verified_orders || 0;
+  const isInsured = summary.is_insured || false;
+  userIsInsured = isInsured;
+  const progress = Math.min((verified / 5) * 100, 100);
+  
+  document.getElementById('verifiedCount').textContent = `${verified} / 5 Orders Verified`;
+  document.getElementById('verifiedBar').style.width = `${progress}%`;
+  
+  if (isInsured) {
+    document.getElementById('eligibilityStatus').textContent = 'ELIGIBLE';
+    document.getElementById('eligibilityStatus').style.color = 'var(--accent3)';
+    document.getElementById('eligibilityText').textContent = 'Your Zero-Aeon-GWI insurance is ACTIVE. You are protected against platform disruptions.';
+    document.getElementById('insuredBadge').style.display = 'block';
+    document.getElementById('eligibilitySection').style.borderColor = 'var(--accent3)';
+  } else {
+    document.getElementById('eligibilityStatus').textContent = 'INELIGIBLE';
+    document.getElementById('eligibilityStatus').style.color = 'var(--warn)';
+    document.getElementById('insuredBadge').style.display = 'none';
+    document.getElementById('eligibilitySection').style.borderColor = 'var(--border)';
+  }
+
+  // Update activation button text if not insured
+  const actBtn = document.querySelector('.activate-btn-main');
+  if (actBtn) {
+    if (!isInsured) {
+      actBtn.innerHTML = '🔒 Verify 5 Orders to Activate';
+      actBtn.style.opacity = '0.7';
+    } else {
+      actBtn.innerHTML = "Activate This Week's Coverage →";
+      actBtn.style.opacity = '1';
     }
   }
 
@@ -607,6 +681,11 @@ async function selectPlan(el, planId, price) {
 }
 
 async function activatePlan() {
+  if (!userIsInsured) {
+    showToast('⚠️ Use OCR to verify 5 orders first!');
+    switchTab('dashboard', document.querySelector('.top-nav-btn:first-child'));
+    return;
+  }
   const res = await fetch('/api/insurance/activate', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({plan_id: selectedPlanId})
@@ -669,7 +748,61 @@ async function estimateTrip() {
   }
 }
 
+async function uploadOrder(input) {
+  if (!input.files || !input.files[0]) return;
+  
+  showToast('AI Analyzing Order Snapshot...');
+  
+  const formData = new FormData();
+  formData.append('file', input.files[0]);
+  
+  try {
+    const res = await fetch('/api/ocr/upload-order', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    
+    if (data.status === 'success') {
+      showToast('✓ ' + data.message);
+      // Reload dashboard to update progress
+      loadDashboard();
+    } else {
+      showToast('❌ Upload failed');
+    }
+  } catch (e) {
+    showToast('❌ Error connecting to OCR service');
+  }
+}
+
+// ─── THEME ──────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const target = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', target);
+  localStorage.setItem('shieldgig-theme', target);
+  document.getElementById('themeToggle').textContent = target === 'light' ? '🌙' : '☀️';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('shieldgig-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').textContent = saved === 'light' ? '🌙' : '☀️';
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
+initTheme();
+
+// Handle URL Tab
+window.onload = () => {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab) {
+    const btn = Array.from(document.querySelectorAll('.top-nav-btn')).find(b => b.innerText.toLowerCase().includes(tab.toLowerCase()));
+    if (btn) switchTab(tab, btn);
+  }
+};
+
 Promise.all([loadDashboard(), loadInsurance(), loadTriggers(), loadClaims()]);
 </script>
 </body>

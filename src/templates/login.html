@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShieldGig — Login</title>
+<title>Zero-Aeon-GWI — Login</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -11,6 +11,12 @@
     --border: #232733; --accent: #f97316; --accent2: #3b82f6;
     --accent3: #10b981; --warn: #ef4444;
     --text: #e8eaf0; --muted: #6b7280; --gold: #fbbf24;
+  }
+  [data-theme="light"] {
+    --bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--accent:#f97316;--accent2:#2563eb;
+    --accent3:#059669;--warn:#dc2626;
+    --text:#0f172a;--muted:#64748b;--gold:#d97706;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -153,6 +159,7 @@
   <div class="hero">
     <div class="logo">Shield<span>Gig</span></div>
     <div class="logo-tag">// Parametric Insurance v1.0</div>
+    <button id="themeToggle" onclick="toggleTheme()" style="background:var(--surface); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:8px; cursor:pointer; margin-top:20px; font-size:16px;">🌓</button>
 
     <div class="hero-title">
       Income protection<br>for <em>every gig worker</em>
@@ -299,6 +306,19 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
+  function initTheme() {
+    const saved = localStorage.getItem('shieldgig-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('themeToggle').textContent = saved === 'light' ? '🌙' : '☀️';
+  }
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const target = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', target);
+    localStorage.setItem('shieldgig-theme', target);
+    document.getElementById('themeToggle').textContent = target === 'light' ? '🌙' : '☀️';
+  }
+  initTheme();
 </script>
 </body>
 </html>

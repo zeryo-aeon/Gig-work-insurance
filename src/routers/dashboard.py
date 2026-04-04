@@ -13,7 +13,7 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from apis.openmentoapi import OpenMeteoWrapper
-from apis.mock_payment import MockPaymentSystem
+from apis.mock_payment import MockPaymentWrapper
 from services.prediction_service import predictor
 import json
 
@@ -28,7 +28,7 @@ def load_history_for_rider(rider_id: str):
 
 router = APIRouter()
 weather_client = OpenMeteoWrapper()
-payment_client = MockPaymentSystem()
+payment_client = MockPaymentWrapper()
 
 
 def require_auth(request: Request):
@@ -109,7 +109,9 @@ async def get_summary(request: Request):
                 "aqi": {"value": round(aqi_val,1), "unit": "μg/m³", "status": "warn" if aqi_val > 50 else "clear", "threshold": 50},
                 "mobility": {"value": "Normal", "unit": "", "status": "clear", "threshold": "Any restriction"},
                 "platform": {"value": "Online", "unit": "", "status": "clear", "threshold": "Downtime"},
-            }
+            },
+            "verified_orders": user.verified_orders,
+            "is_insured": user.is_insured
         }
     except Exception as e:
         import traceback

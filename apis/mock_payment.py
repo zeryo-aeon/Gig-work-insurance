@@ -2,7 +2,7 @@ import uuid
 import time
 from typing import Dict, Any
 
-class MockPaymentSystem:
+class MockPaymentWrapper:
     def __init__(self):
         """Initialize the mock payment system."""
         pass
@@ -45,6 +45,7 @@ class MockPaymentSystem:
         }
 
 if __name__ == "__main__":
-    payment_sys = MockPaymentSystem()
+    payment_sys = MockPaymentWrapper()
     print(payment_sys.process_premium("GW-8821", 60.0))
     print(payment_sys.process_payout("GW-8821", 340.0, "Heavy Rain Trigger"))
+

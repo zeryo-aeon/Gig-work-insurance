@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero-Aeon-GWI — Smart Route Planner</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: rgba(17, 19, 24, 0.9);
+  --surface2: #181c24;
+  --border: rgba(35, 39, 51, 0.8);
+  --accent: #f97316;
+  --accent2: #3b82f6;
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --glass: rgba(17, 19, 24, 0.8);
+}
+
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface2: #f1f5f9;
+  --border: rgba(226, 232, 240, 0.8);
+  --accent: #f97316;
+  --accent2: #2563eb;
+  --text: #0f172a;
+  --muted: #64748b;
+  --glass: rgba(255, 255, 255, 0.85);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { 
+  margin: 0; 
+  font-family: 'DM Sans', sans-serif; 
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+#map { 
+  height: 100vh; 
+  width: 100%; 
+  z-index: 1;
+}
+
+/* Custom Overlays */
+.overlay-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  pointer-events: auto;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 36px;
+  width: 100%;
+}
+
+.top-center { display: flex; gap: 4px; }
+.top-nav-btn {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; color: var(--muted);
+  cursor: pointer; border: none; background: none; transition: all 0.18s;
+  font-family: 'DM Sans', sans-serif; text-decoration: none;
+}
+.top-nav-btn:hover { color: var(--text); background: var(--surface2); }
+.top-nav-btn.active { color: var(--accent); background: rgba(249, 115, 22, 0.1); }
+.top-right { display: flex; align-items: center; gap: 12px; }
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+}
+
+.logo span { color: var(--accent); }
+
+.back-btn {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+}
+
+.panel {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  padding: 24px;
+  border-radius: 20px;
+  width: 340px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  border: 1px solid var(--border);
+  pointer-events: auto;
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-40px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+input, select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent2);
+  background: rgba(255,255,255,0.08);
+}
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  background: var(--muted);
+  cursor: wait;
+  box-shadow: none;
+  transform: none;
+}
+
+.results {
+  margin-top: 20px;
+  display: none;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.res-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.res-item:last-child { margin-bottom: 0; }
+
+.res-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.res-val {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 10px;
+  font-family: 'Space Mono', monospace;
+}
+
+/* Switch UI */
+.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* Leaflet Overrides */
+.leaflet-container {
+  background: var(--bg);
+}
+
+.leaflet-bar {
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+}
+
+.leaflet-bar a {
+  background-color: var(--glass) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  backdrop-filter: blur(12px);
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--surface2) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--glass) !important;
+  backdrop-filter: blur(12px);
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  border-radius: 10px !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--glass) !important;
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div class="overlay-container">
+  <div class="top-bar">
+    <div class="logo">Shield<span>Gig</span></div>
+    
+    <div class="top-center">
+      <a href="/dashboard" class="top-nav-btn">📊 Dashboard</a>
+      <a href="/dashboard?tab=insurance" class="top-nav-btn">🛡️ Insurance</a>
+      <a href="/dashboard?tab=triggers" class="top-nav-btn">⚡ Triggers</a>
+      <a href="/dashboard?tab=claims" class="top-nav-btn">💰 Claims</a>
+      <a href="/dashboard?tab=risk" class="top-nav-btn">🤖 Risk AI</a>
+      <a href="/map" class="top-nav-btn active">🗺️ Smart Map</a>
+    </div>
+
+    <div class="top-right">
+      <button id="themeToggle" class="top-nav-btn" style="font-size:18px;" onclick="toggleTheme()">🌓</button>
+      <a href="/dashboard" class="back-btn" style="padding: 8px 14px; font-size: 13px;">Exit Map</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3><span style="font-size: 24px;">📍</span> Route Planner</h3>
+
+    <div class="input-group">
+      <label>Pickup Location</label>
+      <input id="pickup" placeholder="Enter landmark or click map">
+    </div>
+
+    <div class="input-group">
+      <label>Drop Location</label>
+      <input id="drop" placeholder="Where to?">
+    </div>
+
+    <div class="input-group">
+      <label>Transport Mode</label>
+      <select id="mode">
+        <option value="drive">Car 🚗</option>
+        <option value="motorcycle">Bike 🏍️</option>
+        <option value="walk">Walk 🚶</option>
+      </select>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <button onclick="calculateRoute()" id="btn" class="btn-primary" style="flex: 2;">Find Optimal Route</button>
+      <button onclick="locateMe()" class="btn-primary" style="flex: 1; background: var(--accent2); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">📍 Me</button>
+    </div>
+
+    <!-- Hotspot Toggle -->
+    <div style="margin-top:20px; display:flex; align-items:center; justify-content:space-between; background:var(--surface2); padding:12px; border-radius:12px; border:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">🔥</span>
+        <div>
+          <div style="font-weight:600; font-size:13px;">Delivery Hotspots</div>
+          <div style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase;">5km Analysis</div>
+        </div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="hotspotToggle" onchange="toggleHotspots()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="results" id="results">
+      <div class="res-item">
+        <span class="res-label">Total Distance</span>
+        <span id="distance" class="res-val"></span>
+      </div>
+      <div class="res-item">
+        <span class="res-label">Estimated Time</span>
+        <span id="eta" class="res-val"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/h3-js"></script>
+
+<script>
+// ================= CONFIG via Backend =================
+const API_KEY = "{{ api_key }}";
+
+// ================= THEME LOGIC =================
+let currentTileLayer = null;
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const target = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', target);
+  localStorage.setItem('shieldgig-theme', target);
+  document.getElementById('themeToggle').textContent = target === 'light' ? '🌙' : '☀️';
+  
+  // Update Map Tiles
+  updateMapTiles(target);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('shieldgig-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').textContent = saved === 'light' ? '🌙' : '☀️';
+  return saved;
+}
+
+function updateMapTiles(theme) {
+  if (currentTileLayer) map.removeLayer(currentTileLayer);
+  
+  const style = theme === 'light' ? 'positron' : 'dark-matter';
+  currentTileLayer = L.tileLayer(`https://maps.geoapify.com/v1/tile/${style}/{z}/{x}/{y}.png?apiKey=${API_KEY}`, {
+    maxZoom: 20
+  }).addTo(map);
+}
+
+// ================= MAP INIT =================
+const theme = initTheme();
+const map = L.map('map', {
+  zoomControl: false
+}).setView([12.9716, 77.5946], 13);
+
+L.control.zoom({
+  position: 'bottomright'
+}).addTo(map);
+
+updateMapTiles(theme);
+
+let layerGroup = L.layerGroup().addTo(map);
+let userMarker = null;
+
+// ================= HELPERS =================
+function locateMe() {
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      map.setView([latitude, longitude], 15);
+      
+      if (userMarker) userMarker.remove();
+      
+      userMarker = L.marker([latitude, longitude], {
+        icon: L.divIcon({
+          html: '<div style="background:#10b981; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 15px #10b981;"></div>',
+          className: 'user-icon',
+          iconSize: [16, 16]
+        })
+      }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+      
+      document.getElementById("pickup").value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+    },
+    (err) => {
+      console.error("Location error:", err);
+      alert("Could not retrieve your location");
+    }
+  );
+}
+const cache = {};
+
+// ================= HELPERS =================
+async function getCoordinates(place) {
+  if (cache[place]) return cache[place];
+
+  try {
+    const res = await fetch(
+      `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(place)}&apiKey=${API_KEY}`
+    );
+
+    const data = await res.json();
+
+    if (!data.features || data.features.length === 0) {
+      return null;
+    }
+
+    const coords = {
+      lat: data.features[0].geometry.coordinates[1],
+      lon: data.features[0].geometry.coordinates[0]
+    };
+
+    cache[place] = coords;
+    return coords;
+  } catch (err) {
+    console.error("Geocoding error:", err);
+    return null;
+  }
+}
+
+// ================= MAIN LOGIC =================
+async function calculateRoute() {
+  const pickup = document.getElementById("pickup").value.trim();
+  const drop = document.getElementById("drop").value.trim();
+  const mode = document.getElementById("mode").value;
+  const modeText = document.getElementById("mode").selectedOptions[0].text;
+
+  const btn = document.getElementById("btn");
+  const errorBox = document.getElementById("error");
+  const resultsDiv = document.getElementById("results");
+
+  errorBox.innerText = "";
+  resultsDiv.style.display = "none";
+
+  btn.innerText = "Analyzing Paths...";
+  btn.disabled = true;
+
+  layerGroup.clearLayers();
+
+  try {
+    if (!pickup || !drop) throw new Error("Please enter both locations");
+
+    const start = await getCoordinates(pickup);
+    const end = await getCoordinates(drop);
+
+    if (!start) throw new Error(`Could not find "${pickup}"`);
+    if (!end) throw new Error(`Could not find "${drop}"`);
+
+    // Add markers with custom style
+    const startIcon = L.divIcon({
+      html: '<div style="background:#3b82f6; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #3b82f6;"></div>',
+      className: 'custom-icon',
+      iconSize: [12, 12]
+    });
+
+    const endIcon = L.divIcon({
+      html: '<div style="background:#f97316; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #f97316;"></div>',
+      className: 'custom-icon',
+      iconSize: [12, 12]
+    });
+
+    L.marker([start.lat, start.lon], { icon: startIcon }).addTo(layerGroup).bindPopup("<b>Pickup:</b> " + pickup);
+    L.marker([end.lat, end.lon], { icon: endIcon }).addTo(layerGroup).bindPopup("<b>Drop:</b> " + drop);
+
+    // Route fetch
+    const routeRes = await fetch(
+      `https://api.geoapify.com/v1/routing?waypoints=${start.lat},${start.lon}|${end.lat},${end.lon}&mode=${mode}&apiKey=${API_KEY}`
+    );
+
+    const routeData = await routeRes.json();
+
+    if (routeData.error) {
+      throw new Error(routeData.error.message || "Route calculation failed");
+    }
+
+    if (!routeData.features || routeData.features.length === 0) {
+      throw new Error("No feasible route found for this mode");
+    }
+
+    // Draw route with specific ShieldGig style
+    const route = L.geoJSON(routeData, {
+      style: { color: "#3b82f6", weight: 6, opacity: 0.8 }
+    }).addTo(layerGroup);
+
+    map.fitBounds(route.getBounds(), { padding: [80, 80] });
+
+    // Display results
+    const props = routeData.features[0].properties;
+
+    const dist = (props.distance / 1000).toFixed(2);
+    const timeMin = Math.round(props.time / 60);
+
+    const hours = Math.floor(timeMin / 60);
+    const mins = timeMin % 60;
+
+    const formattedTime = hours > 0 
+      ? `${hours} hr ${mins} min`
+      : `${mins} min`;
+
+    document.getElementById("distance").innerText = dist + " km";
+    document.getElementById("eta").innerText = formattedTime;
+
+    resultsDiv.style.display = "block";
+
+    // Save history
+    localStorage.setItem("lastRoute", JSON.stringify({pickup, drop, mode}));
+
+  } catch (err) {
+    console.error(err);
+    errorBox.innerText = "Error: " + err.message;
+  } finally {
+    btn.innerText = "Find Optimal Route";
+    btn.disabled = false;
+  }
+}
+
+// ================= MAP CLICK =================
+map.on("click", function(e) {
+  const { lat, lng } = e.latlng;
+  const pickupInput = document.getElementById("pickup");
+  pickupInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  
+  // Visual feedback on click
+  L.circleMarker([lat, lng], {
+    radius: 8,
+    color: '#3b82f6',
+    fillOpacity: 0.4
+  }).addTo(layerGroup).fadeOut();
+});
+
+L.Marker.prototype.fadeOut = function() {
+    var self = this;
+    setTimeout(function() {
+        self.remove();
+    }, 1000);
+};
+
+// ================= HOTSPOT LOGIC =================
+const TOMTOM_KEY = "{{ tomtom_key }}";
+let hotspotLayer = null;
+
+async function toggleHotspots() {
+  const isEnabled = document.getElementById("hotspotToggle").checked;
+  if (!isEnabled) {
+    if (hotspotLayer) hotspotLayer.remove();
+    return;
+  }
+
+  const center = map.getCenter();
+  btn.innerText = "Scanning Area...";
+  
+  try {
+    const res = await fetch(`https://api.tomtom.com/search/2/nearbySearch/.json?key=${TOMTOM_KEY}&lat=${center.lat}&lon=${center.lng}&radius=5000&categorySet=7315,9361&limit=100`);
+    const data = await res.json();
+    
+    if (!data.results) throw new Error("No data found");
+    
+    // Bin by H3
+    const counts = {};
+    data.results.forEach(p => {
+      const h3Index = h3.latLngToCell(p.position.lat, p.position.lon, 9);
+      counts[h3Index] = (counts[h3Index] || 0) + 1;
+    });
+
+    renderHexagons(counts);
+    
+  } catch (err) {
+    console.error("Hotspot error:", err);
+    errorBox.innerText = "Hotspot Scan Failed: " + err.message;
+  } finally {
+    btn.innerText = "Find Optimal Route";
+  }
+}
+
+function renderHexagons(counts) {
+  if (hotspotLayer) hotspotLayer.remove();
+  
+  const features = Object.entries(counts).map(([h3Index, count]) => {
+    const vertices = h3.cellToBoundary(h3Index);
+    // H3 vertices are [lat, lng], leaflet polygon wants [lat, lng]
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [vertices.map(v => [v[1], v[0]])] // Flip for GeoJSON
+      },
+      properties: { count }
+    };
+  });
+
+  const max = Math.max(...Object.values(counts));
+
+  hotspotLayer = L.geoJSON({ type: "FeatureCollection", features }, {
+    style: (f) => ({
+      fillColor: getColor(f.properties.count, max),
+      weight: 1,
+      opacity: 0.2,
+      color: 'white',
+      fillOpacity: 0.6
+    })
+  }).addTo(map);
+  
+  map.fitBounds(hotspotLayer.getBounds(), { padding: [50, 50] });
+}
+
+function getColor(val, max) {
+  const ratio = val / max;
+  return ratio > 0.8 ? '#ef4444' : // Red
+         ratio > 0.5 ? '#f97316' : // Orange
+         ratio > 0.2 ? '#eab308' : // Yellow
+                       '#fef08a';   // Light Yellow
+}
+
+// ================= LOAD LAST ROUTE =================
+window.onload = () => {
+  const last = JSON.parse(localStorage.getItem("lastRoute"));
+  if (last) {
+    document.getElementById("pickup").value = last.pickup;
+    document.getElementById("drop").value = last.drop;
+    document.getElementById("mode").value = last.mode;
+    
+    // Auto trigger if both exist
+    if (last.pickup && last.drop) {
+       setTimeout(calculateRoute, 1000);
+    }
+  }
+};
+</script>
+
+</body>
+</html>

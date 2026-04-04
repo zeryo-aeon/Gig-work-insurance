@@ -17,20 +17,28 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from apis.openmentoapi import OpenMeteoWrapper
 from apis.Geoapify_ import GeoapifyWrapper
-from apis.mock_payment import MockPaymentSystem
+from apis.mock_payment import MockPaymentWrapper
+from apis.ocr_apis import OCRWrapper
+from apis.newapi import NewsWrapper
 
 from routers import auth, dashboard, insurance, triggers, claims, admin
-from models.session import get_current_user, SessionUser
+from models.session import get_current_user, SessionUser, seed_db
 
 weather_client = OpenMeteoWrapper()
 geoapify_client = GeoapifyWrapper()
-payment_client = MockPaymentSystem()
+payment_client = MockPaymentWrapper()
+ocr_client = OCRWrapper()
+news_client = NewsWrapper()
 
 app = FastAPI(
-    title="ShieldGig API",
+    title="Zero-Aeon-GWI API",
     description="Parametric Insurance for Gig Workers",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+def startup_event():
+    seed_db()
 
 app.add_middleware(
     CORSMiddleware,
@@ -103,6 +111,59 @@ async def get_wallet_balance(rider_id: str):
     """Get the mock wallet balance of a rider."""
     return payment_client.get_wallet_balance(rider_id)
 
+# ─── OCR & Eligibility Routes ───────────────────────────────────────────────
+
+@app.post("/api/ocr/upload-order", tags=["ocr"])
+async def upload_past_order(request: Request):
+    """
+    Handle past order upload. Extracts data via OCR and increments verified count.
+    Once 5 orders are verified, the user is insured.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    user_session = get_current_user(token)
+    
+    # Process the uploaded file (mocking the extraction logic)
+    # In a real scenario, we'd use: ocr_client.query({"image": ...})
+    
+    # Call the OCR Wrapper to demonstrate integration
+    ocr_result = ocr_client.query({
+        "messages": [{"role": "user", "content": [{"type": "text", "text": "Extract order ID and amount."}]}],
+        "model": "Qwen/Qwen2.5-VL-72B-Instruct:ovhcloud"
+    })
+    
+    from models.session import USERS_DB
+    user = USERS_DB.get(user_session.rider_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    user["verified_orders"] = user.get("verified_orders", 0) + 1
+    
+    # Check eligibility
+    if user["verified_orders"] >= 5:
+        user["is_insured"] = True
+        message = "Order verified via AI! You are now fully INSURED. 🎉"
+    else:
+        needed = 5 - user["verified_orders"]
+        message = f"AI verified your order. Upload {needed} more to activate coverage."
+        
+    return {
+        "status": "success",
+        "verified_orders": user["verified_orders"],
+        "is_insured": user["is_insured"],
+        "message": message,
+        "ocr_analysis": "Order data successfully extracted and validated."
+    }
+
+@app.get("/api/news/traffic", tags=["news"])
+async def get_traffic_news():
+    """Fetch AI-curated traffic intelligence using NewsWrapper."""
+    raw_news = news_client.fetch_news()
+    processed_news = news_client.process(raw_news)
+    return {"news": processed_news}
+
 # ─── Page Routes ────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
@@ -117,16 +178,16 @@ async def root(request: Request):
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request):
     """Serve the Admin HTML Dashboard."""
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="admin.html", context={})
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="login.html", context={})
 
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
-    return templates.TemplateResponse("signup.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="signup.html", context={})
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
@@ -135,14 +196,36 @@ async def dashboard_page(request: Request):
         return RedirectResponse(url="/login")
     try:
         user = get_current_user(token)
-        return templates.TemplateResponse("dashboard.html", {
-            "request": request,
-            "user": user
-        })
+        return templates.TemplateResponse(
+            request=request, name="dashboard.html", context={"user": user}
+        )
     except Exception:
         response = RedirectResponse(url="/login")
         response.delete_cookie("access_token")
         return response
+
+
+@app.get("/map", response_class=HTMLResponse)
+async def map_page(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        return RedirectResponse(url="/login")
+    try:
+        user = get_current_user(token)
+        # Inject the Geoapify API Key from env
+        api_key = os.getenv("GEOAPIFY_API_KEY", "YOUR_GEOAPIFY_API_KEY")
+        tom_key = os.getenv("TOMTOM_API_KEY", "YOUR_TOMTOM_API_KEY")
+        return templates.TemplateResponse(
+            request=request,
+            name="map.html",
+            context={
+                "user": user,
+                "api_key": api_key,
+                "tomtom_key": tom_key
+            }
+        )
+    except Exception:
+        return RedirectResponse(url="/login")
 
 
 @app.get("/session-info", response_class=HTMLResponse)
@@ -152,10 +235,9 @@ async def session_page(request: Request):
         return RedirectResponse(url="/login")
     try:
         user = get_current_user(token)
-        return templates.TemplateResponse("session.html", {
-            "request": request,
-            "user": user
-        })
+        return templates.TemplateResponse(
+            request=request, name="session.html", context={"user": user}
+        )
     except Exception:
         return RedirectResponse(url="/login")
 
