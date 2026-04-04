@@ -27,7 +27,7 @@ jobs:
         run: chmod +x GigShield_Android_Defense/gradlew
 
       - name: Build Release APK
-        run: ./gradlew :app:assembleRelease
+        run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
         working-directory: GigShield_Android_Defense
 
       - name: Create GitHub Release
