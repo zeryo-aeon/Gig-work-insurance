@@ -53,6 +53,16 @@ app.include_router(triggers.router, prefix="/api/triggers", tags=["triggers"])
 app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
+@app.get("/api/status", tags=["health"])
+async def get_status():
+    """Health check for the Android app."""
+    return {
+        "status": "online",
+        "server": "ShieldGig Core",
+        "version": "1.0.0",
+        "last_sync": datetime.now().isoformat()
+    }
+
 
 # ─── Data Routes ────────────────────────────────────────────────────────────
 
