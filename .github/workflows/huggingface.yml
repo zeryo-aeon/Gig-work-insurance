@@ -18,14 +18,10 @@ jobs:
           username: ${{ secrets.HF_USERNAME }}
           password: ${{ secrets.HF_TOKEN }}
 
-      - name: Set lowercased image name
-        run: |
-          # Ensure the tag is lowercase and use a hyphen between username and space name
-          echo "IMAGE_NAME=registry.hf.space/${{ secrets.HF_USERNAME }}-${{ secrets.SPACE_NAME }}" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
-
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE_NAME }}:latest
+          # Hardcoding the image name as registry.hf.space/arunmanikandan-c-my-gig-work
+          tags: registry.hf.space/arunmanikandan-c-my-gig-work:latest
