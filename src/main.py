@@ -39,6 +39,11 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup_event():
+    import os
+    env_port = os.getenv("PORT", "NOT SET")
+    env_host = os.getenv("HOST", "NOT SET")
+    is_hf = os.getenv("SPACE_ID", None) is not None
+    app_logger.info(f"📍 Diagnostic: PORT={env_port}, HOST={env_host}, HF_SPACE={is_hf}")
     seed_db()
 
 app.add_middleware(
