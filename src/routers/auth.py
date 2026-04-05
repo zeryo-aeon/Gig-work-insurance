@@ -57,7 +57,8 @@ async def login(
         value=token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax"
+        samesite="lax",
+        path="/"
     )
     return response
 
@@ -91,7 +92,8 @@ async def signup(
         value=token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax"
+        samesite="lax",
+        path="/"
     )
     return response
 
@@ -137,7 +139,8 @@ async def firebase_login(data: FirebaseAuthRequest):
         value=token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="lax"
+        samesite="lax",
+        path="/"
     )
     return response
 
@@ -147,7 +150,7 @@ async def logout():
     """Clear session cookie."""
     app_logger.info("AUTH: POST logout - Clearing session")
     response = JSONResponse(content={"success": True, "redirect": "/login"})
-    response.delete_cookie("access_token")
+    response.delete_cookie("access_token", path="/")
     return response
 
 
@@ -156,7 +159,7 @@ async def logout_get():
     """GET logout for convenience."""
     app_logger.info("AUTH: GET logout - Redirecting to login")
     response = RedirectResponse(url="/login")
-    response.delete_cookie("access_token")
+    response.delete_cookie("access_token", path="/")
     return response
 
 

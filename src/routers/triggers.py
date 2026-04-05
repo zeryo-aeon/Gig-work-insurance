@@ -128,14 +128,69 @@ async def get_live_triggers(request: Request):
     })
 
     # Automated "Zero-Touch" Payout Logic
-    # In a real app, this would check if a payout was already made today for this trigger
+    from models.database import SessionLocal
+    from models.session import Payment
+    from routers.insurance import PLANS
+    import random
+    from datetime import date
+
     active_count = sum(1 for t in triggers if t["status"] == "triggered")
-    if active_count > 0:
-        for t in triggers:
-            if t["status"] == "triggered":
-                # Simulated Payout call
-                app_logger.info(f"ZERO-TOUCH: Automatically processing payout for {user.rider_id} - Trigger: {t['name']}")
-                payment_client.process_payout(user.rider_id, t["payout_amount"], f"Automated Payout: {t['name']}")
+    
+    if active_count > 0 and user.is_insured:
+        db = SessionLocal()
+        try:
+            # 1. Per day max 1 trigger cap
+            today_str = date.today().strftime("%Y-%m-%d")
+            payouts_today = db.query(Payment).filter(
+                Payment.rider_id == user.rider_id, 
+                Payment.date == today_str,
+                Payment.type == "insurance_payout"
+            ).count()
+            
+            if payouts_today == 0:
+                # 2. Simulate or fetch ability to deliver (Trips < 3)
+                # In a real app, we would query the current day's live orders.
+                # Here we simulate with a random chance or specific logic.
+                mock_trips_today = random.randint(0, 5) 
+                
+                if mock_trips_today < 3:
+                    # 3. Get pricing model multiplier
+                    # Default coverage base level is 1.0 (e.g. Basic Plan)
+                    coverage_multiplier = 1.0 
+                    
+                    # Fetch plan directly via plan's string name (or ID if mapped differently, e.g. "Micro-Insurance" could just mean any plan from plans list, but let's just pick one based on `weekly_plan` if available)
+                    # We will do a generic lookup or default based on PLANS
+                    plan_info = next((p for p in PLANS if p["name"].lower() == user.weekly_plan.lower() or p["id"] == user.weekly_plan.lower()), PLANS[0])
+                    coverage_multiplier = plan_info.get("coverage_level", 1.0)
+
+                    # Trigger the first active alert
+                    for t in triggers:
+                        if t["status"] == "triggered":
+                            # Calculate final payout
+                            final_amount = t["payout_amount"] * coverage_multiplier
+                            
+                            app_logger.info(f"ZERO-TOUCH: Automatically processing payout for {user.rider_id} - Trigger: {t['name']} (Trips: {mock_trips_today}, Multiplier: {coverage_multiplier}x, Paid out: {final_amount})")
+                            
+                            payment_client.process_payout(user.rider_id, final_amount, f"Automated Payout: {t['name']}")
+                            
+                            # Log to Database so we don't trigger again today
+                            import uuid
+                            new_pay = Payment(
+                                id=f"PAY-{uuid.uuid4().hex[:8].upper()}",
+                                rider_id=user.rider_id,
+                                amount=final_amount,
+                                type="insurance_payout",
+                                desc=f"Automated Payout: {t['name']} (Weather Triggered, Trips: {mock_trips_today})",
+                                timestamp=datetime.utcnow().timestamp(),
+                                date=today_str,
+                            )
+                            db.add(new_pay)
+                            db.commit()
+                            
+                            # Break out to ensure only ONE trigger is paid out
+                            break
+        finally:
+            db.close()
 
     return {
         "active_count": active_count,

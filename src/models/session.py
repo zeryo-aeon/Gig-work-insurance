@@ -13,6 +13,8 @@ import time
 import firebase_admin
 from firebase_admin import credentials, auth as firebase_auth
 import json
+import os
+
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 
@@ -53,7 +55,7 @@ except Exception as e:
 def verify_firebase_token(id_token: str) -> Optional[dict]:
     """Verify a Firebase ID token and return its claims."""
     try:
-        decoded_token = firebase_auth.verify_id_token(id_token)
+        decoded_token = firebase_auth.verify_id_token(id_token, clock_skew_seconds=10)
         return decoded_token
     except Exception as e:
         print(f"❌ Firebase token verification failed: {e}")
@@ -86,6 +88,7 @@ class User(Base):
     
     payments = relationship("Payment", back_populates="user")
     history = relationship("RiderHistory", back_populates="user")
+    hazard_reports = relationship("HazardReport", back_populates="user")
 
 class Payment(Base):
     __tablename__ = "payments"
@@ -100,6 +103,20 @@ class Payment(Base):
     date = Column(String)
     
     user = relationship("User", back_populates="payments")
+
+class HazardReport(Base):
+    __tablename__ = "hazard_reports"
+    __table_args__ = {"extend_existing": True}
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    rider_id = Column(String, ForeignKey("users.rider_id"))
+    type = Column(String) # waterlogging, accident, closure, traffic
+    lat = Column(Float)
+    lon = Column(Float)
+    timestamp = Column(Float)
+    description = Column(String)
+    
+    user = relationship("User", back_populates="hazard_reports")
 
 class RiderHistory(Base):
     __tablename__ = "rider_history"

@@ -1,733 +1,1204 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zero-Aeon-GWI — Smart Route Planner</title>
+  <title>Zeryo Aeon GWI — Smart Route Planner</title>
 
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
 
-<style>
-:root {
-  --bg: #0a0c10;
-  --surface: rgba(17, 19, 24, 0.9);
-  --surface2: #181c24;
-  --border: rgba(35, 39, 51, 0.8);
-  --accent: #f97316;
-  --accent2: #3b82f6;
-  --text: #e8eaf0;
-  --muted: #6b7280;
-  --glass: rgba(17, 19, 24, 0.8);
-}
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: rgba(17, 19, 24, 0.9);
+      --surface2: #181c24;
+      --border: rgba(35, 39, 51, 0.8);
+      --accent: #f97316;
+      --accent2: #3b82f6;
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --glass: rgba(17, 19, 24, 0.8);
+    }
 
-[data-theme="light"] {
-  --bg: #f8fafc;
-  --surface: rgba(255, 255, 255, 0.85);
-  --surface2: #f1f5f9;
-  --border: rgba(226, 232, 240, 0.8);
-  --accent: #f97316;
-  --accent2: #2563eb;
-  --text: #0f172a;
-  --muted: #64748b;
-  --glass: rgba(255, 255, 255, 0.85);
-}
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: rgba(255, 255, 255, 0.85);
+      --surface2: #f1f5f9;
+      --border: rgba(226, 232, 240, 0.8);
+      --accent: #f97316;
+      --accent2: #2563eb;
+      --text: #0f172a;
+      --muted: #64748b;
+      --glass: rgba(255, 255, 255, 0.85);
+    }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-body { 
-  margin: 0; 
-  font-family: 'DM Sans', sans-serif; 
-  background: var(--bg);
-  color: var(--text);
-  overflow: hidden;
-}
+    body {
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
 
-#map { 
-  height: 100vh; 
-  width: 100%; 
-  z-index: 1;
-}
+    #map {
+      height: 100vh;
+      width: 100%;
+      z-index: 1;
+    }
 
-/* Custom Overlays */
-.overlay-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-}
+    /* Custom Overlays */
+    .overlay-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
 
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  pointer-events: auto;
-  background: var(--surface);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 36px;
-  width: 100%;
-}
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      pointer-events: auto;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 36px;
+      width: 100%;
+    }
 
-.top-center { display: flex; gap: 4px; }
-.top-nav-btn {
-  padding: 8px 16px; border-radius: 8px; font-size: 13px; color: var(--muted);
-  cursor: pointer; border: none; background: none; transition: all 0.18s;
-  font-family: 'DM Sans', sans-serif; text-decoration: none;
-}
-.top-nav-btn:hover { color: var(--text); background: var(--surface2); }
-.top-nav-btn.active { color: var(--accent); background: rgba(249, 115, 22, 0.1); }
-.top-right { display: flex; align-items: center; gap: 12px; }
+    .top-center {
+      display: flex;
+      gap: 4px;
+    }
 
-.logo {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.5px;
-}
+    .top-nav-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: all 0.18s;
+      font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+    }
 
-.logo span { color: var(--accent); }
+    .top-nav-btn:hover {
+      color: var(--text);
+      background: var(--surface2);
+    }
 
-.back-btn {
-  background: var(--glass);
-  backdrop-filter: blur(12px);
-  padding: 10px 20px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  color: var(--text);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
+    .top-nav-btn.active {
+      color: var(--accent);
+      background: rgba(249, 115, 22, 0.1);
+    }
 
-.back-btn:hover {
-  background: var(--surface2);
-  border-color: var(--accent);
-}
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-.panel {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  padding: 24px;
-  border-radius: 20px;
-  width: 340px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-  border: 1px solid var(--border);
-  pointer-events: auto;
-  animation: slideIn 0.4s ease-out;
-}
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
 
-@keyframes slideIn {
-  from { transform: translateX(-40px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
+    .logo span {
+      color: var(--accent);
+    }
 
-h3 {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 18px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+    .logo-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      margin-left: 8px;
+    }
 
-.input-group {
-  margin-bottom: 12px;
-}
+    .rider-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px 5px 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+    }
 
-label {
-  display: block;
-  font-family: 'Space Mono', monospace;
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  letter-spacing: 0.5px;
-}
+    .rider-chip:hover {
+      border-color: rgba(249, 115, 22, 0.4);
+    }
 
-input, select {
-  width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
-  padding: 12px;
-  border-radius: 10px;
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  transition: all 0.2s;
-}
+    .chip-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
 
-input:focus, select:focus {
-  outline: none;
-  border-color: var(--accent2);
-  background: rgba(255,255,255,0.08);
-}
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 5px #22c55e;
+      animation: pdot 2s infinite;
+    }
 
-select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-}
+    @keyframes pdot {
 
-.btn-primary {
-  width: 100%;
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-family: 'Syne', sans-serif;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
-}
+      0%,
+      100% {
+        opacity: 1;
+      }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
-}
+      50% {
+        opacity: 0.4;
+      }
+    }
 
-.btn-primary:active {
-  transform: translateY(0);
-}
+    .logout-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #fca5a5;
+      cursor: pointer;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      transition: all 0.18s;
+    }
 
-.btn-primary:disabled {
-  background: var(--muted);
-  cursor: wait;
-  box-shadow: none;
-  transform: none;
-}
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
 
-.results {
-  margin-top: 20px;
-  display: none;
-  background: rgba(16, 185, 129, 0.1);
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  animation: fadeIn 0.3s ease;
-}
+    .back-btn {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+    .back-btn:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+    }
 
-.res-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
+    .panel {
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      padding: 24px;
+      border-radius: 20px;
+      width: 340px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      pointer-events: auto;
+      animation: slideIn 0.4s ease-out;
+    }
 
-.res-item:last-child { margin-bottom: 0; }
+    @keyframes slideIn {
+      from {
+        transform: translateX(-40px);
+        opacity: 0;
+      }
 
-.res-label {
-  font-size: 12px;
-  color: var(--muted);
-}
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
 
-.res-val {
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  color: #10b981;
-}
+    h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.error {
-  color: #ef4444;
-  font-size: 12px;
-  margin-top: 10px;
-  font-family: 'Space Mono', monospace;
-}
+    .input-group {
+      margin-bottom: 12px;
+    }
 
-/* Switch UI */
-.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--border); transition: .4s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--accent); }
-input:checked + .slider:before { transform: translateX(22px); }
+    label {
+      display: block;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
 
-/* Leaflet Overrides */
-.leaflet-container {
-  background: var(--bg);
-}
+    input,
+    select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
 
-.leaflet-bar {
-  border: 1px solid var(--border) !important;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-}
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent2);
+      background: rgba(255, 255, 255, 0.08);
+    }
 
-.leaflet-bar a {
-  background-color: var(--glass) !important;
-  color: var(--text) !important;
-  border-bottom: 1px solid var(--border) !important;
-  backdrop-filter: blur(12px);
-}
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
 
-.leaflet-bar a:hover {
-  background-color: var(--surface2) !important;
-}
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+    }
 
-.leaflet-popup-content-wrapper {
-  background: var(--glass) !important;
-  backdrop-filter: blur(12px);
-  color: var(--text) !important;
-  border: 1px solid var(--border);
-  border-radius: 10px !important;
-}
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+    }
 
-.leaflet-popup-tip {
-  background: var(--glass) !important;
-}
-</style>
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      background: var(--muted);
+      cursor: wait;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .results {
+      margin-top: 20px;
+      display: none;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .res-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .res-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .res-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .res-val {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .error {
+      color: #ef4444;
+      font-size: 12px;
+      margin-top: 10px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* Switch UI */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--border);
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider {
+      background-color: var(--accent);
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(22px);
+    }
+
+    /* Leaflet Overrides */
+    .leaflet-container {
+      background: var(--bg);
+    }
+
+    .leaflet-bar {
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .leaflet-bar a {
+      background-color: var(--glass) !important;
+      color: var(--text) !important;
+      border-bottom: 1px solid var(--border) !important;
+      backdrop-filter: blur(12px);
+    }
+
+    .leaflet-bar a:hover {
+      background-color: var(--surface2) !important;
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: var(--glass) !important;
+      backdrop-filter: blur(12px);
+      color: var(--text) !important;
+      border: 1px solid var(--border);
+      border-radius: 10px !important;
+    }
+
+    .leaflet-popup-tip {
+      background: var(--glass) !important;
+    }
+
+    /* Report FAB */
+    .report-fab {
+      position: absolute;
+      bottom: 120px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+      z-index: 1100;
+      pointer-events: auto;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .report-fab:hover {
+      transform: scale(1.1) rotate(5deg);
+      background: #dc2626;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px;
+      border-radius: 20px;
+      width: 380px;
+      max-width: 90%;
+      animation: modalSlide 0.3s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .hazard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .hazard-opt {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .hazard-opt:hover {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .hazard-opt.selected {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+    }
+
+    .hazard-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .hazard-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-family: 'Space Mono';
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="map"></div>
+  <div id="map"></div>
 
-<div class="overlay-container">
-  <div class="top-bar">
-    <div class="logo">Shield<span>Gig</span></div>
-    
-    <div class="top-center">
-      <a href="/dashboard" class="top-nav-btn">📊 Dashboard</a>
-      <a href="/dashboard?tab=insurance" class="top-nav-btn">🛡️ Insurance</a>
-      <a href="/dashboard?tab=triggers" class="top-nav-btn">⚡ Triggers</a>
-      <a href="/dashboard?tab=claims" class="top-nav-btn">💰 Claims</a>
-      <a href="/dashboard?tab=risk" class="top-nav-btn">🤖 Risk AI</a>
-      <a href="/map" class="top-nav-btn active">🗺️ Smart Map</a>
+  <div class="overlay-container">
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="logo">Zeryo Aeon <span>GWI</span><span class="logo-tag">// Parametric Insurance</span></div>
+      </div>
+
+      <div class="top-center">
+        <a href="/dashboard" class="top-nav-btn">📊 Dashboard</a>
+        <a href="/dashboard?tab=insurance" class="top-nav-btn">🛡️ Insurance</a>
+        <a href="/dashboard?tab=triggers" class="top-nav-btn">⚡ Triggers</a>
+        <a href="/dashboard?tab=claims" class="top-nav-btn">💰 Claims</a>
+        <a href="/dashboard?tab=risk" class="top-nav-btn">🤖 Risk AI</a>
+        <a href="/map" class="top-nav-btn active" style="text-decoration:none">🗺️ Smart Map</a>
+        {% if user.role == 'admin' %}
+        <a href="/admin" class="top-nav-btn" style="text-decoration:none">👑 Admin Console</a>
+        {% endif %}
+      </div>
+
+      <div class="top-right">
+        <button id="themeToggle" class="top-nav-btn" style="font-size:18px;padding:6px 10px;"
+          onclick="toggleTheme()">🌓</button>
+        <a href="/session-info" class="rider-chip">
+          <div class="chip-avatar">🛵</div>
+          <span id="headerName">{{ user.name }}</span>
+          <div class="status-dot"></div>
+        </a>
+        <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+      </div>
     </div>
 
-    <div class="top-right">
-      <button id="themeToggle" class="top-nav-btn" style="font-size:18px;" onclick="toggleTheme()">🌓</button>
-      <a href="/dashboard" class="back-btn" style="padding: 8px 14px; font-size: 13px;">Exit Map</a>
-    </div>
-  </div>
+    <div class="panel">
+      <h3><span style="font-size: 24px;">📍</span> Route Planner</h3>
 
-  <div class="panel">
-    <h3><span style="font-size: 24px;">📍</span> Route Planner</h3>
+      <div class="input-group">
+        <label>Pickup Location</label>
+        <input id="pickup" placeholder="Enter landmark or click map">
+      </div>
 
-    <div class="input-group">
-      <label>Pickup Location</label>
-      <input id="pickup" placeholder="Enter landmark or click map">
-    </div>
+      <div class="input-group">
+        <label>Drop Location</label>
+        <input id="drop" placeholder="Where to?">
+      </div>
 
-    <div class="input-group">
-      <label>Drop Location</label>
-      <input id="drop" placeholder="Where to?">
-    </div>
+      <div class="input-group">
+        <label>Transport Mode</label>
+        <select id="mode">
+          <option value="drive">Car 🚗</option>
+          <option value="motorcycle">Bike 🏍️</option>
+          <option value="walk">Walk 🚶</option>
+        </select>
+      </div>
 
-    <div class="input-group">
-      <label>Transport Mode</label>
-      <select id="mode">
-        <option value="drive">Car 🚗</option>
-        <option value="motorcycle">Bike 🏍️</option>
-        <option value="walk">Walk 🚶</option>
-      </select>
-    </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="calculateRoute()" id="btn" class="btn-primary" style="flex: 2;">Find Optimal Route</button>
+        <button onclick="locateMe()" class="btn-primary"
+          style="flex: 1; background: var(--accent2); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">📍 Me</button>
+      </div>
 
-    <div style="display: flex; gap: 8px;">
-      <button onclick="calculateRoute()" id="btn" class="btn-primary" style="flex: 2;">Find Optimal Route</button>
-      <button onclick="locateMe()" class="btn-primary" style="flex: 1; background: var(--accent2); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">📍 Me</button>
-    </div>
+      <!-- Hazard Toggle -->
+      <div
+        style="margin-top:20px; display:flex; align-items:center; justify-content:space-between; background:var(--surface2); padding:12px; border-radius:12px; border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">⚠️</span>
+          <div>
+            <div style="font-weight:600; font-size:13px;">Hazard Zones</div>
+            <div style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase;">Risk-Geo Engine</div>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="hazardToggle" onchange="toggleHazards()">
+          <span class="slider"></span>
+        </label>
+      </div>
 
-    <!-- Hotspot Toggle -->
-    <div style="margin-top:20px; display:flex; align-items:center; justify-content:space-between; background:var(--surface2); padding:12px; border-radius:12px; border:1px solid var(--border);">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:20px;">🔥</span>
-        <div>
-          <div style="font-weight:600; font-size:13px;">Delivery Hotspots</div>
-          <div style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase;">5km Analysis</div>
+      <!-- Hotspot Toggle -->
+      <div
+        style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; background:var(--surface2); padding:12px; border-radius:12px; border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:20px;">🔥</span>
+          <div>
+            <div style="font-weight:600; font-size:13px;">Delivery Hotspots</div>
+            <div style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase;">Platform Demand</div>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="hotspotToggle" onchange="toggleHotspots()">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Hotspot Legend -->
+      <div id="hotspotLegend"
+        style="margin-top:12px; display:none; flex-direction:column; gap:8px; padding:12px; background:rgba(0,0,0,0.2); border-radius:10px; border:1px solid var(--border); animation:fadeIn 0.3s ease;">
+        <div
+          style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase; margin-bottom:4px;">
+          Hotspot Intensity</div>
+        <div style="display:flex; gap:4px; height:8px; border-radius:4px; overflow:hidden;">
+          <div style="flex:1; background:#ef4444;" title="High"></div>
+          <div style="flex:1; background:#f97316;" title="Medium-High"></div>
+          <div style="flex:1; background:#fbbf24;" title="Medium"></div>
+          <div style="flex:1; background:#86efac;" title="Low"></div>
+          <div style="flex:1; background:#22c55e;" title="Safe"></div>
+        </div>
+        <div
+          style="display:flex; justify-content:space-between; font-size:9px; color:var(--muted); font-family:'Space Mono';">
+          <span>HOTSPOT</span>
+          <span>SAFE ZONE</span>
         </div>
       </div>
-      <label class="switch">
-        <input type="checkbox" id="hotspotToggle" onchange="toggleHotspots()">
-        <span class="slider"></span>
-      </label>
-    </div>
 
-    <!-- Hotspot Legend -->
-    <div id="hotspotLegend" style="margin-top:12px; display:none; flex-direction:column; gap:8px; padding:12px; background:rgba(0,0,0,0.2); border-radius:10px; border:1px solid var(--border); animation:fadeIn 0.3s ease;">
-      <div style="font-size:10px; color:var(--muted); font-family:'Space Mono'; text-transform:uppercase; margin-bottom:4px;">Hotspot Intensity</div>
-      <div style="display:flex; gap:4px; height:8px; border-radius:4px; overflow:hidden;">
-        <div style="flex:1; background:#ef4444;" title="High"></div>
-        <div style="flex:1; background:#f97316;" title="Medium-High"></div>
-        <div style="flex:1; background:#fbbf24;" title="Medium"></div>
-        <div style="flex:1; background:#86efac;" title="Low"></div>
-        <div style="flex:1; background:#22c55e;" title="Safe"></div>
-      </div>
-      <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--muted); font-family:'Space Mono';">
-        <span>HOTSPOT</span>
-        <span>SAFE ZONE</span>
-      </div>
-    </div>
+      <div class="error" id="error"></div>
 
-    <div class="error" id="error"></div>
+      <div class="results" id="results">
+        <div class="res-item">
+          <span class="res-label">Total Distance</span>
+          <span id="distance" class="res-val"></span>
+        </div>
+        <div class="res-item">
+          <span class="res-label">Estimated Time</span>
+          <span id="eta" class="res-val"></span>
+        </div>
 
-    <div class="results" id="results">
-      <div class="res-item">
-        <span class="res-label">Total Distance</span>
-        <span id="distance" class="res-val"></span>
-      </div>
-      <div class="res-item">
-        <span class="res-label">Estimated Time</span>
-        <span id="eta" class="res-val"></span>
+        <!-- AI Intelligence Section -->
+        <div id="aiIntelligence" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(16, 185, 129, 0.2);">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+              <div class="ai-badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 10px; padding: 2px 6px;">🤖 AI ROUTE ENGINE</div>
+          </div>
+          <div class="res-item">
+              <span class="res-label">Risk Status</span>
+              <span id="riskStatus" class="res-val" style="color: var(--accent3);">Optimal</span>
+          </div>
+          <div class="res-item">
+              <span class="res-label">Hazard Multiplier</span>
+              <span id="hazardMult" class="res-val" style="color: var(--gold);">1.0x</span>
+          </div>
+          
+          <!-- New Breakdown -->
+          <div id="riskBreakdown" style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:14px; width:20px;">🌧️</span>
+                  <div style="flex:1; height:4px; background:rgba(255,255,255,0.05); border-radius:2px;">
+                      <div id="weatherBar" style="width:0%; height:100%; background:#3b82f6; border-radius:2px;"></div>
+                  </div>
+                  <span id="weatherScore" style="font-size:9px; font-family:'Space Mono'; color:var(--muted)">0%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:14px; width:20px;">📍</span>
+                  <div style="flex:1; height:4px; background:rgba(255,255,255,0.05); border-radius:2px;">
+                      <div id="zoneBar" style="width:0%; height:100%; background:#f97316; border-radius:2px;"></div>
+                  </div>
+                  <span id="zoneScore" style="font-size:9px; font-family:'Space Mono'; color:var(--muted)">0%</span>
+              </div>
+          </div>
+
+          <div id="recommendation" style="font-size: 11px; line-height: 1.5; margin-top: 12px; color: var(--muted); padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+              Analyzing route risk...
+          </div>
+
+          <!-- Trust Reward -->
+          <div id="trustReward" style="margin-top:10px; display:none; background:rgba(16,185,129,0.1); padding:8px; border-radius:6px; border:1px solid rgba(16,185,129,0.2); animation:fadeIn 0.5s ease;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span style="font-size:10px; color:#10b981; font-weight:700;">🛡️ SAFETY POINTS</span>
+                  <span style="font-size:11px; color:#10b981; font-family:'Space Mono'; font-weight:700;">+25 PTS</span>
+              </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/h3-js"></script>
+  <!-- FAB -->
+  <button class="report-fab" onclick="openReportModal()" title="Report Hazard">⚠️</button>
 
-<script>
-// ================= CONFIG via Backend =================
-const API_KEY = "{{ api_key }}";
-
-// ================= THEME LOGIC =================
-let currentTileLayer = null;
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  const target = current === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', target);
-  localStorage.setItem('shieldgig-theme', target);
-  document.getElementById('themeToggle').textContent = target === 'light' ? '🌙' : '☀️';
-  
-  // Update Map Tiles
-  updateMapTiles(target);
-}
-
-function initTheme() {
-  const saved = localStorage.getItem('shieldgig-theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', saved);
-  document.getElementById('themeToggle').textContent = saved === 'light' ? '🌙' : '☀️';
-  return saved;
-}
-
-function updateMapTiles(theme) {
-  if (currentTileLayer) map.removeLayer(currentTileLayer);
-  
-  const style = theme === 'light' ? 'positron' : 'dark-matter';
-  currentTileLayer = L.tileLayer(`https://maps.geoapify.com/v1/tile/${style}/{z}/{x}/{y}.png?apiKey=${API_KEY}`, {
-    maxZoom: 20
-  }).addTo(map);
-}
-
-// ================= MAP INIT =================
-const theme = initTheme();
-const map = L.map('map', {
-  zoomControl: false
-}).setView([12.9716, 77.5946], 13);
-
-L.control.zoom({
-  position: 'bottomright'
-}).addTo(map);
-
-updateMapTiles(theme);
-
-let layerGroup = L.layerGroup().addTo(map);
-let userMarker = null;
-
-// ================= HELPERS =================
-function locateMe() {
-  if (!navigator.geolocation) {
-    alert("Geolocation is not supported by your browser");
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const { latitude, longitude } = position.coords;
-      map.setView([latitude, longitude], 15);
+  <!-- Hazard Modal -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-content">
+      <h3 style="margin-bottom:8px">Report Active Hazard</h3>
+      <p style="font-size:12px; color:var(--muted); line-height:1.4">Help fellow ShieldGig riders by identifying real-time disruptions at your current location.</p>
       
-      if (userMarker) userMarker.remove();
+      <div class="hazard-grid">
+        <div class="hazard-opt" onclick="selectHazard('waterlogging', this)">
+          <span class="hazard-icon">🌊</span>
+          <span class="hazard-label">Flooded</span>
+        </div>
+        <div class="hazard-opt" onclick="selectHazard('accident', this)">
+          <span class="hazard-icon">💥</span>
+          <span class="hazard-label">Accident</span>
+        </div>
+        <div class="hazard-opt" onclick="selectHazard('closure', this)">
+          <span class="hazard-icon">🚧</span>
+          <span class="hazard-label">Blocked</span>
+        </div>
+        <div class="hazard-opt" onclick="selectHazard('traffic', this)">
+          <span class="hazard-icon">🚦</span>
+          <span class="hazard-label">Traffic</span>
+        </div>
+      </div>
+
+      <input id="hazardDesc" placeholder="Optional description..." style="margin-bottom:20px">
       
-      userMarker = L.marker([latitude, longitude], {
-        icon: L.divIcon({
-          html: '<div style="background:#10b981; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 15px #10b981;"></div>',
-          className: 'user-icon',
-          iconSize: [16, 16]
-        })
-      }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
-      
-      document.getElementById("pickup").value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-    },
-    (err) => {
-      console.error("Location error:", err);
-      alert("Could not retrieve your location");
-    }
-  );
-}
-const cache = {};
+      <div style="display:flex; gap:12px">
+        <button class="btn-primary" style="background:var(--surface2); color:var(--muted); flex:1" onclick="closeReportModal()">Cancel</button>
+        <button class="btn-primary" style="flex:2" id="submitReportBtn" onclick="submitHazardReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
 
-// ================= HELPERS =================
-async function getCoordinates(place) {
-  if (cache[place]) return cache[place];
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/h3-js"></script>
 
-  try {
-    const res = await fetch(
-      `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(place)}&apiKey=${API_KEY}`
-    );
+  <script>
+    // ================= CONFIG via Backend =================
+    const API_KEY = "{{ api_key }}";
 
-    const data = await res.json();
+    // ================= THEME LOGIC =================
+    let currentTileLayer = null;
 
-    if (!data.features || data.features.length === 0) {
-      return null;
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const target = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', target);
+      localStorage.setItem('shieldgig-theme', target);
+      document.getElementById('themeToggle').textContent = target === 'light' ? '🌙' : '☀️';
+
+      // Update Map Tiles
+      updateMapTiles(target);
     }
 
-    const coords = {
-      lat: data.features[0].geometry.coordinates[1],
-      lon: data.features[0].geometry.coordinates[0]
+    function initTheme() {
+      const saved = localStorage.getItem('shieldgig-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('themeToggle').textContent = saved === 'light' ? '🌙' : '☀️';
+      return saved;
+    }
+
+    function updateMapTiles(theme) {
+      if (currentTileLayer) map.removeLayer(currentTileLayer);
+
+      const style = theme === 'light' ? 'positron' : 'dark-matter';
+      currentTileLayer = L.tileLayer(`https://maps.geoapify.com/v1/tile/${style}/{z}/{x}/{y}.png?apiKey=${API_KEY}`, {
+        maxZoom: 20
+      }).addTo(map);
+    }
+
+    // ================= MAP INIT =================
+    const theme = initTheme();
+    const map = L.map('map', {
+      zoomControl: false
+    }).setView([12.9716, 77.5946], 13);
+
+    async function doLogout() {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    L.control.zoom({
+      position: 'bottomright'
+    }).addTo(map);
+
+    updateMapTiles(theme);
+
+    let layerGroup = L.layerGroup().addTo(map);
+    let userMarker = null;
+
+    // ================= HELPERS =================
+    function locateMe() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 15);
+
+          if (userMarker) userMarker.remove();
+
+          userMarker = L.marker([latitude, longitude], {
+            icon: L.divIcon({
+              html: '<div style="background:#10b981; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 15px #10b981;"></div>',
+              className: 'user-icon',
+              iconSize: [16, 16]
+            })
+          }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+
+          document.getElementById("pickup").value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        },
+        (err) => {
+          console.error("Location error:", err);
+          alert("Could not retrieve your location");
+        }
+      );
+    }
+    const cache = {};
+
+    // ================= HELPERS =================
+    async function getCoordinates(place) {
+      if (cache[place]) return cache[place];
+
+      try {
+        const res = await fetch(
+          `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(place)}&apiKey=${API_KEY}`
+        );
+
+        const data = await res.json();
+
+        if (!data.features || data.features.length === 0) {
+          return null;
+        }
+
+        const coords = {
+          lat: data.features[0].geometry.coordinates[1],
+          lon: data.features[0].geometry.coordinates[0]
+        };
+
+        cache[place] = coords;
+        return coords;
+      } catch (err) {
+        console.error("Geocoding error:", err);
+        return null;
+      }
+    }
+
+    // ================= MAIN LOGIC =================
+    async function calculateRoute() {
+      const pickup = document.getElementById("pickup").value.trim();
+      const drop = document.getElementById("drop").value.trim();
+      const mode = document.getElementById("mode").value;
+
+      const btn = document.getElementById("btn");
+      const errorBox = document.getElementById("error");
+      const resultsDiv = document.getElementById("results");
+
+      errorBox.innerText = "";
+      resultsDiv.style.display = "none";
+
+      btn.innerText = "Consulting AI Engine...";
+      btn.disabled = true;
+
+      layerGroup.clearLayers();
+
+      try {
+        if (!pickup || !drop) throw new Error("Please enter both locations");
+
+        // Call our backend AI Route Engine
+        const res = await fetch(`/api/route?origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(drop)}`);
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail || "Route calculation failed");
+
+        // Add markers
+        const startIcon = L.divIcon({
+          html: '<div style="background:#3b82f6; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #3b82f6;"></div>',
+          className: 'custom-icon',
+          iconSize: [12, 12]
+        });
+
+        const endIcon = L.divIcon({
+          html: '<div style="background:#f97316; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #f97316;"></div>',
+          className: 'custom-icon',
+          iconSize: [12, 12]
+        });
+
+        L.marker([data.origin.lat, data.origin.lon], { icon: startIcon }).addTo(layerGroup).bindPopup("<b>Pickup:</b> " + data.origin.name);
+        L.marker([data.destination.lat, data.destination.lon], { icon: endIcon }).addTo(layerGroup).bindPopup("<b>Drop:</b> " + data.destination.name);
+
+        // Get the actual geometry from Geoapify for visuals
+        const routeRes = await fetch(
+          `https://api.geoapify.com/v1/routing?waypoints=${data.origin.lat},${data.origin.lon}|${data.destination.lat},${data.destination.lon}&mode=${mode}&apiKey=${API_KEY}`
+        );
+        const routeData = await routeRes.json();
+
+        const routeLayer = L.geoJSON(routeData, {
+          style: { color: "#3b82f6", weight: 6, opacity: 0.8 }
+        }).addTo(layerGroup);
+
+        map.fitBounds(routeLayer.getBounds(), { padding: [80, 80] });
+
+        // Display AI Results
+        document.getElementById("distance").innerText = data.distance_km + " km";
+        document.getElementById("eta").innerText = data.eta_minutes + " min";
+
+        const ai = data.ai_report;
+        const statusEl = document.getElementById("riskStatus");
+        statusEl.innerText = ai.risk_status;
+        statusEl.style.color = ai.risk_score > 60 ? '#ef4444' : ai.risk_score > 20 ? '#fbbf24' : '#10b981';
+        
+        document.getElementById("hazardMult").innerText = ai.hazard_multiplier.toFixed(2) + "x";
+        document.getElementById("recommendation").innerText = ai.recommendation;
+
+        // Visual Breakdown
+        const wScore = Math.min(ai.risk_score * 0.8, 100);
+        const zScore = Math.min(ai.risk_score * 0.4, 100);
+        
+        document.getElementById("weatherBar").style.width = wScore + "%";
+        document.getElementById("weatherScore").innerText = Math.round(wScore) + "%";
+        
+        document.getElementById("zoneBar").style.width = zScore + "%";
+        document.getElementById("zoneScore").innerText = Math.round(zScore) + "%";
+
+        // Trust Reward Logic
+        const trustReward = document.getElementById("trustReward");
+        if (ai.risk_status === "Optimal") {
+            trustReward.style.display = "block";
+        } else {
+            trustReward.style.display = "none";
+        }
+
+        resultsDiv.style.display = "block";
+        localStorage.setItem("lastRoute", JSON.stringify({ pickup, drop, mode }));
+
+      } catch (err) {
+        console.error(err);
+        errorBox.innerText = "Error: " + err.message;
+      } finally {
+        btn.innerText = "Find Optimal Route";
+        btn.disabled = false;
+      }
+    }
+
+    // ================= MAP CLICK =================
+    map.on("click", function (e) {
+      const { lat, lng } = e.latlng;
+      const pickupInput = document.getElementById("pickup");
+      pickupInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    });
+
+    // ================= HAZARD & HOTSPOT LOGIC =================
+    const TOMTOM_KEY = "{{ tomtom_key }}";
+    let hotspotLayer = null;
+    let hazardLayer = null;
+    let crowdsourcedLayer = null;
+
+    async function toggleHazards() {
+      const isEnabled = document.getElementById("hazardToggle").checked;
+      if (!isEnabled) {
+        if (hazardLayer) hazardLayer.remove();
+        if (crowdsourcedLayer) crowdsourcedLayer.remove();
+        return;
+      }
+
+      try {
+        // 1. Static Geo-Risk
+        const res = await fetch('/api/map/hazards');
+        const data = await res.json();
+
+        if (hazardLayer) hazardLayer.remove();
+        hazardLayer = L.layerGroup().addTo(map);
+
+        Object.entries(data.zones).forEach(([name, zone]) => {
+          if (zone.risk_score > 0) {
+            const color = zone.risk_score >= 4 ? '#ef4444' : zone.risk_score >= 2 ? '#fbbf24' : '#22c55e';
+            const h3Index = h3.latLngToCell(zone.lat, zone.lon, 8);
+            const bounds = h3.cellToBoundary(h3Index);
+            
+            L.polygon(bounds.map(v => [v[0], v[1]]), {
+              color: color,
+              fillColor: color,
+              fillOpacity: 0.15,
+              weight: 1
+            }).addTo(hazardLayer).bindPopup(`<b>${name}</b> (Geo-Risk)`);
+          }
+        });
+
+        // 2. Crowdsourced Reports
+        loadActiveHazards();
+      } catch (err) {
+        console.error("Hazard error:", err);
+      }
+    }
+
+    async function loadActiveHazards() {
+        try {
+            const res = await fetch('/api/hazards/active');
+            const data = await res.json();
+            
+            if (crowdsourcedLayer) crowdsourcedLayer.remove();
+            crowdsourcedLayer = L.layerGroup().addTo(map);
+            
+            const icons = {
+                waterlogging: '🌊',
+                accident: '💥',
+                closure: '🚧',
+                traffic: '🚦'
+            };
+            
+            data.hazards.forEach(h => {
+                const icon = L.divIcon({
+                    html: `<div style="background:#ef4444; width:36px; height:36px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px rgba(239,68,68,0.5); font-size:18px;">${icons[h.type] || '⚠️'}</div>`,
+                    className: 'hazard-icon-div',
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 54] // Floating effect
+                });
+                
+                L.marker([h.lat, h.lon], { icon }).addTo(crowdsourcedLayer)
+                    .bindPopup(`<b>Active Report</b><br>${h.type.toUpperCase()}<br>${h.description || 'No details provided.'}<br><small>${new Date(h.timestamp * 1000).toLocaleTimeString()}</small>`);
+            });
+        } catch (err) {
+            console.error("Crowdsource fetch error:", err);
+        }
+    }
+
+    // ================= REPORTING LOGIC =================
+    let selectedHazardType = null;
+    let reportModal = document.getElementById('reportModal');
+
+    function openReportModal() {
+        reportModal.style.display = 'flex';
+        selectedHazardType = null;
+        document.querySelectorAll('.hazard-opt').forEach(opt => opt.classList.remove('selected'));
+        document.getElementById('hazardDesc').value = '';
+    }
+
+    function closeReportModal() {
+        reportModal.style.display = 'none';
+    }
+
+    function selectHazard(type, element) {
+        selectedHazardType = type;
+        document.querySelectorAll('.hazard-opt').forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    async function submitHazardReport() {
+        if (!selectedHazardType) {
+            alert("Please select a hazard type.");
+            return;
+        }
+        
+        const btn = document.getElementById('submitReportBtn');
+        btn.innerText = "Reporting...";
+        btn.disabled = true;
+        
+        // Get center of map for the report (mock current location if not available)
+        const center = map.getCenter();
+        const desc = document.getElementById('hazardDesc').value;
+        
+        try {
+            const res = await fetch('/api/hazards/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: selectedHazardType,
+                    lat: center.lat,
+                    lon: center.lng,
+                    description: desc
+                })
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                alert("Report submitted! Thank you.");
+                closeReportModal();
+                loadActiveHazards();
+            } else {
+                throw new Error(data.detail || "Report failed");
+            }
+        } catch (err) {
+            alert("Error: " + err.message);
+        } finally {
+            btn.innerText = "Submit Report";
+            btn.disabled = false;
+        }
+    }
+
+    async function toggleHotspots() {
+      const isEnabled = document.getElementById("hotspotToggle").checked;
+      const legend = document.getElementById("hotspotLegend");
+
+      if (!isEnabled) {
+        if (hotspotLayer) hotspotLayer.remove();
+        legend.style.display = "none";
+        return;
+      }
+
+      legend.style.display = "flex";
+      const center = map.getCenter();
+
+      try {
+        const res = await fetch(`https://api.tomtom.com/search/2/nearbySearch/.json?key=${TOMTOM_KEY}&lat=${center.lat}&lon=${center.lng}&radius=5000&categorySet=7315,7348,9361,9376&limit=100`);
+        const data = await res.json();
+        if (!data.results) throw new Error("No data found");
+
+        const counts = {};
+        data.results.forEach(p => {
+          const h3Index = h3.latLngToCell(p.position.lat, p.position.lon, 9);
+          counts[h3Index] = (counts[h3Index] || 0) + 1;
+        });
+
+        renderHexagons(counts);
+      } catch (err) {
+        console.error("Hotspot error:", err);
+      }
+    }
+
+    function renderHexagons(counts) {
+      if (hotspotLayer) hotspotLayer.remove();
+
+      const features = Object.entries(counts).map(([h3Index, count]) => {
+        const vertices = h3.cellToBoundary(h3Index);
+        return {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [vertices.map(v => [v[1], v[0]])]
+          },
+          properties: { count }
+        };
+      });
+
+      const max = Math.max(...Object.values(counts));
+
+      hotspotLayer = L.geoJSON({ type: "FeatureCollection", features }, {
+        style: (f) => {
+          const density = f.properties.count / max;
+          return {
+            fillColor: getColor(f.properties.count, max),
+            weight: 1,
+            opacity: 0.15,
+            color: 'white',
+            fillOpacity: 0.3 + (density * 0.4)
+          };
+        }
+      }).addTo(map);
+    }
+
+    function getColor(val, max) {
+      const ratio = val / max;
+      if (ratio > 0.8) return '#ef4444';
+      if (ratio > 0.6) return '#f97316';
+      if (ratio > 0.4) return '#fbbf24';
+      if (ratio > 0.2) return '#86efac';
+      return '#22c55e';
+    }
+
+    // ================= LOAD LAST ROUTE =================
+    window.onload = () => {
+      const last = JSON.parse(localStorage.getItem("lastRoute"));
+      if (last) {
+        document.getElementById("pickup").value = last.pickup;
+        document.getElementById("drop").value = last.drop;
+        document.getElementById("mode").value = last.mode;
+        if (last.pickup && last.drop) {
+          setTimeout(calculateRoute, 1000);
+        }
+      }
     };
-
-    cache[place] = coords;
-    return coords;
-  } catch (err) {
-    console.error("Geocoding error:", err);
-    return null;
-  }
-}
-
-// ================= MAIN LOGIC =================
-async function calculateRoute() {
-  const pickup = document.getElementById("pickup").value.trim();
-  const drop = document.getElementById("drop").value.trim();
-  const mode = document.getElementById("mode").value;
-  const modeText = document.getElementById("mode").selectedOptions[0].text;
-
-  const btn = document.getElementById("btn");
-  const errorBox = document.getElementById("error");
-  const resultsDiv = document.getElementById("results");
-
-  errorBox.innerText = "";
-  resultsDiv.style.display = "none";
-
-  btn.innerText = "Analyzing Paths...";
-  btn.disabled = true;
-
-  layerGroup.clearLayers();
-
-  try {
-    if (!pickup || !drop) throw new Error("Please enter both locations");
-
-    const start = await getCoordinates(pickup);
-    const end = await getCoordinates(drop);
-
-    if (!start) throw new Error(`Could not find "${pickup}"`);
-    if (!end) throw new Error(`Could not find "${drop}"`);
-
-    // Add markers with custom style
-    const startIcon = L.divIcon({
-      html: '<div style="background:#3b82f6; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #3b82f6;"></div>',
-      className: 'custom-icon',
-      iconSize: [12, 12]
-    });
-
-    const endIcon = L.divIcon({
-      html: '<div style="background:#f97316; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px #f97316;"></div>',
-      className: 'custom-icon',
-      iconSize: [12, 12]
-    });
-
-    L.marker([start.lat, start.lon], { icon: startIcon }).addTo(layerGroup).bindPopup("<b>Pickup:</b> " + pickup);
-    L.marker([end.lat, end.lon], { icon: endIcon }).addTo(layerGroup).bindPopup("<b>Drop:</b> " + drop);
-
-    // Route fetch
-    const routeRes = await fetch(
-      `https://api.geoapify.com/v1/routing?waypoints=${start.lat},${start.lon}|${end.lat},${end.lon}&mode=${mode}&apiKey=${API_KEY}`
-    );
-
-    const routeData = await routeRes.json();
-
-    if (routeData.error) {
-      throw new Error(routeData.error.message || "Route calculation failed");
-    }
-
-    if (!routeData.features || routeData.features.length === 0) {
-      throw new Error("No feasible route found for this mode");
-    }
-
-    // Draw route with specific ShieldGig style
-    const route = L.geoJSON(routeData, {
-      style: { color: "#3b82f6", weight: 6, opacity: 0.8 }
-    }).addTo(layerGroup);
-
-    map.fitBounds(route.getBounds(), { padding: [80, 80] });
-
-    // Display results
-    const props = routeData.features[0].properties;
-
-    const dist = (props.distance / 1000).toFixed(2);
-    const timeMin = Math.round(props.time / 60);
-
-    const hours = Math.floor(timeMin / 60);
-    const mins = timeMin % 60;
-
-    const formattedTime = hours > 0 
-      ? `${hours} hr ${mins} min`
-      : `${mins} min`;
-
-    document.getElementById("distance").innerText = dist + " km";
-    document.getElementById("eta").innerText = formattedTime;
-
-    resultsDiv.style.display = "block";
-
-    // Save history
-    localStorage.setItem("lastRoute", JSON.stringify({pickup, drop, mode}));
-
-  } catch (err) {
-    console.error(err);
-    errorBox.innerText = "Error: " + err.message;
-  } finally {
-    btn.innerText = "Find Optimal Route";
-    btn.disabled = false;
-  }
-}
-
-// ================= MAP CLICK =================
-map.on("click", function(e) {
-  const { lat, lng } = e.latlng;
-  const pickupInput = document.getElementById("pickup");
-  pickupInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  
-  // Visual feedback on click
-  L.circleMarker([lat, lng], {
-    radius: 8,
-    color: '#3b82f6',
-    fillOpacity: 0.4
-  }).addTo(layerGroup).fadeOut();
-});
-
-L.Marker.prototype.fadeOut = function() {
-    var self = this;
-    setTimeout(function() {
-        self.remove();
-    }, 1000);
-};
-
-// ================= HOTSPOT LOGIC =================
-const TOMTOM_KEY = "{{ tomtom_key }}";
-let hotspotLayer = null;
-
-async function toggleHotspots() {
-  const isEnabled = document.getElementById("hotspotToggle").checked;
-  const legend = document.getElementById("hotspotLegend");
-  
-  if (!isEnabled) {
-    if (hotspotLayer) hotspotLayer.remove();
-    legend.style.display = "none";
-    return;
-  }
-
-  legend.style.display = "flex";
-
-  const center = map.getCenter();
-  btn.innerText = "Scanning Area...";
-  
-  try {
-    const res = await fetch(`https://api.tomtom.com/search/2/nearbySearch/.json?key=${TOMTOM_KEY}&lat=${center.lat}&lon=${center.lng}&radius=5000&categorySet=7315,7348,9361,9376&limit=100`);
-    const data = await res.json();
-    
-    if (!data.results) throw new Error("No data found");
-    
-    // Bin by H3
-    const counts = {};
-    data.results.forEach(p => {
-      const h3Index = h3.latLngToCell(p.position.lat, p.position.lon, 9);
-      counts[h3Index] = (counts[h3Index] || 0) + 1;
-    });
-
-    renderHexagons(counts);
-    
-  } catch (err) {
-    console.error("Hotspot error:", err);
-    errorBox.innerText = "Hotspot Scan Failed: " + err.message;
-  } finally {
-    btn.innerText = "Find Optimal Route";
-  }
-}
-
-function renderHexagons(counts) {
-  if (hotspotLayer) hotspotLayer.remove();
-  
-  const features = Object.entries(counts).map(([h3Index, count]) => {
-    const vertices = h3.cellToBoundary(h3Index);
-    // H3 vertices are [lat, lng], leaflet polygon wants [lat, lng]
-    return {
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: [vertices.map(v => [v[1], v[0]])] // Flip for GeoJSON
-      },
-      properties: { count }
-    };
-  });
-
-  const max = Math.max(...Object.values(counts));
-
-  hotspotLayer = L.geoJSON({ type: "FeatureCollection", features }, {
-    style: (f) => {
-      const density = f.properties.count / max;
-      return {
-        fillColor: getColor(f.properties.count, max),
-        weight: 1,
-        opacity: 0.15,
-        color: 'white',
-        fillOpacity: 0.3 + (density * 0.4) // Dynamic opacity
-      };
-    }
-  }).addTo(map);
-  
-  map.fitBounds(hotspotLayer.getBounds(), { padding: [50, 50] });
-}
-
-function getColor(val, max) {
-  const ratio = val / max;
-  // High density = Hot (Red)
-  if (ratio > 0.8) return '#ef4444'; 
-  if (ratio > 0.6) return '#f97316'; 
-  // Medium density = Warning (Yellow/Amber)
-  if (ratio > 0.4) return '#fbbf24';
-  // Low density = Safe/Non-hotspot (Green)
-  if (ratio > 0.2) return '#86efac'; // Light Green
-  return '#22c55e';                 // Solid Green
-}
-
-// ================= LOAD LAST ROUTE =================
-window.onload = () => {
-  const last = JSON.parse(localStorage.getItem("lastRoute"));
-  if (last) {
-    document.getElementById("pickup").value = last.pickup;
-    document.getElementById("drop").value = last.drop;
-    document.getElementById("mode").value = last.mode;
-    
-    // Auto trigger if both exist
-    if (last.pickup && last.drop) {
-       setTimeout(calculateRoute, 1000);
-    }
-  }
-};
-</script>
+  </script>
+  </script>
 
 </body>
+
 </html>

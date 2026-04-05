@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zero-Aeon-GWI — Signup</title>
+<title>Zeryo Aeon GWI — Signup</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -121,7 +121,16 @@
   <!-- Login Card -->
   <div class="login-card">
     <div class="card-title">Create Pilot Account</div>
-    <div class="card-subtitle">Join Zero-Aeon-GWI Parametric Insurance</div>
+    <div class="card-subtitle">Join Zeryo Aeon GWI Parametric Insurance</div>
+
+    <!-- AI Magic Fill -->
+    <div style="margin-top: 20px;">
+        <label for="ocrFill" class="submit-btn" style="background: rgba(16, 185, 129, 0.1); border: 1px dashed var(--accent3); color: var(--accent3); cursor: pointer; margin-top: 0; font-size: 13px;">
+          🪄 AI Magic Form Auto-Fill
+          <input type="file" id="ocrFill" style="display:none" onchange="autoFillOCR(this)">
+        </label>
+        <div style="font-size: 10px; color: var(--muted); text-align: center; margin-top: 6px;">Upload a profile screenshot from Swiggy/Zomato/Uber</div>
+    </div>
 
     <div class="form-group">
       <label class="form-label" for="full_name">FULL NAME</label>
@@ -233,6 +242,44 @@
       showError('Could not connect to local server');
     }
   }
+
+  window.autoFillOCR = async (input) => {
+    if (!input.files || !input.files[0]) return;
+    
+    const btn = input.closest('label');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✨ Analyzing Screenshot...';
+    btn.style.pointerEvents = 'none';
+    
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+    
+    try {
+      const res = await fetch('/api/ocr/auto-fill-signup', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (data.status === 'success' && data.extracted) {
+          const e = data.extracted;
+          if (e.full_name) document.getElementById('full_name').value = e.full_name;
+          if (e.phone) document.getElementById('phone').value = e.phone;
+          if (e.zone) document.getElementById('zone').value = e.zone;
+          
+          btn.innerHTML = '✅ Form Auto-Filled!';
+          btn.style.background = 'rgba(16, 185, 129, 0.2)';
+      } else {
+          showError("Could not extract profile details. Please fill manually.");
+          btn.innerHTML = originalText;
+          btn.style.pointerEvents = 'auto';
+      }
+    } catch (err) {
+      showError("OCR Service Error");
+      btn.innerHTML = originalText;
+      btn.style.pointerEvents = 'auto';
+    }
+  };
 
   document.getElementById('signupBtn').onclick = async () => {
     const full_name = document.getElementById('full_name').value.trim();

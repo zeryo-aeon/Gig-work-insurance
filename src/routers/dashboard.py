@@ -112,6 +112,15 @@ async def get_summary(request: Request):
         # AI Dynamic Pricing Logic (XGBoost + Geo-Risk)
         pricing_data = predictor.calculate_premium_modifier(user.rider_id, zone=user.zone, current_weather_risk=int(temp_val))
         
+        # Calculate dynamic premium to display on dashboard
+        dynamic_base = 30 - pricing_data.get("discount_applied", 0)
+        computed_premium = float(max(5.0, round((dynamic_base * pricing_data.get("modifier", 1.0)) / 5) * 5))
+        
+        # Determine risk level for dashboard display
+        risk_score = pricing_data.get("points_total", 0)
+        # Normalize -50 to 50 into 0-100 for display, lower is better usually but let's stick to 0-100 high=bad
+        display_risk = max(0, min(100, 50 - risk_score)) 
+        
         return {
             "rider": user.dict(),
             "wallet_balance": balance_data.get("balance_inr", 0),
@@ -120,9 +129,9 @@ async def get_summary(request: Request):
                 "label": "Last 7 Days Performance",
                 "earnings": round(total_earnings, 2),
                 "payout": round(total_payouts, 2),
-                "premium": pricing_data["final_premium"], 
-                "risk_score": 68,
-                "triggers_fired": 2,
+                "premium": computed_premium, 
+                "risk_score": display_risk,
+                "triggers_fired": 1 if total_payouts > 0 else 0,
                 "predicted_next_day": pricing_data["modifier"] * 500, # scaling factor for demo
                 "total_distance": round(total_distance, 1),
                 "total_traffic_delay": round(total_traffic_delay, 1),
@@ -136,7 +145,9 @@ async def get_summary(request: Request):
                 "platform": {"value": "Online", "unit": "", "status": "clear", "threshold": "Downtime"},
             },
             "verified_orders": user.verified_orders,
-            "is_insured": user.is_insured
+            "is_insured": user.is_insured,
+            "trips_today": random.randint(0, 4) if user.is_insured else 0,
+            "payout_eligible": user.is_insured
         }
     except Exception as e:
         app_logger.error(f"DASHBOARD: Error fetching summary for rider {user.rider_id}: {str(e)}")
@@ -187,46 +198,75 @@ async def get_analytics(request: Request):
 @router.get("/risk-factors")
 async def get_risk_factors(request: Request):
     user = require_auth(request)
+    # Fetch real live weather data for risk calculation
+    user_zone = user.dict().get("zone", "Bangalore")
+    weather = weather_client.get_city_data(user_zone)
+    temp_val = 0
+    if weather and "weather" in weather and weather["weather"]:
+        temp_val = weather["weather"]["current"].get("temperature_c", 0)
+    
+    pricing_data = predictor.calculate_premium_modifier(user.rider_id, zone=user.zone, current_weather_risk=int(temp_val))
+    
+    # Map points to dashboard factors
+    risk_score = pricing_data.get("points_total", 0)
+    display_risk = max(0, min(100, 50 - risk_score))
+    
+    factors = [
+        {"name": "Weather Risk", "score": min(100, int(temp_val * 2)), "color": "warn" if temp_val > 30 else "green"},
+        {"name": "Zone Hazard", "score": 100 if not pricing_data.get("is_safe_zone") else 20, "color": "warn" if not pricing_data.get("is_safe_zone") else "green"},
+        {"name": "Income Stability", "score": 100 if risk_score < 0 else 30, "color": "gold" if risk_score < 10 else "green"},
+        {"name": "Activity Level", "score": 50, "color": "gold"},
+    ]
+    
     return {
-        "overall_score": 68,
-        "level": "High",
-        "factors": [
-            {"name": "Weather", "score": 80, "color": "warn"},
-            {"name": "Mobility", "score": 25, "color": "green"},
-            {"name": "Platform", "score": 15, "color": "green"},
-            {"name": "Income Var.", "score": 60, "color": "gold"},
-        ]
+        "overall_score": display_risk,
+        "level": "High" if display_risk > 60 else "Moderate" if display_risk > 30 else "Low",
+        "factors": factors
     }
 
 
 @router.get("/disruptions")
 async def get_disruptions(request: Request):
     user = require_auth(request)
+    # Fetch real live weather data
+    user_zone = user.dict().get("zone", "Bangalore")
+    weather = weather_client.get_city_data(user_zone)
+    
+    rain_val = 0
+    temp_val = 0
+    if weather and "weather" in weather and weather["weather"]:
+        temp_val = weather["weather"]["current"].get("temperature_c", 0)
+        rain_val = weather["weather"]["snapshot"].get("rain_mm", 0)
+
+    # Historical data for payouts
+    rider_data = load_history_for_rider(user.rider_id)
+    total_payouts = sum(h["payouts"] for h in rider_data["history"]) if rider_data else 0
+
     return {
         "disruptions": [
             {
                 "name": "Heavy Rain",
                 "type": "Environmental",
                 "icon": "🌧️",
-                "measured": "48 mm/hr",
-                "threshold": "> 30 mm/hr",
-                "loss": "₹340",
-                "status": "triggered"
+                "measured": f"{rain_val} mm/hr",
+                "threshold": "> 5 mm/hr",
+                "loss": f"₹{int(total_payouts/2)}" if total_payouts > 0 else "—",
+                "status": "triggered" if rain_val > 5 else "clear"
             },
             {
                 "name": "Extreme Heat",
                 "type": "Environmental",
                 "icon": "🌡️",
-                "measured": "38°C",
-                "threshold": "> 42°C",
+                "measured": f"{temp_val}°C",
+                "threshold": "> 35°C",
                 "loss": "—",
-                "status": "watch"
+                "status": "warn" if temp_val > 35 else "clear"
             },
             {
                 "name": "Air Pollution",
                 "type": "Environmental",
                 "icon": "💨",
-                "measured": "142 AQI",
+                "measured": "Normal",
                 "threshold": "> 300 AQI",
                 "loss": "—",
                 "status": "clear"
@@ -244,7 +284,7 @@ async def get_disruptions(request: Request):
                 "name": "Demand Crash",
                 "type": "Platform",
                 "icon": "📉",
-                "measured": "Orders/hr: 8",
+                "measured": "Stable",
                 "threshold": "< 5 orders/hr",
                 "loss": "—",
                 "status": "clear"

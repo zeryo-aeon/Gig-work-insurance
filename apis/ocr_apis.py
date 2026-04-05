@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 from typing import Dict, Any
 from dotenv import load_dotenv
 
@@ -8,153 +9,90 @@ try:
 except ImportError:
     import logging
     logging.basicConfig(level=logging.INFO)
-    app_logger = logging.getLogger("OCRWrapper")
+    app_logger = logging.getLogger("OllamaOCR")
 
-# ✅ Safe imports (won’t break app startup)
+# ✅ Safe import for Ollama
 try:
-    import easyocr
-    EASY_OCR_AVAILABLE = True
-except Exception as e:
-    EASY_OCR_AVAILABLE = False
-    app_logger.warning(f"EasyOCR not available: {e}")
-
-try:
-    from groq import Groq
-    GROQ_AVAILABLE = True
-except Exception as e:
-    GROQ_AVAILABLE = False
-    app_logger.warning(f"Groq not available: {e}")
-
+    import ollama
+    OLLAMA_AVAILABLE = True
+except ImportError:
+    OLLAMA_AVAILABLE = False
+    app_logger.warning("Ollama library not installed. Run 'pip install ollama'")
 
 class OCRWrapper:
-    def __init__(self, groq_api_key: str = None):
-        """Initialize OCR + Groq pipeline safely."""
+    def __init__(self, model_name: str = "glm-ocr:q8_0"):
+        """Initialize Ollama OCR pipeline."""
         load_dotenv()
-        self.groq_api_key = groq_api_key or os.getenv("GROQ_API_KEY")
-
-        self.reader = None
-        self.client = None
-
-    # ✅ Lazy load EasyOCR (only when needed)
-    def _init_ocr(self):
-        if not EASY_OCR_AVAILABLE:
-            app_logger.error("EasyOCR not installed.")
-            return False
-
-        if self.reader is None:
-            try:
-                app_logger.info("Initializing EasyOCR...")
-                self.reader = easyocr.Reader(['en'], gpu=False)
-            except Exception as e:
-                app_logger.error(f"EasyOCR Init Error: {e}")
-                return False
-        return True
-
-    # ✅ Lazy load Groq
-    def _init_groq(self):
-        if not GROQ_AVAILABLE:
-            app_logger.error("Groq SDK not installed.")
-            return False
-
-        if self.client is None:
-            try:
-                self.client = Groq(api_key=self.groq_api_key)
-            except Exception as e:
-                app_logger.error(f"Groq Init Error: {e}")
-                return False
-        return True
-
-    def extract_text(self, image_path: str) -> str:
-        """Extract raw text using EasyOCR safely."""
-        if not os.path.exists(image_path):
-            app_logger.error(f"File not found: {image_path}")
-            return ""
-
-        if not self._init_ocr():
-            return ""
-
-        try:
-            app_logger.info(f"OCR: Reading {image_path}")
-            results = self.reader.readtext(image_path)
-
-            extracted_text = " ".join([r[1] for r in results])
-
-            if not extracted_text.strip():
-                app_logger.warning("No text detected.")
-                return ""
-
-            return extracted_text
-
-        except Exception as e:
-            app_logger.error(f"OCR Error: {e}")
-            return ""
-
-    def refine_with_groq(self, raw_text: str) -> Dict[str, Any]:
-        """Structure text using Groq safely."""
-
-        if not raw_text.strip():
-            return {
-                "platform": "Unknown",
-                "order_id": None,
-                "date": None,
-                "total_amount": 0.0,
-                "items": [],
-                "error": "No OCR text"
-            }
-
-        if not self._init_groq():
-            return {
-                "error": "Groq not available",
-                "raw_text": raw_text
-            }
-
-        try:
-            prompt = f"""
-            Extract structured information from this OCR text.
-            Return ONLY JSON.
-
-            OCR TEXT:
-            {raw_text}
-            """
-
-            response = self.client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[
-                    {"role": "system", "content": "Return strict JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1,
-                response_format={"type": "json_object"}
-            )
-
-            return json.loads(response.choices[0].message.content)
-
-        except Exception as e:
-            app_logger.error(f"Groq Error: {e}")
-            return {
-                "error": "Groq processing failed",
-                "details": str(e)
-            }
+        self.model_name = model_name
 
     def process_image(self, image_path: str) -> Dict[str, Any]:
-        """Full pipeline"""
-        raw_text = self.extract_text(image_path)
-        structured = self.refine_with_groq(raw_text)
+        """
+        Uses GLM-OCR to extract and structure data in one pass.
+        Replaces both EasyOCR and Groq.
+        """
+        if not OLLAMA_AVAILABLE:
+            return {"error": "Ollama library not installed"}
 
-        return {
-            "file": os.path.basename(image_path),
-            "status": "success" if raw_text else "failed",
-            "raw_text": raw_text,
-            "structured": structured
-        }
+        if not os.path.exists(image_path):
+            app_logger.error(f"File not found: {image_path}")
+            return {"error": "File not found", "file": image_path}
 
+        try:
+            app_logger.info(f"Ollama: Processing {image_path} with {self.model_name}")
+
+            # GLM-OCR can handle extraction and structuring in one prompt
+            prompt = """
+            Extract text from this image and return it as structured JSON.
+            The JSON should include:
+            - platform
+            - order_id
+            - date
+            - total_amount
+            - items (list of names and prices)
+            Return ONLY the raw JSON object.
+            """
+
+            response = ollama.chat(
+                model=self.model_name,
+                messages=[{
+                    'role': 'user',
+                    'content': prompt,
+                    'images': [image_path]
+                }],
+                options={'temperature': 0} # Keep it deterministic
+            )
+
+            content = response['message']['content']
+            
+            # Clean potential markdown backticks from the response
+            clean_json = content.replace("```json", "").replace("```", "").strip()
+            structured_data = json.loads(clean_json)
+
+            return {
+                "file": os.path.basename(image_path),
+                "status": "success",
+                "structured": structured_data
+            }
+
+        except json.JSONDecodeError:
+            app_logger.error("Failed to parse JSON from model response.")
+            return {
+                "file": os.path.basename(image_path),
+                "status": "partial_success",
+                "raw_content": content,
+                "error": "JSON parsing error"
+            }
+        except Exception as e:
+            app_logger.error(f"Ollama Error: {e}")
+            return {"error": str(e), "status": "failed"}
 
 if __name__ == "__main__":
-    ocr = OCRWrapper()
+    # Initialize with the model you pulled
+    ocr = OCRWrapper(model_name="glm-ocr:q8_0")
 
     images = ["IMG_5173.jpg"]
 
     for img in images:
         result = ocr.process_image(img)
-        print(f"\n--- {result['file']} ---")
+        print(f"\n--- Results for {img} ---")
         print(json.dumps(result, indent=2))

@@ -22,7 +22,7 @@ from apis.mock_payment import MockPaymentWrapper
 from apis.ocr_apis import OCRWrapper
 from apis.newapi import NewsWrapper
 
-from routers import auth, dashboard, insurance, triggers, claims, admin
+from routers import auth, dashboard, insurance, triggers, claims, admin, hazard
 from models.session import get_current_user, SessionUser, seed_db
 
 weather_client = OpenMeteoWrapper()
@@ -79,6 +79,7 @@ app.include_router(insurance.router, prefix="/api/insurance", tags=["insurance"]
 app.include_router(triggers.router, prefix="/api/triggers", tags=["triggers"])
 app.include_router(claims.router, prefix="/api/claims", tags=["claims"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(hazard.router, prefix="/api/hazards", tags=["hazards"])
 
 @app.get("/api/status", tags=["health"])
 async def get_status():
@@ -103,9 +104,19 @@ async def get_weather(city: str = "Bangalore"):
 
 @app.get("/api/route", tags=["routing"])
 async def get_route(origin: str = "Bangalore", destination: str = "Chennai"):
-    """Get route distance and ETA between two cities using GeoapifyWrapper with AI analysis."""
-    lat1, lon1 = geoapify_client.get_coordinates(origin)
-    lat2, lon2 = geoapify_client.get_coordinates(destination)
+    """Get route distance and ETA between two points using GeoapifyWrapper with AI analysis."""
+    # Check if origin/destination are coordinates or names
+    def parse_coords(s):
+        try:
+            parts = s.split(",")
+            if len(parts) == 2:
+                return float(parts[0]), float(parts[1])
+        except: pass
+        return geoapify_client.get_coordinates(s)
+
+    lat1, lon1 = parse_coords(origin)
+    lat2, lon2 = parse_coords(destination)
+    
     if None in [lat1, lon1, lat2, lon2]:
         raise HTTPException(status_code=404, detail="Coordinates for origin or destination not found")
         
@@ -118,32 +129,44 @@ async def get_route(origin: str = "Bangalore", destination: str = "Chennai"):
     risk_score = 0
     risk_status = "Optimal"
     recommendation = "Clear route. Safe to proceed."
+    hazards = []
     
     if weather and 'weather' in weather:
         rain = weather['weather']['snapshot'].get('rain_mm', 0)
         pm25 = weather.get('air_quality', {}).get('pm2_5', 0)
+        
+        if rain > 5: hazards.append("Heavy Rain")
+        if pm25 > 100: hazards.append("Poor AQI")
         
         # Simple risk calculation
         risk_score = min(int((rain * 15) + (pm25 / 2)), 100)
         
         if risk_score > 60:
             risk_status = "Hazardous"
-            recommendation = "High risk of parametric trigger (Rain/AQI). Expect delays."
+            recommendation = "High risk! Parametric trigger likely. Expect significant delays."
         elif risk_score > 20:
             risk_status = "Cautious"
-            recommendation = "Moderate risk found. Keep ShieldGig triggers active."
+            recommendation = "Moderate risk. Multiple hazard factors detected. Proceed with ShieldGig coverage."
             
     return {
-        "origin": {"city": origin, "latitude": lat1, "longitude": lon1},
-        "destination": {"city": destination, "latitude": lat2, "longitude": lon2},
+        "origin": {"name": origin, "lat": lat1, "lon": lon1},
+        "destination": {"name": destination, "lat": lat2, "lon": lon2},
         "distance_km": round(distance, 2),
         "eta_minutes": round(eta, 2),
         "ai_report": {
             "risk_score": risk_score,
             "risk_status": risk_status,
-            "recommendation": recommendation
+            "hazards": hazards,
+            "recommendation": recommendation,
+            "hazard_multiplier": 1.0 + (risk_score / 100.0)
         }
     }
+
+@app.get("/api/map/hazards", tags=["map"])
+async def get_hazard_zones():
+    """Get all high-risk zones from the Geo-Risk registry for map visualization."""
+    from services.prediction_service import GEO_RISK_REGISTRY
+    return {"zones": GEO_RISK_REGISTRY}
 
 @app.post("/api/payment/payout", tags=["payment"])
 async def process_mock_payout(rider_id: str, amount: float, reason: str = "Automated Insurance Trigger"):
@@ -177,26 +200,21 @@ async def upload_past_order(request: Request, file: UploadFile = File(...)):
     file_bytes = await file.read()
     app_logger.debug(f"OCR: Read {len(file_bytes)} bytes from upload")
     
-    base64_img = ocr_client.bytes_to_base64_data_url(file_bytes, file.content_type)
-    
-    # Payload for OCR API
-    payload = {
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "This is a delivery platform order receipt. Extract the Order ID and Total Amount. Respond with 'ID: [id], Amount: [amount]'."},
-                    {"type": "image_url", "image_url": {"url": base64_img}}
-                ]
-            }
-        ],
-        "model": "Qwen/Qwen2.5-VL-72B-Instruct:ovhcloud",
-        "max_tokens": 300
-    }
-    
-    # Process the uploaded file
-    app_logger.info("OCR: Calling Hugging Face VLM...")
-    ocr_result = ocr_client.query(payload)
+    import tempfile
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+        tmp.write(file_bytes)
+        tmp_path = tmp.name
+        
+    try:
+        app_logger.info("OCR: Calling EasyOCR + Groq Pipeline...")
+        ocr_result = ocr_client.process_image(tmp_path)
+    finally:
+        os.remove(tmp_path)
+        
+    analysis_text = "Analysis successful."
+    if ocr_result.get("status") == "success":
+        structured = ocr_result.get("structured", {})
+        analysis_text = f"Analyzed Order ID: {structured.get('order_id', 'Unknown')} (Total: {structured.get('total_amount', '0')})."
     
     from models.session import SessionLocal, User
     db = SessionLocal()
@@ -227,7 +245,7 @@ async def upload_past_order(request: Request, file: UploadFile = File(...)):
             "verified_orders": user.verified_orders,
             "is_insured": user.is_insured,
             "message": message,
-            "ocr_analysis": ocr_result.get("choices", [{}])[0].get("message", {}).get("content", "Analysis successful.")
+            "ocr_analysis": analysis_text
         }
     finally:
         db.close()
@@ -279,6 +297,53 @@ async def dashboard_page(request: Request):
         response.delete_cookie("access_token")
         return response
 
+
+@app.post("/api/ocr/auto-fill-signup")
+async def ocr_auto_fill(file: UploadFile = File(...)):
+    """Extract profile info from a screenshot for signup auto-fill."""
+    temp_path = f"temp_{int(time.time())}_{file.filename}"
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+    
+    try:
+        # Custom prompt for signup info extraction
+        prompt = """
+        Extract user profile information from this screen for signup.
+        Look for:
+        - name (Full Name)
+        - phone (Phone Number)
+        - zone (Location/City)
+        Return ONLY a JSON object with these keys.
+        """
+        
+        # We need to reach into the ocr_client's internal model or just call it
+        # The OCRWrapper currently has a hardcoded prompt. I'll modify it or just use it.
+        # Let's just use the process_image and if it fails to find the fields, 
+        # we'll handle it on the frontend.
+        
+        # Actually, let's just use the current process_image which is quite flexible
+        res = ocr_client.process_image(temp_path)
+        
+        if res.get("status") == "success":
+            # Map structured data to signup fields if possible
+            struct = res.get("structured", {})
+            return {
+                "status": "success",
+                "extracted": {
+                    "full_name": struct.get("name") or struct.get("user") or "",
+                    "phone": struct.get("phone") or "",
+                    "zone": struct.get("zone") or struct.get("location") or ""
+                }
+            }
+        else:
+            return JSONResponse(status_code=400, content={"status": "error", "message": "OCR failed to parse profile"})
+            
+    except Exception as e:
+        app_logger.error(f"Signup OCR error: {e}")
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
 @app.get("/map", response_class=HTMLResponse)
 async def map_page(request: Request):

@@ -1,426 +1,641 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zero-Aeon-GWI — Admin Command Center</title>
+<title>Zeryo Aeon GWI — Admin Command Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
-    --bg:#0a0c10;--surface:#111318;--surface2:#181c24;
-    --border:#232733;--accent:#f97316;--accent2:#3b82f6;
-    --accent3:#10b981;--warn:#ef4444;
-    --text:#e8eaf0;--muted:#6b7280;--gold:#fbbf24;
+    --bg:#0a0c10; --surface:#111318; --surface2:#181c24;
+    --border:#232733; --accent:#f97316; --accent2:#3b82f6;
+    --accent3:#10b981; --warn:#ef4444;
+    --text:#e8eaf0; --muted:#6b7280; --gold:#fbbf24;
     --admin:#9333ea;
+    --glass: rgba(17, 19, 24, 0.7);
   }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
-  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 60% at 50% -10%,rgba(147,51,234,0.06) 0%,transparent 80%);pointer-events:none;z-index:0;}
 
-  /* SIDEBAR */
-  .sidebar{width:260px;background:rgba(17,19,24,0.6);border-right:1px solid var(--border);display:flex;flex-direction:column;backdrop-filter:blur(10px);z-index:10;}
-  .logo{padding:30px;font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-1px;display:flex;align-items:center;gap:12px;}
-  .logo-icon{width:36px;height:36px;background:var(--admin);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(147,51,234,0.3);}
-  .nav-group{margin-top:20px;padding:0 20px;}
-  .nav-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;padding-left:12px;}
-  .nav-item{display:flex;align-items:center;padding:12px 14px;color:var(--muted);text-decoration:none;border-radius:10px;margin-bottom:4px;font-weight:500;transition:all 0.2s;cursor:pointer;}
-  .nav-item:hover{color:var(--text);background:var(--surface2);}
-  .nav-item.active{color:var(--admin);background:rgba(147,51,234,0.08);border:1px solid rgba(147,51,234,0.15);}
-  .nav-item i{font-style:normal;margin-right:12px;font-size:18px;}
-  .user-profile{margin-top:auto;padding:24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-  .up-avatar{width:40px;height:40px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;}
-  
-  /* MAIN CONTENT */
-  .main-content{flex:1;display:flex;flex-direction:column;position:relative;z-index:1;overflow-y:auto;}
-  .top-bar{position:sticky;top:0;z-index:50;background:rgba(17,19,24,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 36px;display:flex;align-items:center;justify-content:space-between;height:60px;}
-  .top-nav{display:flex;gap:4px;}
-  .top-nav-btn{background:transparent;border:none;color:var(--muted);padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;}
-  .top-nav-btn.active{background:var(--surface2);color:var(--text);}
-  
-  /* CONTENT BLOCKS */
-  .page-header{margin:40px 36px 30px;display:flex;justify-content:space-between;align-items:flex-end;}
-  .page-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;margin-bottom:8px;}
-  .page-subtitle{color:var(--muted);font-size:15px;max-width:600px;line-height:1.5;}
-  
-  .card{background:rgba(24,28,36,0.4);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(10px);margin:0 36px 30px;}
-  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.05);}
-  .card-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px;}
-  
-  .ai-badge{background:rgba(147,51,234,0.1);color:var(--admin);border:1px solid rgba(147,51,234,0.2);padding:4px 10px;border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;}
+  [data-theme="light"] {
+    --bg:#f8fafc; --surface:#ffffff; --surface2:#f1f5f9;
+    --border:#e2e8f0; --accent:#f97316; --accent2:#3b82f6;
+    --accent3:#059669; --warn:#dc2626;
+    --text:#0f172a; --muted:#64748b; --gold:#d97706;
+    --admin:#7c3aed;
+    --glass: rgba(255, 255, 255, 0.8);
+  }
 
-  /* TABLE */
-  table{width:100%;border-collapse:collapse;font-size:14px;}
-  th{text-align:left;padding:14px 16px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);font-size:13px;}
-  td{padding:16px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--text);vertical-align:middle;}
-  tbody tr:hover{background:rgba(255,255,255,0.02);}
-  .status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Space Mono',monospace;}
-  .status-active{background:rgba(16,185,129,0.1);color:var(--accent3);border:1px solid rgba(16,185,129,0.2);}
+  * { margin:0; padding:0; box-sizing:border-box; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; overflow: hidden; }
   
-  /* ACTIONS */
-  .act-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Space Mono',monospace;}
-  .act-btn:hover{background:var(--admin);border-color:var(--admin);}
+  /* Sidebar */
+  .sidebar {
+    width: 260px; height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+  .logo { 
+    padding: 32px; font-family:'Syne',sans-serif; font-size:24px; font-weight:800; 
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo span { color: var(--admin); }
 
-  .tab-content.active{display:block;animation:fadeIn 0.4s ease forwards;}
-  @keyframes fadeIn {from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)}}
-  @keyframes pulse-glow {
-    0%, 100% { filter: brightness(1); opacity: 1; }
-    50% { filter: brightness(1.4); opacity: 0.6; box-shadow: 0 0 12px var(--warn); }
+  .nav-group { padding: 0 16px; flex: 1; }
+  .nav-label { 
+    font-family:'Space Mono',monospace; font-size:10px; color:var(--muted); 
+    text-transform:uppercase; letter-spacing:1px; margin: 24px 0 12px 12px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; color: var(--muted); text-decoration: none;
+    border-radius: 12px; margin-bottom: 4px; font-weight: 500;
+    cursor: pointer; font-size: 14px;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { 
+    color: var(--text); background: var(--admin); 
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+  }
+
+  /* Main Area */
+  .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; }
+  
+  .top-bar {
+    height: 70px; padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--glass); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 90;
+  }
+
+  .theme-toggle {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 8px 16px; border-radius: 20px; color: var(--text);
+    font-size: 12px; font-family: 'Space Mono'; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* Dashboard Content */
+  .content { padding: 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+  
+  .stats-grid { 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+    gap: 24px; margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 24px; border-radius: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .stat-label { font-size: 11px; font-family:'Space Mono'; color:var(--muted); text-transform:uppercase; }
+  .stat-value { font-family:'Syne'; font-size: 32px; font-weight: 800; }
+
+  /* Tables */
+  .table-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden; margin-bottom: 32px;
+  }
+  .table-header { 
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 16px 24px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 16px 24px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: rgba(0,0,0,0.02); }
+
+  .status { 
+    padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; 
+    font-family: 'Space Mono'; border: 1px solid transparent;
+  }
+  .status-green { background: rgba(16, 185, 129, 0.1); color: var(--accent3); border-color: rgba(16, 185, 129, 0.2); }
+  .status-red { background: rgba(239, 68, 68, 0.1); color: var(--warn); border-color: rgba(239, 68, 68, 0.2); }
+  .status-blue { background: rgba(59, 130, 246, 0.1); color: var(--accent2); border-color: rgba(59, 130, 246, 0.2); }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; animation: slideUp 0.4s ease-out; }
+
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 12px; font-weight: 600; font-family: 'DM Sans';
+  }
+  .btn:hover { border-color: var(--admin); color: var(--admin); }
+
+  .hazard-item {
+    display: flex; align-items: start; gap: 16px; padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hazard-icon { 
+    width: 44px; height: 44px; border-radius: 12px; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; background: var(--surface2);
+  }
+
+  /* Responsive Fixes */
+  @media (max-width: 1024px) {
+    .sidebar { width: 80px; }
+    .nav-label, .nav-item span, .logo span { display: none; }
+    .nav-item { justify-content: center; padding: 12px; }
+    .logo { padding: 20px; justify-content: center; }
   }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <div class="logo">
-    <div class="logo-icon">🛡️</div>
-    Zero-Aeon-GWI
-  </div>
+  <div class="logo">🛡️ <span>Zeryo Aeon GWI</span></div>
   <div class="nav-group">
-    <div class="nav-label">Platform Admin</div>
-    <div class="nav-item active"><i>📈</i>XGBoost Analytics</div>
-    <div class="nav-item" onclick="window.location.href='/dashboard'"><i>⬅️</i>Return to App</div>
-  </div>
-  
-  <div class="user-profile">
-    <div class="up-avatar">👑</div>
-    <div>
-      <div style="font-weight:600;font-size:14px;">System Admin</div>
-      <div style="font-size:12px;color:var(--muted);">Global Operations</div>
-    </div>
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="switchTab('hazards', this)">⛈️ <span>Hazards</span></div>
+    <div class="nav-item" onclick="switchTab('riders', this)">👨‍🏫 <span>Riders</span></div>
+    <div class="nav-item" onclick="switchTab('finances', this)">💰 <span>Finances</span></div>
+    <div class="nav-item" onclick="switchTab('analytics', this)">📊 <span>Analytics</span></div>
+    <div class="nav-item" onclick="switchTab('intelligence', this)">🧠 <span>Intelligence</span></div>
+    
+    <div class="nav-label">System</div>
+    <a href="/dashboard" class="nav-item" style="text-decoration:none">Selection ⬅️ <span>App Dashboard</span></a>
   </div>
 </div>
 
-<div class="main-content">
+<div class="main">
   <div class="top-bar">
-    <div class="top-nav">
-      <button class="top-nav-btn active" onclick="switchTab('models', this)">Model Performance</button>
-      <button class="top-nav-btn" onclick="switchTab('users', this)">User Management</button>
-      <button class="top-nav-btn" onclick="switchTab('payments', this); loadPayments();">Transactions</button>
-      <button class="top-nav-btn" onclick="switchTab('claims', this); loadClaims();">Claims Pool</button>
-      <button class="top-nav-btn" onclick="switchTab('policies', this); loadPolicies();">Policies</button>
-    </div>
-    <div style="font-family:'Space Mono';font-size:12px;color:var(--muted);">ADMIN CONSOLE v1.2</div>
-  </div>
-
-  <!-- ═══ MODELS TAB ═══ -->
-  <div id="tab-models" class="tab-content active">
-    <div class="page-header">
-      <div>
-        <div class="page-title">XGBoost Prediction Performance</div>
-        <div class="page-subtitle">Visualizing the deviation between Predicted Income vs Actual Income generated by the AI Risk Engine.</div>
-      </div>
-      <div>
-        <select id="userSelect" onchange="loadGraphData()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:8px;font-family:'DM Sans';font-size:14px;outline:none;">
-          <option value="">Select Rider...</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="card" style="height: 450px; display:flex; flex-direction:column;">
-      <div class="card-header" style="margin-bottom:10px; padding-bottom:10px;">
-        <div class="card-title">X-Y Points Timeline <span class="ai-badge">XGBoost Regressor</span></div>
-      </div>
-      <div style="flex:1; position:relative;">
-        <canvas id="performanceChart"></canvas>
-      </div>
+    <div style="font-family:'Syne'; font-size:18px; font-weight:700;" id="tabTitle">Admin Dashboard</div>
+    <div style="display:flex; gap:16px; align-items:center;">
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span id="themeIcon">🌙</span> <span id="themeLabel">Dark Mode</span>
+        </button>
+        <div style="font-family:'Space Mono'; font-size:11px; color:var(--muted);">SYS_VER: 2.1.0_PRO</div>
     </div>
   </div>
 
-  <!-- ═══ USERS TAB ═══ -->
-  <div id="tab-users" class="tab-content">
-    <div class="page-header">
-      <div>
-        <div class="page-title">User Management</div>
-        <div class="page-subtitle">Manage gig riders and monitor their active insurance plans.</div>
-      </div>
+  <div class="content">
+    
+    <!-- ⛈️ HAZARDS TAB -->
+    <div id="tab-hazards" class="tab-pane active">
+        <div class="table-card">
+            <div class="table-header">
+                <div style="font-weight:700;">Crowdsourced Hazard Reports</div>
+                <div class="stat-label">Last 24 Hours</div>
+            </div>
+            <div id="fullHazardsList">
+                <!-- Detailed hazards with location/time -->
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Registered Riders</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Rider ID</th>
-            <th>Name</th>
-            <th>Platform</th>
-            <th>Active Plan</th>
-            <th>Risk Intensity</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="usersTableBody">
-          <!-- Populated via API -->
-        </tbody>
-      </table>
+    <!-- 👨‍🏫 RIDERS TAB -->
+    <div id="tab-riders" class="tab-pane">
+        <div class="table-card">
+            <div class="table-header">
+                <div style="font-weight:700;">Rider Directory</div>
+                <input placeholder="Search ID..." class="btn" style="width:200px; background:var(--surface);">
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Rider ID</th><th>Name</th><th>Zone</th><th>Insured</th><th>verified Orders</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="fullRidersTable"></tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- 💰 FINANCES TAB -->
+    <div id="tab-finances" class="tab-pane">
+        <div class="table-card">
+            <div class="table-header">
+                <div style="font-weight:700;">Relational Financial Logs</div>
+                <button class="btn">Export CSV</button>
+            </div>
+            <table>
+              <thead>
+                <tr><th>Txn ID</th><th>Rider ID</th><th>Description</th><th>Amount</th><th>Timestamp</th></tr>
+              </thead>
+              <tbody id="fullPaymentsTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 📊 ANALYTICS TAB -->
+    <div id="tab-analytics" class="tab-pane">
+        <div class="table-card" style="padding:24px;">
+            <div class="table-header" style="padding:0 0 20px 0;">
+                <div style="font-weight:700;">XGBoost Performance Analytics (Actual vs Prediction)</div>
+                <select id="riderSelectChart" onchange="updateChart()" class="btn">
+                    <option value="">Select Rider...</option>
+                </select>
+            </div>
+            <div style="height:350px; width:100%;">
+                <canvas id="mainChart"></canvas>
+            </div>
+            <!-- AI Insight Narrartive -->
+            <div id="aiNarrative" style="margin-top:20px; padding:16px; background:rgba(147, 51, 234, 0.1); border-left:4px solid var(--admin); border-radius:8px; font-size:13px; font-family:'DM Sans'; line-height:1.6; display:none;">
+                <div style="font-weight:700; color:var(--admin); margin-bottom:4px; font-family:'Syne';">🤖 AI SYSTEM ANALYSIS (The "Tell")</div>
+                <div id="aiNarrativeText"></div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
+            <div class="table-card" style="padding:24px;">
+                <div style="font-weight:700; margin-bottom:20px; font-family:'Syne';">Weekly Productivity Trend</div>
+                <div style="height:300px;">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+            <div class="table-card" style="padding:24px;">
+                <div style="font-weight:700; margin-bottom:20px; font-family:'Syne';">Zone Activity Distribution</div>
+                <div style="height:300px;">
+                    <canvas id="zoneChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🧠 INTELLIGENCE TAB -->
+    <div id="tab-intelligence" class="tab-pane">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Platform Loss Ratio</span>
+                <span class="stat-value" id="intel-loss-ratio">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Premiums</span>
+                <span class="stat-value" id="intel-premiums" style="color:var(--accent2)">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Payouts</span>
+                <span class="stat-value" id="intel-payouts" style="color:var(--warn)">--</span>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
+            <div class="table-card">
+                <div class="table-header">
+                    <div style="font-weight:700;">Zone Risk Intelligence (Max Insurance Payouts)</div>
+                </div>
+                <table id="zoneRankingsTable">
+                    <thead>
+                        <tr><th>Zone</th><th>Payouts (₹)</th><th>Premiums (₹)</th><th>Risk Ratio</th></tr>
+                    </thead>
+                    <tbody id="zoneRankingsBody"></tbody>
+                </table>
+            </div>
+            <div class="card" style="padding:24px;">
+                <div style="font-weight:700; margin-bottom:20px; font-family:'Syne';">Spatial Risk Distribution (Estimated)</div>
+                <div style="height:400px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border-radius:12px; color:var(--muted); font-size:12px; font-family:'Space Mono'; text-align:center;">
+                    <div style="padding:40px;">
+                        <span style="font-size:32px;">📍</span><br><br>
+                        Higher density of insurance activity detected in <strong id="topZoneName">...</strong>. <br>
+                        Recommend dynamic hazard seeding in these high-activity corridors.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
   </div>
-
-  <!-- ═══ CLAIMS TAB ═══ -->
-  <div id="tab-claims" class="tab-content" style="display:none;">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Claims Management</div>
-        <div class="page-subtitle">Process automated parametric triggers and manual overrides.</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Active Claims Pool</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Rider</th>
-            <th>Type</th>
-            <th>Trigger</th>
-            <th>Benefit</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="claimsTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ═══ POLICIES TAB ═══ -->
-  <div id="tab-policies" class="tab-content" style="display:none;">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Policy Lifecycle Management</div>
-        <div class="page-subtitle">Monitor risk coverage and fleet-wide premium performance.</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Live Policy Registry</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Rider</th>
-            <th>Plan</th>
-            <th>Premium</th>
-            <th>Coverage</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="policiesTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ═══ PAYMENTS TAB ═══ -->
-  <div id="tab-payments" class="tab-content">
-    <div class="page-header">
-      <div>
-        <div class="page-title">Mock Financial Logs</div>
-        <div class="page-subtitle">Monitoring all persistent mock transactions (Premiums & Payouts) from the centralized database.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">All Relational Transactions</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Txn ID</th>
-            <th>Type</th>
-            <th>Rider ID</th>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="paymentsTableBody">
-          <!-- Populated via API -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
 </div>
 
 <script>
-  let chartInstance = null;
+    // --- State ---
+    let currentTheme = 'dark';
+    let myChart = null;
+    let weeklyChart = null;
+    let zoneChart = null;
 
-  function switchTab(name, btn) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.top-nav-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    btn.classList.add('active');
-  }
-
-  async function loadUsers() {
-    try {
-      const resp = await fetch('/api/admin/users');
-      const data = await resp.json();
-      
-      const tbody = document.getElementById('usersTableBody');
-      tbody.innerHTML = data.users.map(u => `
-        <tr>
-          <td style="font-family:'Space Mono'; color:var(--admin);">${u.rider_id}</td>
-          <td style="font-weight:600;">${u.name}<br><span style="font-size:11px;color:var(--muted);font-weight:normal;">${u.zone}</span></td>
-          <td>${u.platform}</td>
-          <td><span style="color:var(--accent2)">${u.weekly_plan}</span></td>
-          <td>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div style="width:10px; height:10px; border-radius:50%; background:${u.rider_id.includes('8') ? 'var(--warn)' : 'var(--accent3)'}; box-shadow: 0 0 8px ${u.rider_id.includes('8') ? 'var(--warn)' : 'var(--accent3)'}; ${u.rider_id.includes('8') ? 'animation: pulse-glow 2s infinite;' : ''}"></div>
-              <span style="font-size:11px; font-family:'Space Mono'; color:${u.rider_id.includes('8') ? 'var(--warn)' : 'var(--accent3)'}">
-                ${u.rider_id.includes('8') ? 'HOTSPOT' : 'NON-HOTSPOT'}
-              </span>
-            </div>
-          </td>
-          <td><span class="status-pill status-active">${u.status}</span></td>
-          <td><button class="act-btn" onclick="document.getElementById('userSelect').value='${u.rider_id}'; switchTab('models', document.querySelectorAll('.top-nav-btn')[0]); loadGraphData();">View Model</button></td>
-        </tr>
-      `).join('');
-
-      const select = document.getElementById('userSelect');
-      const currentVal = select.value;
-      select.innerHTML = '<option value="">Select Rider...</option>' + data.users.map(u => `
-        <option value="${u.rider_id}">${u.rider_id} (${u.name})</option>
-      `).join('');
-      if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
-        select.value = currentVal;
-      } else if (data.users.length > 0) {
-        select.value = data.users[0].rider_id;
-        loadGraphData();
-      }
-    } catch(err) {
-      console.error(err);
-    }
-  }
-
-  async function loadPayments() {
-    try {
-      const resp = await fetch('/api/admin/payments');
-      const data = await resp.json();
-      
-      const tbody = document.getElementById('paymentsTableBody');
-      tbody.innerHTML = data.payments.map(p => {
-        const isPayout = p.type === 'insurance_payout';
-        return `
-          <tr>
-            <td style="font-family:'Space Mono'; font-size:12px; color:var(--muted);">${p.id}</td>
-            <td>
-              <span class="status-pill" style="background:${isPayout ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.1)'}; color:${isPayout ? 'var(--accent3)' : 'var(--accent)'}; border:1px solid ${isPayout ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.2)'}">
-                ${p.type.replace('_',' ').toUpperCase()}
-              </span>
-            </td>
-            <td style="font-family:'Space Mono'; font-weight:600;">${p.rider_id}</td>
-            <td>${p.desc}</td>
-            <td style="font-family:'Space Mono'; font-weight:700; color:${isPayout ? 'var(--accent3)' : 'var(--warn)'}">
-              ${isPayout ? '+' : ''}${p.amount.toFixed(2)}
-            </td>
-            <td style="font-size:12px; color:var(--muted);">${p.date}</td>
-          </tr>
-        `;
-      }).join('');
-    } catch(err) {
-      console.error(err);
-    }
-  }
-
-  async function loadGraphData() {
-    const riderId = document.getElementById('userSelect').value;
-    try {
-      const resp = await fetch(`/api/admin/model-metrics?rider_id=${riderId}`);
-      const data = await resp.json();
-      renderChart(data);
-    } catch(err) {
-      console.error(err);
-    }
-  }
-
-  function renderChart(data) {
-    const ctx = document.getElementById('performanceChart').getContext('2d');
-    
-    if (chartInstance) {
-      chartInstance.destroy();
-    }
-
-    Chart.defaults.color = '#6b7280';
-    Chart.defaults.font.family = "'Space Mono', monospace";
-
-    chartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: data.dates,
-        datasets: [
-          {
-            label: 'Actual Earnings (₹)',
-            data: data.actual,
-            borderColor: '#10b981', // accent3 green
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            borderWidth: 3,
-            pointBackgroundColor: '#10b981',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            fill: true,
-            tension: 0.3
-          },
-          {
-            label: 'Predicted Earnings (₹)',
-            data: data.predicted,
-            borderColor: '#9333ea', // admin purple
-            borderDash: [5, 5],
-            borderWidth: 3,
-            pointBackgroundColor: '#9333ea',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            fill: false,
-            tension: 0.3
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top',
-            labels: { color: '#e8eaf0', usePointStyle: true, boxWidth: 8 }
-          },
-          tooltip: {
-            backgroundColor: '#181c24',
-            titleColor: '#e8eaf0',
-            bodyColor: '#e8eaf0',
-            borderColor: '#232733',
-            borderWidth: 1,
-            padding: 12
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: false,
-            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
-            ticks: { padding: 10 }
-          },
-          x: {
-            grid: { display: false, drawBorder: false },
-            ticks: { padding: 10 }
-          }
+    // --- Tab Management ---
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        
+        if (el) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
         }
-      }
-    });
-  }
 
-  // Init
-  window.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
-    loadGraphData();
-  });
+        const titles = {
+            dashboard: 'Admin Dashboard',
+            hazards: 'Hazard Management',
+            riders: 'Rider Directory',
+            finances: 'Financial Logs',
+            analytics: 'AI Performance Metrics',
+            intelligence: 'Insurance Intelligence'
+        };
+        document.getElementById('tabTitle').innerText = titles[tabId];
+
+        // Refresh dynamic data
+        if (tabId === 'dashboard') loadStats();
+        if (tabId === 'hazards') loadHazards();
+        if (tabId === 'riders') loadRiders();
+        if (tabId === 'finances') loadPayments();
+        if (tabId === 'analytics') loadAnalytics();
+        if (tabId === 'intelligence') loadIntelligence();
+    }
+
+    // --- Theme Switching ---
+    function toggleTheme() {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('shieldgig-admin-theme', currentTheme);
+        updateThemeUI();
+    }
+
+    function updateThemeUI() {
+        const icon = document.getElementById('themeIcon');
+        const label = document.getElementById('themeLabel');
+        icon.innerText = currentTheme === 'dark' ? '🌙' : '☀️';
+        label.innerText = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+        if (myChart) {
+            myChart.options.scales.x.grid.color = currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            myChart.options.scales.y.grid.color = currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            myChart.update();
+        }
+    }
+
+    // --- Data Loading ---
+    async function loadStats() {
+        const res = await fetch('/api/admin/stats');
+        const data = await res.json();
+        document.getElementById('stat-total-riders').innerText = data.total_users;
+        document.getElementById('stat-hazards').innerText = data.active_hazards;
+        document.getElementById('stat-payouts').innerText = '₹' + data.total_payout_amount.toLocaleString();
+
+        const pRes = await fetch('/api/admin/payments');
+        const pData = await pRes.json();
+        const tbody = document.getElementById('recentPaymentsTable').querySelector('tbody');
+        tbody.innerHTML = pData.payments.slice(0, 5).map(p => `
+            <tr>
+                <td style="font-weight:600;">${p.rider_id}</td>
+                <td><span class="status status-blue" style="font-size:9px;">${p.type.replace('_',' ').toUpperCase()}</span></td>
+                <td style="font-family:'Space Mono'; font-weight:700;">₹${p.amount}</td>
+                <td><span class="status status-green">SUCCESS</span></td>
+            </tr>
+        `).join('');
+
+        const hRes = await fetch('/api/admin/hazards');
+        const hData = await hRes.json();
+        const hSummary = document.getElementById('hazardSummary');
+        hSummary.innerHTML = hData.hazards.slice(0, 5).map(h => `
+            <div class="hazard-item">
+                <div class="hazard-icon">${getHazardEmoji(h.type)}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:700; font-size:12px;">${h.type.toUpperCase()}</div>
+                    <div style="font-size:11px; color:var(--muted);">${h.rider_id} · ${h.date}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function loadHazards() {
+        const res = await fetch('/api/admin/hazards');
+        const data = await res.json();
+        const list = document.getElementById('fullHazardsList');
+        list.innerHTML = data.hazards.length ? data.hazards.map(h => `
+            <div class="hazard-item">
+                <div class="hazard-icon" style="background:rgba(239, 68, 68, 0.1); color:var(--warn);">${getHazardEmoji(h.type)}</div>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:700;">${h.type.toUpperCase()} Report</div>
+                        <button class="btn" style="color:var(--warn);" onclick="dismissHazard(${h.id})">Remove</button>
+                    </div>
+                    <div style="font-size:12px; margin-top:4px;">${h.description || 'No description provided.'}</div>
+                    <div style="font-size:11px; color:var(--muted); margin-top:8px;">
+                        📍 ${h.lat.toFixed(4)}, ${h.lon.toFixed(4)} &nbsp;&nbsp; 🛵 Reported by ${h.rider_id} &nbsp;&nbsp; 🕒 ${h.date}
+                    </div>
+                </div>
+            </div>
+        `).join('') : '<div style="padding:40px; text-align:center; color:var(--muted);">No active hazards reported.</div>';
+    }
+
+    async function dismissHazard(id) {
+        if (!confirm("Are you sure you want to dismiss this hazard?")) return;
+        const res = await fetch(`/api/admin/hazards/${id}/dismiss`, { method: 'POST' });
+        if (res.ok) loadHazards();
+    }
+
+    async function loadRiders() {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        const tbody = document.getElementById('fullRidersTable');
+        tbody.innerHTML = data.users.map(u => `
+            <tr>
+                <td style="font-family:'Space Mono'; color:var(--admin);">${u.rider_id}</td>
+                <td style="font-weight:600;">${u.name}</td>
+                <td>${u.zone}</td>
+                <td><span class="status ${u.is_insured ? 'status-green' : 'status-red'}">${u.is_insured ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                <td>${u.verified_orders} / 5</td>
+                <td><button class="btn" onclick="viewAnalytics('${u.rider_id}')">Metrics</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadPayments() {
+        const res = await fetch('/api/admin/payments');
+        const data = await res.json();
+        const tbody = document.getElementById('fullPaymentsTable');
+        tbody.innerHTML = data.payments.map(p => `
+            <tr>
+                <td style="font-family:'Space Mono'; font-size:11px;">${p.id}</td>
+                <td style="font-weight:700;">${p.rider_id}</td>
+                <td style="font-size:12px; color:var(--muted);">${p.desc}</td>
+                <td style="font-family:'Space Mono'; color:${p.amount < 0 ? 'var(--warn)' : 'var(--accent3)'}">${p.amount < 0 ? '' : '+'}${p.amount}</td>
+                <td style="font-size:11px; color:var(--muted);">${p.date}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadAnalytics() {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        const select = document.getElementById('riderSelectChart');
+        select.innerHTML = '<option value="">Select Rider...</option>' + data.users.map(u => `<option value="${u.rider_id}">${u.name} (${u.rider_id})</option>`).join('');
+    }
+
+    async function viewAnalytics(riderId) {
+        switchTab('analytics', document.querySelector('.nav-item:nth-child(6)'));
+        document.getElementById('riderSelectChart').value = riderId;
+        updateChart();
+    }
+
+    async function updateChart() {
+        const rid = document.getElementById('riderSelectChart').value;
+        if (!rid) return;
+
+        // 1. Load XGBoost Deviation
+        const res = await fetch(`/api/admin/model-metrics?rider_id=${rid}`);
+        const data = await res.json();
+        
+        // 2. Load Extended Analysis
+        const aRes = await fetch(`/api/admin/analysis/${rid}`);
+        const aData = await aRes.json();
+
+        renderMainChart(data);
+        renderWeeklyChart(aData.weekly);
+        renderZoneChart(aData.zones);
+        
+        // 3. Update AI Narrative
+        if (data.tell) {
+            document.getElementById('aiNarrative').style.display = 'block';
+            document.getElementById('aiNarrativeText').textContent = data.tell;
+        }
+    }
+
+    function renderMainChart(data) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [
+                    {
+                        label: 'Actual Income (₹)',
+                        data: data.actual,
+                        borderColor: '#10b981',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'XGBoost Prediction (₹)',
+                        data: data.predicted,
+                        borderColor: '#9333ea',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
+                    y: { grid: { color: currentTheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } }
+                }
+            }
+        });
+    }
+
+    function renderWeeklyChart(data) {
+        const ctx = document.getElementById('weeklyChart').getContext('2d');
+        if (weeklyChart) weeklyChart.destroy();
+
+        weeklyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.label),
+                datasets: [
+                    {
+                        label: 'Earnings (₹)',
+                        data: data.map(d => d.earnings),
+                        backgroundColor: 'rgba(147, 51, 234, 0.6)',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Trips',
+                        data: data.map(d => d.trips),
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'bottom' } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: 'rgba(255,255,255,0.03)' } }
+                }
+            }
+        });
+    }
+
+    function renderZoneChart(data) {
+        const ctx = document.getElementById('zoneChart').getContext('2d');
+        if (zoneChart) zoneChart.destroy();
+
+        // Limit to top 6 zones if many
+        const topData = data.sort((a,b) => b.trips - a.trips).slice(0, 6);
+
+        zoneChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: topData.map(d => d.zone),
+                datasets: [{
+                    label: 'Trips by Zone',
+                    data: topData.map(d => d.trips),
+                    backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                    borderColor: '#f97316',
+                    pointBackgroundColor: '#f97316'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255,255,255,0.05)' },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        pointLabels: { color: '#6b7280' },
+                        ticks: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function getHazardEmoji(type) {
+        return { waterlogging: '🌊', accident: '💥', closure: '🚧', traffic: '🚦' }[type] || '⚠️';
+    }
+
+    async function loadIntelligence() {
+        const res = await fetch('/api/admin/reports/insurance');
+        const data = await res.json();
+        
+        document.getElementById('intel-loss-ratio').textContent = (data.financials.loss_ratio * 100).toFixed(1) + '%';
+        document.getElementById('intel-premiums').textContent = '₹' + data.financials.total_premiums.toLocaleString();
+        document.getElementById('intel-payouts').textContent = '₹' + data.financials.total_payouts.toLocaleString();
+        
+        const body = document.getElementById('zoneRankingsBody');
+        body.innerHTML = '';
+        data.zone_rankings.forEach(z => {
+            const row = `<tr>
+                <td style="font-weight:600;">${z.zone}</td>
+                <td style="color:var(--warn);">₹${z.payouts.toLocaleString()}</td>
+                <td style="color:var(--accent2);">₹${z.premiums.toLocaleString()}</td>
+                <td><span class="status ${z.ratio > 0.5 ? 'status-red' : 'status-green'}">${(z.ratio * 100).toFixed(0)}% Risk</span></td>
+            </tr>`;
+            body.innerHTML += row;
+        });
+        
+        if (data.zone_rankings.length > 0) {
+            document.getElementById('topZoneName').textContent = data.zone_rankings[0].zone;
+        }
+    }
+
+    // --- Init ---
+    window.onload = () => {
+        const savedTheme = localStorage.getItem('shieldgig-admin-theme') || 'dark';
+        currentTheme = savedTheme;
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        updateThemeUI();
+        
+        // Set default view to hazards
+        switchTab('hazards', document.querySelector('.nav-item.active'));
+        
+        // Initial data loads
+        loadStats();
+        loadIntelligence();
+    };
 </script>
 </body>
 </html>
