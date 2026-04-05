@@ -152,7 +152,7 @@ class OCRWrapper:
 if __name__ == "__main__":
     ocr = OCRWrapper()
 
-    images = ["receipt1.png", "receipt2.jpg"]
+    images = ["IMG_5173.jpg"]
 
     for img in images:
         result = ocr.process_image(img)

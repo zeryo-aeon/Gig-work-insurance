@@ -1,6 +1,13 @@
 # Use a lightweight python image
 FROM python:3.11-slim
 
+# Install system dependencies for building certain packages (like easyocr)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv for fast dependency management
 RUN pip install uv
 
@@ -16,10 +23,12 @@ RUN uv sync --frozen --no-dev
 # Copy the rest of the project files
 COPY . .
 
-# Expose port (Cloud Run sets PORT env var automatically)
-ENV PORT=8000
-EXPOSE 8000
+# Expose port (Hugging Face Spaces default to 7860)
+ENV PORT=7860
+EXPOSE 7860
 
 # Command to run the app using uvicorn out of the src directory
 # Using sh -c to ensure $PORT is evaluated correctly
-CMD ["sh", "-c", "uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port ${PORT:-8000}"]
+# Command to run the app using uvicorn out of the src directory
+# Using sh -c to ensure $PORT is evaluated correctly
+CMD ["sh", "-c", "uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port ${PORT:-7860}"]
