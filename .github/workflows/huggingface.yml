@@ -24,4 +24,4 @@ jobs:
           context: .
           push: true
           # Replace YOUR_HF_USERNAME and YOUR_SPACE_NAME accordingly
-          tags: registry.hf.space/${{ secrets.HF_USERNAME }}/${{ secrets.SPACE_NAME }}:latest
+          tags: registry.hf.space/${{ secrets.HF_USERNAME }}-${{ secrets.SPACE_NAME }}:latest
