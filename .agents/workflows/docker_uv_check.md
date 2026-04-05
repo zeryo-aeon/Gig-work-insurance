@@ -17,7 +17,7 @@ Follow these steps to verify that the project's Dockerfile correctly installs de
 `docker build -t gig-insurance-app .`
 
 4. Run the image to verify `uvicorn` starts successfully.
-`docker run -d -p 8080:8000 --name test-gig-app gig-insurance-app`
+`docker run -d -p 8080:7860 --name test-gig-app gig-insurance-app`
 
 5. Check the logs of the container (wait a few seconds first) to confirm `uvicorn` is running without errors.
 `docker logs test-gig-app`

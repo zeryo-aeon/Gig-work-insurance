@@ -29,6 +29,4 @@ EXPOSE 7860
 
 # Command to run the app using uvicorn out of the src directory
 # Using sh -c to ensure $PORT is evaluated correctly
-# Command to run the app using uvicorn out of the src directory
-# Using sh -c to ensure $PORT is evaluated correctly
-CMD ["sh", "-c", "uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port ${PORT:-7860}"]
+CMD ["sh", "-c", "uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port ${PORT}"]
