@@ -23,8 +23,13 @@ jobs:
           # Copy the Hugging Face specific README over the GitHub README
           cp README-hf.md README.md
           
-          # Remove large files to avoid Hugging Face push rejection
+          # Remove large and binary files to avoid Hugging Face push rejection
           find . -name "*.mp4" -type f -delete
+          find . -name "*.jpg" -type f -delete
+          find . -name "*.png" -type f -delete
+          find . -name "*.jar" -type f -delete
+          find . -name "*.apk" -type f -delete
+          rm -rf GigShield_Android_Defense/
           
           # Create a fresh git repo to wipe history containing large files
           rm -rf .git
