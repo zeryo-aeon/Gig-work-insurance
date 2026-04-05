@@ -22,10 +22,19 @@ jobs:
         run: |
           # Copy the Hugging Face specific README over the GitHub README
           cp README-hf.md README.md
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git commit -am "Update README for HF deployment"
           
-          # Add the Hugging Face Space as a remote and push
+          # Remove large files to avoid Hugging Face push rejection
+          find . -name "*.mp4" -type f -delete
+          
+          # Create a fresh git repo to wipe history containing large files
+          rm -rf .git
+          git init
+          git checkout -b main
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          
+          # Add, commit, and push only the current state
+          git add .
+          git commit -m "Deploy to Hugging Face"
           git remote add hf https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$SPACE_NAME
           git push --force hf main
