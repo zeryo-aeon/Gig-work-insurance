@@ -16,9 +16,10 @@ RUN uv sync --frozen --no-dev
 # Copy the rest of the project files
 COPY . .
 
-# Expose port (Hugging Face Spaces often default to 7860, but we can set 8000)
+# Expose port (Cloud Run sets PORT env var automatically)
 ENV PORT=8000
 EXPOSE 8000
 
 # Command to run the app using uvicorn out of the src directory
-CMD ["uv", "run", "uvicorn", "main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]
+# Using sh -c to ensure $PORT is evaluated correctly
+CMD ["sh", "-c", "uv run uvicorn main:app --app-dir src --host 0.0.0.0 --port ${PORT:-8000}"]

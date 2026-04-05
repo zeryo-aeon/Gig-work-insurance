@@ -215,16 +215,13 @@
     document.getElementById('eyeBtn').textContent = inp.type === 'password' ? '👁️' : '🙈';
   };
 
-  async function handleBackendSync(user, name) {
+  async function handleBackendSync(user) {
     try {
+      const idToken = await user.getIdToken();
       const response = await fetch('/auth/firebase-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          name: name || user.displayName || user.email.split('@')[0]
-        })
+        body: JSON.stringify({ id_token: idToken })
       });
       const data = await response.json();
       if (data.success) {
@@ -253,7 +250,7 @@
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(result.user, { displayName: full_name });
-      await handleBackendSync(result.user, full_name);
+      await handleBackendSync(result.user);
     } catch (e) {
       showError(e.message);
       btn.disabled = false;

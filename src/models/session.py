@@ -10,6 +10,9 @@ from pydantic import BaseModel
 from fastapi import HTTPException
 import hashlib
 import time
+import firebase_admin
+from firebase_admin import credentials, auth as firebase_auth
+import json
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 
@@ -18,6 +21,43 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hours
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+
+# ─── Firebase Admin Init ───────────────────────────────────────────────────
+
+# 1. Try to get service account from environment variable (as JSON string)
+# 2. Fallback to physical file
+SERVICE_ACCOUNT_JSON = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+SERVICE_ACCOUNT_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "gig-work-insurence-firebase-adminsdk-fbsvc-75417b9102.json")
+)
+
+try:
+    if not firebase_admin._apps:
+        if SERVICE_ACCOUNT_JSON:
+            # Initialize from JSON string (Best for Cloud Run/GitHub)
+            cred_dict = json.loads(SERVICE_ACCOUNT_JSON)
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+            print("🔥 Firebase Admin initialized via Environment Variable")
+        elif os.path.exists(SERVICE_ACCOUNT_PATH):
+            # Initialize from local JSON file
+            cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
+            firebase_admin.initialize_app(cred)
+            print(f"🔥 Firebase Admin initialized from {os.path.basename(SERVICE_ACCOUNT_PATH)}")
+        else:
+            print("⚠️ Firebase service account NOT found (no JSON env var or file). Auth will be limited.")
+except Exception as e:
+    print(f"❌ Error initializing Firebase Admin: {e}")
+
+def verify_firebase_token(id_token: str) -> Optional[dict]:
+    """Verify a Firebase ID token and return its claims."""
+    try:
+        decoded_token = firebase_auth.verify_id_token(id_token)
+        return decoded_token
+    except Exception as e:
+        print(f"❌ Firebase token verification failed: {e}")
+        return None
 
 
 # ─── Database Models ─────────────────────────────────────────────────────────

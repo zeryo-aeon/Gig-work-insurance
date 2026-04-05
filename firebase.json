@@ -1,0 +1,19 @@
+{
+  "hosting": {
+    "public": "src/static",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "shieldgig-backend",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}

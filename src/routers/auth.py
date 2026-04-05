@@ -19,9 +19,7 @@ router = APIRouter()
 
 
 class FirebaseAuthRequest(BaseModel):
-    uid: str
-    email: str
-    name: str
+    id_token: str
 
 
 @router.post("/login")
@@ -100,10 +98,26 @@ async def signup(
 
 @router.post("/firebase-login")
 async def firebase_login(data: FirebaseAuthRequest):
-    """Bridge Firebase UID/Email with a local JWT session."""
-    app_logger.info(f"AUTH: Firebase login attempt for {data.email} ({data.uid})")
+    """Bridge Firebase ID Token with a local JWT session."""
+    from models.session import verify_firebase_token, get_or_create_firebase_user
     
-    user = get_or_create_firebase_user(data.uid, data.email, data.name)
+    # 1. Verify the ID Token with Google/Firebase
+    decoded_token = verify_firebase_token(data.id_token)
+    if not decoded_token:
+        app_logger.warning("AUTH: Invalid Firebase ID Token submitted")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired Firebase token"
+        )
+    
+    uid = decoded_token.get("uid")
+    email = decoded_token.get("email")
+    name = decoded_token.get("name") or email.split("@")[0]
+    
+    app_logger.info(f"AUTH: Secure Firebase login verified for {email} ({uid})")
+    
+    # 2. Get/Create local user
+    user = get_or_create_firebase_user(uid, email, name)
     
     token = create_access_token(
         data={"sub": user.rider_id},

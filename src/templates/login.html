@@ -252,24 +252,56 @@
   </div>
 </div>
 
-<script>
-  /* 
-     ⚠️ Firebase temporarily disabled for demo accounts to avoid 'unauthorized-domain' error.
-     To re-enable:
-     1. Add back the Firebase module script.
-     2. Add localhost/127.0.0.1 to your Firebase Authorized Domains.
-  */
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { 
+    getAuth, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  // Attach functions to window for global access (onclick)
-  function fillCreds(id, pw) {
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSb_upwyqGUqWaInVajk_WzU8Ojqpbnnc",
+    authDomain: "gig-work-insurence.firebaseapp.com",
+    projectId: "gig-work-insurence",
+    storageBucket: "gig-work-insurence.firebasestorage.app",
+    messagingSenderId: "114084456891",
+    appId: "1:114084456891:web:cb3df6bac2ded3fa143c9e",
+    measurementId: "G-4G4LVSKKZQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Attach functions to window for global access
+  window.fillCreds = (id, pw) => {
     document.getElementById('login_id').value = id;
     document.getElementById('password').value = pw;
-  }
+  };
 
-  function togglePwd() {
+  window.togglePwd = () => {
     const inp = document.getElementById('password');
     inp.type = inp.type === 'password' ? 'text' : 'password';
     document.getElementById('eyeBtn').textContent = inp.type === 'password' ? '👁️' : '🙈';
+  };
+
+  async function handleBackendSync(idToken) {
+    try {
+      const response = await fetch('/auth/firebase-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_token: idToken })
+      });
+      const data = await response.json();
+      if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        showError(data.detail || 'Backend sync failed');
+      }
+    } catch (e) {
+      showError('Could not connect to local server');
+    }
   }
 
   async function standardLogin(id, pw) {
@@ -307,12 +339,18 @@
       btn.disabled = true;
       btn.classList.add('loading');
       
-      // Always use standard login for now as Firebase is temporarily disabled
+      // Standard login for demo accounts (GW-XXXX or ADMIN-XXXX)
       await standardLogin(login_id, password);
     };
 
-    document.getElementById('googleBtn').onclick = () => {
-      showError('Google Login is temporarily disabled for demo testing.');
+    document.getElementById('googleBtn').onclick = async () => {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const idToken = await result.user.getIdToken();
+        await handleBackendSync(idToken);
+      } catch (e) {
+        showError(e.message);
+      }
     };
   });
 
@@ -325,7 +363,7 @@
   }
 
   // Theme logic
-  function toggleTheme() {
+  window.toggleTheme = () => {
     const current = document.documentElement.getAttribute('data-theme');
     const target = current === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', target);
